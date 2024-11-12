@@ -1,0 +1,49 @@
+{% for comment in comments %}
+<div class="card border-0">
+    <div class="card-body pt-2 p-0">
+        <div>
+            <a class="text-decoration-none" href="{{ url_for('main.user', username=comment.author.username) }}">
+                <img class="rounded-circle avatar" {% if post.author.picture %} src="{{ post.author.picture }}" {% else %} src="https://www.gravatar.com/avatar/?d=mp&s=200" {% endif %}alt="photo">
+            </a>
+            {% set user_link %}
+                    <a class="text-decoration-none d-inline-block fs-6 text-body" href="{{ url_for('main.user', username=comment.author.username) }}">
+                        {{ comment.author.username }}{% if comment.author.verified %}&#x2713;{% elif comment.author.confirmed %}&#xB7;{% endif %}
+                    </a>            
+                {% if comment.author.label %}<span class="badge rounded-pill text-bg-secondary py-0 px-1">{{ comment.author.label }}</span>{% endif %}
+                <span>{{comment.id}} - {{ _('%(when)s', when=moment(comment.timestamp).format('D/MM/YY H:mm:ss')) }}</span>
+                {% if comment.pinned %}<span>&#x1F4CC;</span>{% endif %}
+                {% endset %}
+                <span>{{ _('%(username)s', username=user_link) }}</span>
+            <div class="pt-2 m-0 comment-body">
+                {% if comment.disabled %}
+                    <small><i>{{ _('Disabled') }}</i></small>
+                {% else %}
+                    {% if comment.body_html %}
+                        {{ comment.body_html | safe }}
+                    {% else %}
+                        {{ comment.body }}
+                    {% endif %}
+                {% endif %}
+            </div>
+            {% if current_user.is_authenticated and current_user.can("COMMENT") %}
+                    {% set action %}{{ url_for('main.post', id=post.id) }}{% endset %}
+                    {{ macros.vote(action=action, value="vote_comment", input_id=comment.id, count=comment.votes_count()) }}
+
+                <button class="btn btn-sm dropdown-toggle ps-1 py-0" type="button" data-bs-toggle="collapse" data-bs-target="#reply_comment_{{ comment.id }}" aria-expanded="False" aria-controls="reply_comment_{{ comment.id }}">
+                    {{_('Reply')}}
+                </button>
+                <div class="collapse" id="reply_comment_{{ comment.id }}">
+                        {% set action %}{{ url_for('main.post', id=post.id) }}{% endset %}
+                        {% set reply %}@{{ comment.author.username }} {% endset %}
+                        
+                        {{ macros.comment(action=action, reply=reply, input_id=comment.id, value="reply_comment") }}
+                </div>                
+            {% else %}
+                <span class="btn btn-outline-dark btn-sm border border-dark-subtle disabled px-1 py-0">
+                    &#8679; {{ comment.votes_count() }}
+                </span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endfor %}

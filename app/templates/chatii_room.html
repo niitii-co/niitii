@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    <div class="row justify-content-center align-items-center mt-3">
+        <div class="col-sm-12 col-md-10 col-lg-8 col-xl-6 col-xxl-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-center align-items-center p-2">
+                <h2>Chatii: {{code}}</h2>
+            </div>
+            <div class="card-body w-auto h-10 overflow-y-auto" id="messages">
+                    <!--messages here-->
+            </div>
+        <form action="" method="post">
+            <div class="d-flex justify-content-start align-items-center p-3 card-footer text-muted ">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">            
+                <div class="me-3">
+                    <label for="photo" class="form-label">&#x1F4CE;</label>
+                    <input class="form-control d-none" type="file" id="photo" name="photo" accept="image/*, .jpg, .jpeg, .png, .gif" multiple>
+                </div>            
+                <textarea autofocus class="form-control me-3" maxlength="256" minlength="1" id="message" rows="3" name="message"></textarea>
+                <button class="btn btn-outline-primary btn-sm mt-2" id="send-btn" type="submit" name="send" >{{ _('Send') }}</button>
+            </div>
+        </form>
+        </div>
+        </div>
+    </div>
+    
+    <script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" 
+        integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+        crossorigin="anonymous">
+    </script>
+    <script type="text/javascript" charset="utf-8">
+        let socket = io();
+        
+        socket.on("message", (data) => {
+            createMessage(data.name, data.body, data.img, data.time);
+        });        
+        
+        const messages = document.querySelector('#messages');
+
+        let imgData;
+        document.addEventListener('submit', (e) => {
+            e.preventDefault();
+            let msg = e.target.message.value
+            let file = e.target.photo.files[0];
+            let photo = document.getElementById("photo").files[0];
+            if (msg == "" && typeof file == 'undefined') {
+                return;
+            }
+            let reader = new FileReader();
+            reader.addEventListener('load', () => {
+                socket.emit('message', {body: msg, img: reader.result});
+                e.target.reset();
+            },
+            false,
+            );
+            if (file) {            
+                reader.readAsDataURL(file);
+            }
+            else {
+                socket.emit('message', {body: msg, img: null});
+                e.target.reset();                
+            };
+        });
+               
+        const createMessage = (name, body, image, time) => {
+            let msg_time = new Date(time).toLocaleString();
+            
+            if (image && image !== 'None') {
+                let img = document.createElement("img");
+                img.className = "img-fluid object-fit-scale mb-3"
+                img.src = image;
+                messages.append(img);
+            }
+            if (body) {
+                let p = document.createElement("p");
+                p.innerHTML = `
+                        <strong>${name}:</strong>
+                        <span class="p-1 mb-1 rounded-3 fs-5 bg-body-tertiary">${body}</span>
+                        <span class="d-block mb-0 rounded-3 text-body" style="font-size: .50rem;">
+                            ${msg_time}                
+                        </span>
+                `;
+                messages.append(p);
+                };
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            Array.from(document.querySelectorAll('img')).forEach((ele, index) => {
+                ele.addEventListener('dblclick', function(e) {
+                   if(document.fullscreenElement){
+                      document.exitFullscreen()
+                   } else {
+                     ele.requestFullscreen();
+                   }
+                });
+            });
+        });
+
+    </script>
+    {% for msg in messages %}
+        <script type="text/javascript">
+            createMessage("{{msg.name}}", "{{msg.body}}", "{{msg.img}}", {{msg.time}});
+            
+            var msg_view = document.getElementById("messages");
+            msg_view.scrollTop = msg_view.scrollHeight;
+        </script>
+    {% endfor %}    
+{% endblock %}

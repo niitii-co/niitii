@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    {% for message in messages %}
+    <div class="card border-0">
+        <div class="card-body pb-0">
+            <div>
+            {% set user_link %}
+                <a class="text-decoration-none d-inline-block fs-6 {% if message.recipient.username %} text-success {% else %} text-body {% endif %}" href="{{ url_for('main.user', username=message.recipient.username) }}">
+                    {{ message.recipient.username }}{% if message.recipient.verified %}&#x2713;{% endif %}                    
+                </a>            
+                {% if message.recipient.label %}<span class="badge rounded-pill text-bg-info py-0 px-1">{{ message.recipient.label }}</span>{% endif %}
+                <span style="font-size: .65rem;">{{message.id}} - {{ _('%(when)s', when=moment(message.timestamp).format('D/MM/YY H:mm:ss')) }}</span>
+            {% endset %}
+            <span style="font-size: .65rem;">{{ _('%(username)s', username=user_link) }}</span>
+            <div class="pt-2">
+                {{ message._body }}            
+                {% if current_user.is_authenticated %}
+                    {% if user == (comment.author or current_user.can("MODERATE")) %}
+                    <div class="d-inline m-0">
+                        {{ macros.empty(action=action, value="delete", input_id=message.id) }}
+                    </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <hr class="my-2">    
+    {% endfor %}
+    
+    {{ macros.pagination(pagination, 'main.edit_messages', username=current_user.username) }}
+{% endblock %}

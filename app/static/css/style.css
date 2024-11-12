@@ -1,0 +1,150 @@
+
+.avatar {
+    height: 1.5rem;
+    width: 1.5rem;
+}
+
+.avatar-md {
+    height: 3rem;
+    width: 3rem;
+}
+
+.avatar-lg {
+    height: 6rem;
+    width: 6rem;
+}
+
+.blur {
+    filter: blur(.8rem);
+}
+
+/*_comments, edit_messages*/
+.card-body span{
+    font-size: .65rem;    
+}
+
+/*inbox*/
+
+
+/*message*/
+.card-header span {
+    font-size: .65rem;
+}
+
+/*post*/
+.carousel-height {
+    height: 30rem;
+    width: 100%;
+}
+
+.carousel-item > img {
+    max-height: 100%;
+    max-width: 100%;
+}
+
+.carousel-item > img:hover {
+    transition: transform .2s;
+    transform: scale(1.5);
+}
+
+
+.comment-body p {
+    margin: 0;
+    padding-bottom: .5rem;
+}
+
+form .form-check {
+    font-size: .80rem;
+}
+
+.message-time {
+    font-size: .75rem;
+}
+
+/*chatii_room*/
+#messages {
+    height: 35rem;
+}
+
+/*base*/
+.navbar {
+    background-color: #D3D3D3;
+}
+
+.navbar-brand {
+/*    hex: #258925*/
+    color: rgb(37,137,37);
+}
+
+.niitii-green {
+/*    hex: #258925*/
+    color: rgb(37,137,37);
+}
+
+/*base*/
+.notice-badge {
+    font-size: .5rem;
+}
+
+/*followers, following, view_notifications*/
+.pre-wrap {
+    white-space: pre-wrap;
+}
+
+/*post*/
+/*.post-div:hover > .carousel-img:not(:hover) {*/
+/*    filter: blur(.5rem);    */
+/*}*/
+
+.post-div a {
+    font-size: .75rem;
+}
+
+
+/*_post*/
+.post-link p {
+    margin: 0;
+}
+
+.thumbnail-img {
+    max-width: 25%;
+    max-height: 15rem;
+}
+
+.vote-form button {
+    font-size: .65rem;
+}
+
+/* MOBILE SIZE. BOOTSTRAP SMALL*/
+@media only screen and (min-width:576px) {
+
+}
+
+/* TABLET SIZE. BOOTSTRAP MEDIUM */
+@media only screen and (min-width:768px) {
+    .card-width {
+        width: 80%;
+    }
+    .post-div {
+        width: 90%;
+    }
+}
+
+
+/* CUSTOM SIZE. BOOTSTRAP LARGE */
+@media only screen and (min-width:992px) {
+    .card-width {
+        width: 60%;
+    }
+    .post-div {
+        width: 80%;
+    }
+}
+
+
+/* CUSTOM SIZE. BOOTSTRAP EXTRA LARGE */
+@media only screen and (min-width: 1200px) {
+
+}
+
+

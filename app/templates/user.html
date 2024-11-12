@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    <div class="row d-flex justify-content-center">
+      <div class="col-sm-12 col-md-10 col-lg-8 col-xl-6 col-xxl-6">
+        <div class="card">
+          <div class="rounded-top d-flex flex-row mb-2 h-100" >
+            <div class="ms-4 mt-1 w-50 d-flex flex-column h-100" >
+              <img class="rounded-circle img-fluid mx-auto mt-5 mb-2" {% if user.picture %} src="{{ user.picture }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %}alt="photo" >
+              <p class="mb-0 fs-1 d-flex justify-content-center {% if user.confirmed %} text-success {% endif %}">{{ user.username }}{% if age != None %}, {{ age }}{% endif %}{% if user.verified %}&#x2713;{% elif user.confirmed %}&#xB7;{% endif %}</p>
+                {% if user.label %}                
+                    <p class="badge rounded-pill text-bg-secondary m-0">{{ user.label }}</p>
+                {% endif %}
+            </div>
+            <div class="ms-4 ps-2 pt-5 w-100 text-center">
+                {% if user.song %}
+                    {% set song_name = user.song.split('^', 1)[0] if user.song else '' %}
+                    {% set song_link = user.song.split('^', 1)[1] if user.song else '' %}                
+                    <p class="my-1"><a class="text-decoration-none fs-4" href="{{ song_link }}">{{ song_name }}</a></p>
+                {% endif %}                              
+                {% if current_user.is_authenticated %}
+                    {% if current_user == user %}
+                        <p class="m-0">{{ _('Joined') }}: {{ moment(user.joined).format('D MMM YY') }}</p>
+                        <p class="m-0">{{ _('Last seen') }}: {{ moment(user.last_seen).format('D MMM YY H:mm:ss') }}</p>
+                    {% endif %}
+                    {% if current_user == user %}
+                      <a class="my-1 btn btn-outline-dark btn-sm" href="{{ url_for('main.edit_account', id=current_user.id) }}">
+                        {{ _('Edit Account') }}
+                      </a>
+                    {% endif %}
+                    {% if current_user != user %}
+                    <div class="my-1">
+                        <a class="text-decoration-none" href="{{ url_for('main.message', username=user.username) }}">&#x2709;</a>
+                        <button id="showDialog" class="btn btn-sm border border-0" type="submit" name="submit" value="">&#x1F4E2;</button>
+                        <dialog class="border rounded" id="ping_dialog">
+                            <form id="ping" method="post">
+                                <input id="csrf_token_del" name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                                <div class="mb-3">
+                                    <label class="form-label" for="body">{{ _('Note') }}</label>
+                                    <textarea autofocus class="form-control" maxlength="128" minlength="1" id="body" name="body" rows="2" required></textarea>                                    
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <button class="btn btn-secondary me-auto" type="button" value="cancel" formmethod="dialog">{{ _('Cancel') }}</button>
+                                    <button id="" class="btn btn-primary ms-auto" type="submit" name="submit" value="ping">{{ _('Send') }}</button>           
+                                </div>
+                            </form>
+                        </dialog>                        
+                    </div>
+                    {% endif %}
+                    {% if current_user != user and current_user.can("MODERATE")%}
+                        <span><a class="my-1 btn btn-outline-dark btn-sm" href="{{ url_for('main.edit_account_admin', username=user.username) }}">{{ _('Edit Admin') }}</a></span>
+                {% endif %}
+                {% if user.location %}                
+                    <p class="my-1"><a class="text-decoration-none" href="http://maps.google.com/?q={{ user.location }}">{{ user.location }}</a></p>
+                {% endif %}                
+                    <div class="my-1">
+                        {% if current_user != user and not current_user.is_following(user) %}
+                            {{ macros.empty(action="", value="follow", label="follow") }}
+                        {% elif current_user != user and current_user.is_following(user)  %}
+                            {{ macros.empty(action="", value="unfollow", label="unfollow") }}
+                        {% endif %}
+                    </div>
+                {% endif %}
+              
+            </div>
+          </div>
+          <div class="px-4">
+            <div class="d-flex justify-content-end text-center py-1">
+              <div>
+                <p class="mb-1 h5">{{ user.posts_count() }}</p>
+                <p class="small text-muted mb-0">{{ _('Posts') }}</p>
+              </div>
+              <div class="px-3">
+                <p class="mb-1 h5">{{ user.followers_count() }}</p>
+                <p class="small text-muted mb-0"><a class="text-decoration-none" href="{{ url_for('main.followers', username=user.username) }}">{{ _('followers') }}</a></p>
+              </div>
+              <div>
+                <p class="mb-1 h5">{{ user.following_count() }}</p>
+                <p class="small text-muted mb-0"><a class="text-decoration-none" href="{{ url_for('main.following', username=user.username) }}">{{ _('following') }}</a></p>
+              </div>
+            </div>
+          </div>
+          <div class="px-4">
+          {% if user.about_me %}
+            <div class="my-2 mx-1">
+                <p class="pre-wrap">{{ user.about_me }}</p>
+            </div>
+         {% endif %}
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <p class="fs-3 mb-0 text-muted">{{ _('Posts') }}</p>
+            {% if current_user.is_authenticated %}              
+              <p class="d-inline m-0"><a class="text-decoration-none" href="{{ url_for('main.user_comments', username=user.username) }}">{{ _('View comments') }}</a></p>
+            {% endif %}  
+            </div>
+                {% for post in posts %}
+                    {% with user_page=True %}
+                        {% include '_post.html' %}
+                    {% endwith %}
+                {% endfor %}
+                
+                {{ macros.pagination(pagination, 'main.user', username=user.username) }}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <script type="text/javascript">
+        function sendForm(form, submitter) {
+            let postForm = new FormData(form);
+            postForm.append('submit', submitter.value);
+
+            const SCRIPT_ROOT = {{ request.script_root|tojson }};
+            let username = '{{ user.username }}';
+            let url = `${SCRIPT_ROOT}/${username}`;
+
+            fetch(url, {
+                method: 'POST',         
+                body: postForm,
+            })
+            .then((response) => response.text())
+            .then((text) => {
+                if (submitter.value === 'follow') {
+                    submitter.innerHTML = 'unfollow';                
+                    submitter.value = 'unfollow';
+                }
+                // Must define 'else if' so that the modal 'Send' innerHTML isn't changed to 'follow'
+                else if (submitter.value === 'unfollow') {
+                    submitter.innerHTML = 'follow';                
+                    submitter.value = 'follow';
+                };
+            })
+            .catch(console.error);
+        }
+        document.addEventListener('submit', (e) => {
+            let form = e.target;        
+            try {
+                    e.preventDefault();
+                    sendForm(form, e.submitter);
+                    form.reset()
+            }
+            catch (error) {
+                console.error(error); 
+            }
+       });
+       
+        function ping() {
+            let showButton = document.getElementById("showDialog");
+            let deleteDialog = document.getElementById("ping_dialog");
+            
+            
+            // "Show the dialog" button opens the <dialog> modal
+            showButton.addEventListener("click", () => {
+              deleteDialog.showModal();
+            });
+
+            // "Cancel" button closes the dialog without submitting because of [formmethod="dialog"], triggering a close event.
+            deleteDialog.addEventListener("click", () => {
+                deleteDialog.close();
+            });            
+        }
+        if (document.getElementById("showDialog")) {
+            document.addEventListener('DOMContentLoaded', ping); 
+        };
+    </script>  
+{% endblock %}
