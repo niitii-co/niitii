@@ -1,0 +1,50 @@
+{% import "_macros.html" as macros %}
+
+    <div class="card-body mx-auto p-0 {% if not user_page %}card-width{% endif %}">
+        <div>
+            <a class="text-decoration-none" href="{{ url_for('main.user', username=post.author.username) }}">
+                <img class="rounded-circle avatar" {% if post.author.picture %} src="{{ post.author.picture }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">
+            </a>
+            {% set user_link %}
+<!--                 d-inline-block remove trailing space from <a> tag -->
+                <a class="text-decoration-none d-inline-block fs-6 text-body" href="{{ url_for('main.user', username=post.author.username) }}">
+                    {{ post.author.username }}{% if post.author.verified %}&#x2713;{% elif post.author.confirmed %}&#xB7;{% endif %}
+                </a>
+                {% if post.author.label %}<span class="badge rounded-pill text-bg-secondary py-0 px-1">{{ post.author.label }}</span>{% endif %}
+                <span>{{ _('%(when)s', when=moment(post.timestamp).format('D/MM/YY H:mm:ss')) }}</span>
+            {% endset %}
+                <span>{{ _('%(username)s', username=user_link) }}</span>
+        </div>
+        <div>
+            <div class="ps-0 pt-2 pb-2 post-link" >
+                    <a class="text-decoration-none text-body h4" href="{{ url_for('main.post', id=post.id) }}">
+                        {{ post.title }}
+                    {% if post.photo %}
+                    <div class="{% if post.nsfw or post.photo['nsfw'] %}my-4{% else %}my-2{% endif %}">
+                       {% for p in post.photo['link'] %}
+                        <img class="rounded thumbnail-img {% if post.nsfw or post.photo['nsfw'] %}blur{% endif %}" src="{{ post.photo['link'][loop.index0] }}">
+                        {% endfor %}                        
+                    </div>
+                    {% endif %}
+                    </a>
+            </div>
+            <div>
+                <span class="btn btn-outline-dark btn-sm border border-dark-subtle disabled px-1 py-0">
+                    &#x21E7; {{ post.votes_count() }}
+                </span>
+                <span class="px-2 small">{{ post.comments_count() }} {{ _('Comments') }}</span>
+            </div>
+            <div>
+                {% if post.label %}
+                    <span class="badge rounded-pill text-bg-info text-body py-0 px-1">{{ post.label }}</span>
+                {% endif %}                
+                {% for tag in post.tags %}
+                    <a class="btn btn-tag btn-rounded px-1 py-0 " href="{{ url_for('main.view_tags', name=tag.name) }}"><i>#{{ tag.name }}</i></a>
+                {% endfor %}
+                {% if post.nsfw or post.photo['nsfw'] %}
+                    <span class="badge rounded-pill text-bg-danger text-body py-0 px-1">NSFW</span>
+                {% endif %}
+            </div>
+        <hr class="my-2">
+    </div>
+</div>

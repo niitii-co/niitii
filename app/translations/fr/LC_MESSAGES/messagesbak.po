@@ -1,0 +1,231 @@
+# French translations for PROJECT.
+# Copyright (C) 2024 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2024-01-01 21:54-0500\n"
+"PO-Revision-Date: 2024-01-01 21:55-0500\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: fr\n"
+"Language-Team: fr <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.14.0\n"
+
+#: app/__init__.py:24
+msgid "login to access this page"
+msgstr "connectez-vous pour accéder à cette page"
+
+#: app/forms.py:11 app/forms.py:31 app/forms.py:43
+msgid "Username"
+msgstr "Nom d'utilisateur"
+
+#: app/forms.py:12
+msgid "About me"
+msgstr "Sur moi"
+
+#: app/forms.py:13 app/forms.py:39
+msgid "Submit"
+msgstr "Soumettre"
+
+#: app/forms.py:23 app/forms.py:53
+msgid "Use a different username"
+msgstr "Utiliser un autre nom d'utilisateur"
+
+#: app/forms.py:32 app/forms.py:45 app/forms.py:68
+msgid "Password"
+msgstr "Mot de passe"
+
+#: app/forms.py:33
+msgid "Remember Me"
+msgstr "Souviens-toi de moi"
+
+#: app/forms.py:34 app/routes.py:102 app/templates/login.html:5
+msgid "Sign In"
+msgstr "Se connecter"
+
+#: app/forms.py:38
+msgid "Write"
+msgstr "Écrire"
+
+#: app/forms.py:44 app/forms.py:63
+msgid "Email"
+msgstr "Email"
+
+#: app/forms.py:46 app/forms.py:69
+msgid "Repeat Password"
+msgstr "Répéter le mot de passe"
+
+#: app/forms.py:47 app/templates/register.html:5
+msgid "Register"
+msgstr "Registre"
+
+#: app/forms.py:59
+msgid "Use a different email address"
+msgstr "Utiliser une autre adresse e-mail"
+
+#: app/forms.py:64 app/forms.py:70
+msgid "Request Password Reset"
+msgstr "Demander la réinitialisation du mot de passe"
+
+#: app/routes.py:29
+msgid "Post is live"
+msgstr "La publication est en direct"
+
+#: app/routes.py:35 app/templates/base.html:27
+msgid "Home"
+msgstr "Accueil"
+
+#: app/routes.py:46
+msgid "Changes saved"
+msgstr "Changements sauvegardés"
+
+#: app/routes.py:51 app/templates/edit_profile.html:5
+msgid "Edit Profile"
+msgstr "Editer le profil"
+
+#: app/routes.py:62 app/templates/base.html:30
+msgid "Explore"
+msgstr "Explorer"
+
+#: app/routes.py:73 app/routes.py:134
+#, python-format
+msgid "User %(username)s not found"
+msgstr "Utilisateur %(username)s non trouvé"
+
+#: app/routes.py:76
+msgid "Cannot follow yourself"
+msgstr "Ne peux pas te suivre"
+
+#: app/routes.py:80
+#, python-format
+msgid "You are following %(username)s"
+msgstr "Vous suivez %(username)s"
+
+#: app/routes.py:95
+msgid "Invalid username or password"
+msgstr "Nom d'utilisateur ou mot de passe invalide"
+
+#: app/routes.py:121
+msgid "Registration complete"
+msgstr "Inscription complète"
+
+#: app/routes.py:137
+msgid "Cannot unfollow yourself"
+msgstr "Ne pouvez pas vous désabonner"
+
+#: app/routes.py:141
+#, python-format
+msgid "You are not following %(username)s"
+msgstr "Vous ne suivez pas %(username)s"
+
+#: app/routes.py:158
+msgid "Password has been reset"
+msgstr "Le mot de passe a été réinitialisé"
+
+#: app/routes.py:172
+msgid "Check your email for reset instructions"
+msgstr "Vérifiez votre courrier électronique pour les instructions de réinitialisation"
+
+#: app/routes.py:174 app/templates/reset_password.html:5
+#: app/templates/reset_password_request.html:5
+msgid "Reset Password"
+msgstr "Réinitialiser le mot de passe"
+
+#: app/templates/404.html:4
+msgid "Not Found"
+msgstr "Pas trouvé"
+
+#: app/templates/404.html:5 app/templates/500.html:6
+msgid "Back"
+msgstr "Arrière"
+
+#: app/templates/500.html:4
+msgid "Unexpected error has occurred"
+msgstr "Une erreur inattendue s'est produite"
+
+#: app/templates/500.html:5
+msgid "Administrator has been notified"
+msgstr "L'administrateur a été informé"
+
+#: app/templates/_post.html:14
+#, python-format
+msgid "%(username)s said %(when)s"
+msgstr "%(username)s dit %(when)s"
+
+#: app/templates/base.html:9
+msgid "Welcome to niitii"
+msgstr "Bienvenue à niitii"
+
+#: app/templates/base.html:36
+msgid "Login"
+msgstr "Se connecter"
+
+#: app/templates/base.html:40
+msgid "Profile"
+msgstr "Profil"
+
+#: app/templates/base.html:43
+msgid "Logout"
+msgstr "Se déconnecter"
+
+#: app/templates/login.html:7
+msgid "New User?"
+msgstr "Nouvel utilisateur?"
+
+#: app/templates/login.html:7
+msgid "Click to Register"
+msgstr "Cliquez pour vous inscrire"
+
+#: app/templates/login.html:9
+msgid "Forgot Your Password?"
+msgstr "Mot de passe oublié?"
+
+#: app/templates/login.html:10
+msgid "Click to Reset"
+msgstr "Cliquez pour réinitialiser"
+
+#: app/templates/user.html:8
+msgid "User"
+msgstr "Utilisateur"
+
+#: app/templates/user.html:11
+msgid "Last seen on"
+msgstr "Vu pour la dernière fois le"
+
+#: app/templates/user.html:13
+#, python-format
+msgid "%(count)d followers"
+msgstr "%(count)d suiveurs"
+
+#: app/templates/user.html:13
+#, python-format
+msgid "%(count)d following"
+msgstr "%(count)d suivants"
+
+#: app/templates/user.html:15
+msgid "Edit your profile"
+msgstr "Modifier votre profil"
+
+#: app/templates/user.html:20
+msgid "Follow"
+msgstr "Suivre"
+
+#: app/templates/user.html:27
+msgid "Unfollow"
+msgstr "Ne plus suivre"
+
+#: app/templates/user.html:41
+msgid "Newer posts"
+msgstr "Articles plus récents"
+
+#: app/templates/user.html:46
+msgid "Older posts"
+msgstr "Articles plus anciens"
+

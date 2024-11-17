@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    <div class="row justify-content-center align-items-center mt-3">
+    <div class="col-sm-12 col-md-10 col-lg-8 col-xl-8 col-xxl-8">
+    <h3>{{ _('Edit Account') }} -
+        <a class="text-decoration-none text-body" href="{{ url_for('main.user', username=user.username) }}">
+            {{ user.username }}{% if user.verified %}&#x2713;{% elif user.confirmed %}&#xB7;{% endif %}
+        </a>
+    </h3>
+    <div class="my-3">
+        <img class="rounded-circle avatar-lg" {% if user.picture %} src="{{ user.picture }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">
+    </div>  
+        {% set action = url_for('main.edit_account', id=user.id) %}
+        {{ macros.edit_account(action=action, user=user) }}
+    <div class="my-3">
+    {% if user.mfa_enabled %}
+        {{ macros.empty(action="", value="disable_mfa", label="Disable MFA") }}
+    {% else %}
+        {{ macros.empty(action="", value="enable_mfa", label="Enable MFA") }}
+    {% endif %}
+    </div>
+    {% if not user.confirmed %}
+        <p class="m-0"><a class="fs-5 text-decoration-none" href="{{ url_for('auth.request_confirm_account') }}">{{ _('Confirm account') }}</a></p>
+    {% endif %}
+    <div>    
+        <p class="m-0"><a class="fs-5 text-decoration-none" href="{{ url_for('auth.change_password') }}">{{ _('Change password') }}</a></p>
+        <p><a class="fs-5 text-decoration-none" href="{{ url_for('auth.request_change_email') }}">{{ _('Change email') }}</a></p>
+        <span class="d-block fs-3">{{ _('Delete Account') }}</span>
+        <dialog class="border rounded" id="delete_dialog">
+            {% set action %}{{ url_for('main.delete_account', id=user.id) }}{% endset %}    
+            {{ macros.delete_account_modal(action=action) }}
+        </dialog>
+            {{ macros.delete_btn() }}
+    </div>
+    </div>
+    </div>    
+    
+    <script type="text/javascript">
+         function deleteBtn() {
+            let showButton = document.getElementById("showDialog");
+            let deleteDialog = document.getElementById("delete_dialog");
+            let confirmBtn = deleteDialog.querySelector("#confirmBtn");
+            
+            
+            // "Show the dialog" button opens the <dialog> modal
+            showButton.addEventListener("click", () => {
+              deleteDialog.showModal();
+            });
+
+            // "Cancel" button closes the dialog without submitting because of [formmethod="dialog"], triggering a close event.
+            deleteDialog.addEventListener("click", () => {
+                deleteDialog.close();
+            });
+
+            // Prevent the "confirm" button from the default behavior of submitting the form, and close the dialog with the `close()` method, which triggers the "close" event.
+            confirmBtn.addEventListener("click", () => {
+            });
+        }
+        document.addEventListener('DOMContentLoaded', deleteBtn);
+    </script>
+{% endblock %}

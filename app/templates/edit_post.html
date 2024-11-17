@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    <div class="row justify-content-center align-items-center mt-3">
+    <div class="col-sm-12 col-md-10 col-lg-8 col-xl-8 col-xxl-8">
+        <h3>{{ _('Edit Post') }}: <a class="text-decoration-none" href="{{ url_for('main.post', id=post.id) }}">{{ post.id }}</a></h3>
+        <div class="mb-4">
+        {% if current_user.is_authenticated %}
+            {% if current_user == post.author %}
+                    {{ macros.edit_post(post=post, tags=tags) }}    
+            {% elif current_user.is_authenticated and current_user.can("MODERATE") %}
+                    {% set label = post.label if post.label else 'None' %}
+                    {{ macros.edit_post(post=post, tags=tags) }}                
+            {% endif %}
+        {% endif %}            
+        </div>
+        <div class="fs-4 mb-4"><a class="text-decoration-none" href="{{ url_for('main.post_comments', id=post.id) }}">{{ _('Edit Comments') }}</a></div> 
+        <h3>{{ _('Delete Post') }}</h3>
+        <dialog class="border rounded" id="delete_dialog">
+            {% set action %}{{ url_for('main.edit_post', id=post.id) }}{% endset %}
+            {{ macros.delete_post_modal(value="delete_post", action=action)}}
+        </dialog>    
+            {{ macros.delete_btn() }}
+    </div>
+    </div>
+            
+            
+    <script type="text/javascript">
+         function deleteBtn() {
+            let showButton = document.getElementById("showDialog");
+            let deleteDialog = document.getElementById("delete_dialog");
+            let confirmBtn = deleteDialog.querySelector("#confirmBtn");
+            
+            
+            // "Show the dialog" button opens the <dialog> modal
+            showButton.addEventListener("click", () => {
+              deleteDialog.showModal();
+            });
+
+            // "Cancel" button closes the dialog without submitting because of [formmethod="dialog"], triggering a close event.
+            deleteDialog.addEventListener("click", () => {
+                deleteDialog.close();
+            });
+
+            // Prevent the "confirm" button from the default behavior of submitting the form, and close the dialog with the `close()` method, which triggers the "close" event.
+            confirmBtn.addEventListener("click", () => {
+            });
+        }
+        document.addEventListener('DOMContentLoaded', deleteBtn);        
+    </script>
+{% endblock %}

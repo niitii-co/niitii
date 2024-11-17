@@ -1,0 +1,537 @@
+{% macro login() %}
+        <form action="" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="col-6 mb-3">
+                    <label class="form-label" for="username">{{ _('Username') }}</label>
+                    <input autofocus class="form-control" id="username" name="username" type="text" autocomplete="username" required>
+                </div>
+                <div class="col-6 mb-3">
+                    <label class="form-label" for="password">{{ _('Password') }}</label>
+                    <input class="form-control" id="password" name="password" type="password" autocomplete="current-password" required>
+                </div>
+                <div class="form-check mb-3">
+                    <label class="form-check-label" for="remember_me">{{ _('Remember Me') }}</label>
+                    <input class="form-check-input" id="remember_me" name="remember_me" type="checkbox">
+                </div>
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="login">{{ _('Sign In') }}</button>    
+        </form>
+{% endmacro %}
+
+
+{% macro login_mfa(action="", user_id="") %}
+        <form action="" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="col-3 mb-3">
+                    <label class="form-label" for="mfa_token">{{ _('Enter token') }}</label>
+                    <input autofocus class="form-control" id="mfa_token" maxlength="6" minlength="6" name="mfa_token" type="text" autocomplete="off" pattern="\d{6,6}" required>
+                </div>
+                <div class="form-check mb-3">
+                    <label class="form-check-label" for="remember_me">{{ _('Remember Me') }}</label>
+                    <input class="form-check-input" id="remember_me" name="remember_me" type="checkbox">
+                </div>
+                    <input id="user_id" name="user_id" type="hidden" value="{{ user_id }}">                
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="login_mfa">{{ _('Sign In') }}</button>    
+        </form>
+{% endmacro %}
+
+
+{% macro register() %}
+        <form action="" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="col-6 mb-3">
+                    <label class="form-label" for="username">{{ _('Username') }}</label>
+                    <input autofocus class="form-control" id="username" maxlength="64" minlength="1" name="username" type="text" autocomplete="off" pattern="^(?!.*niitii)[a-z0-9_.]*$" required>
+                </div>
+                <div class="col-6 mb-3">
+                    <label class="form-label" for="email">{{ _('Email') }}</label>
+                    <input class="form-control" id="email" maxlength="64" minlength="1" name="email" type="email" autocomplete="off" required>
+                </div>
+                <div class="col-6 mb-3">
+                    <label class="form-label" for="password">{{ _('Password') }}</label>
+<!--https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Regex_invalid_char_in_class                    -->
+                    <input class="form-control" id="password" maxlength="32" minlength="10" name="password" type="password" autocomplete="new-password" pattern="^(?!.* )(?=.*[a-z])(?=.*[0-9])(?=.*[`~!@#$%^&*_=+;:'?,.]).{10,32}$" required>
+                </div>
+                <div class="col-6 mb-3">
+                    <label class="form-label" for="password2">{{ _('Repeat Password') }}</label>
+                    <input class="form-control" id="password2" maxlength="32" minlength="10" name="password2" type="password" autocomplete="new-password" required>
+                </div>
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="register">{{ _('Register') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro request_password_reset() %}
+        <form action="" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="col-6 mb-3">
+                    <label class="form-label" for="email">{{ _('Email') }}</label>
+                    <input autofocus class="form-control" id="email" maxlength="64" minlength="1" name="email" type="email" autocomplete="email" required>
+                </div>
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="reset_password_request">{{ _('Request Password Reset') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro reset_password() %}
+        <form action="" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="col-3 mb-3">
+                    <label class="form-label" for="password">{{ _('Password') }}</label>
+                    <input autofocus class="form-control" id="password" maxlength="32" minlength="10" name="password" type="password" autocomplete="new-password" pattern="^(?!.* )(?=.*[a-z])(?=.*[0-9])(?=.*[`~!@#$%^&*_=+;:'?,.]).{10,32}$" required>
+                </div>
+                <div class="col-3 mb-3">
+                    <label class="form-label" for="password2">{{ _('Repeat Password') }}</label>
+                    <input class="form-control" id="password2" maxlength="32" minlength="10" name="password2" type="password" autocomplete="new-password" required>
+                </div>
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="reset_password">{{ _('Update Password') }}</button>
+        </form>
+{% endmacro %}        
+
+
+{% macro check_token(action="") %}
+        <form action="{{ action }}" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="col-3 mb-3">
+                    <label class="form-label" for="mfa_token">{{ _('Enter token') }}</label>
+                    <input autofocus class="form-control" id="mfa_token" maxlength="6" minlength="6" name="mfa_token" type="text" autocomplete="off" pattern="\d{6,6}" required>
+                </div>
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="check_token">{{ _('Check') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro change_password() %}
+        <form action="" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="col-3 mb-3">
+                    <label class="form-label" for="old_password">{{ _('Old password') }}</label>
+                    <input autofocus class="form-control" id="old_password" maxlength="32" minlength="8" name="old_password" type="password" autocomplete="current-password" required>
+                </div>
+                <div class="col-3 mb-3">
+                    <label class="form-label" for="password">{{ _('New Password') }}</label>
+                    <input class="form-control" id="password" maxlength="32" minlength="8" name="password" type="password" autocomplete="new-password" pattern="^(?!.* )(?=.*[a-z])(?=.*[0-9])(?=.*[`~!@#$%^&*_=+;:'?,.]).{10,32}$" required>
+                </div>
+                <div class="col-3 mb-3">
+                    <label class="form-label" for="password2">{{ _('Repeat Password') }}</label>
+                    <input class="form-control" id="password2" maxlength="32" minlength="8" name="password2" type="password"  autocomplete="new-password" required>
+                </div>
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="change_password">{{ _('Update Password') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro change_email() %}
+        <form action="" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="col-6 mb-3">
+                    <label class="form-label" for="email">{{ _('New Email') }}</label>
+                    <input autofocus class="form-control" id="email" maxlength="64" minlength="1" name="email" type="email" autocomplete="email" required>
+                </div>
+                <div class="col-6 mb-3">
+                    <label class="form-label" for="password">{{ _('Password') }}</label>
+                    <input class="form-control" id="password" maxlength="32" minlength="8" name="password" type="password" autocomplete="current-password" required>
+                </div>
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="change_email">{{ _('Update Email Address') }}</button>
+        </form>                    
+{% endmacro %}
+
+
+{% macro new_post() %}
+        <form class="d-inline" id="newPost" action="" method="post" enctype="multipart/form-data">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label" for="title">{{ _('Title') }}</label>
+                    <input autofocus class="form-control" id="title" maxlength="128" minlength="1" name="title" type="text" autocomplete="off" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="body">{{ _('Body') }}</label>
+                    <textarea class="form-control" maxlength="4096" minlength="1" id="body" name="body" rows="10" required></textarea>
+                </div>
+                <div class="form-check mb-3">
+                    <label class="form-check-label" for="post_nsfw">{{ _('Post NSFW') }}</label>
+                    <input class="form-check-input" id="post_nsfw" name="post_nsfw" type="checkbox">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="tags">{{ _('Tags') }}</label>
+                    <input class="form-control" id="tags" maxlength="128" minlength="0" name="tags" type="text" autocomplete="off" placeholder="{{ _('Max: 5') }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="photo_link">{{ _('Link photo') }}</label>
+                    <textarea class="form-control" id="photo_link" minlength="1" rows="2" name="photo_link" type="text" autocomplete="off"></textarea>
+                </div>               
+                <div class="mb-3">
+                    <label for="fileInput" class="form-label">{{ _('Upload photo') }}</label>
+                    <input class="form-control" id="fileInput" type="file" name="photo" accept="image/*, .jpg, .jpeg, .png, .gif" multiple>
+                </div>
+                <div class="form-check mb-3">                
+                    <label class="form-check-label" for="photo_nsfw">{{ _('Photo NSFW') }}</label>
+                    <input class="form-check-input" id="photo_nsfw" name="photo_nsfw" type="checkbox">
+                </div>
+                <div class="form-check mb-3">
+                    <label class="form-check-label" for="disable_comments">{{ _('Disable comments') }}</label>
+                    <input class="form-check-input" id="disable_comments" name="disable_comments" type="checkbox">
+                </div>
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="new_post">{{ _('Submit') }}</button>
+        </form>                    
+{% endmacro %}
+
+
+{% macro edit_post(post="", tags="") %}
+        <form class="d-inline" action="" method="post" enctype="multipart/form-data">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label" for="title">{{ _('Title') }}</label>
+                    <input class="form-control" id="title" maxlength="256" minlength="1" name="photo_link" type="text" autocomplete="off" value="{{ post.title }}" disabled>
+                </div>            
+                <div class="mb-3">
+                    <label class="form-label" for="body">{{ _('Body') }}</label>
+                    <textarea autofocus class="form-control" maxlength="4096" minlength="1" id="body" name="body" rows="10" required>{{ post.body }}</textarea>
+                </div>
+                <div class="form-check mb-3">
+                    <label class="form-check-label" for="post_nsfw">{{ _('Post NSFW') }}</label>
+                    <input class="form-check-input" type="checkbox" id="post_nsfw" name="post_nsfw" type="checkbox" {% if post.nsfw %} checked {% endif %}>
+                </div>                
+                <div class="mb-3">
+                    <label class="form-label" for="tags">{{ _('Tags') }}:</label>
+                    <input class="form-control" id="tags" maxlength="100" minlength="0" name="tags" type="text" autocomplete="off" value="{{tags}}" placeholder="{{ _('Max: 5') }}">
+                </div>
+                {% if label %}
+                <div class="mb-3">
+                    <label class="form-label" for="label">{{ _('Label') }}</label>
+                    <input class="form-control" id="label" type="text" name="label" value="{% if post.label %}{{ post.label }}{% endif %}">
+                </div>
+                {% endif %}                
+                <div class="mb-3">
+                    <label class="form-label" for="photo_link">{{ _('Photo link') }}</label>
+                    <textarea class="form-control" id="photo_link" minlength="1" rows="5" name="photo_link" type="text" autocomplete="off">{% for p in post.photo['link'] %}{{p}}{{"\n"}}{% endfor %}</textarea>
+                </div>                
+                <div class="mb-3">
+                    <label for="formFileMultiple" class="form-label">{{ _('Upload photo') }}</label>
+                    <input class="form-control" type="file" id="formFileMultiple" name="photo" accept="image/*, .jpg, .jpeg, .png, .gif" multiple>
+                </div>
+                <div class="form-check mb-3">                
+                    <label class="form-check-label" for="photo_nsfw">{{ _('Photo NSFW') }}</label>
+                    <input class="form-check-input" id="photo_nsfw" name="photo_nsfw" type="checkbox" {% if post.photo['nsfw'] %} checked {% endif %}>
+                </div>
+                <div class="form-check mb-3">
+                    <label class="form-check-label" for="disable_comments">{{ _('Disable comments') }}</label>
+                    <input class="form-check-input" id="disable_comments" name="disable_comments" type="checkbox" {% if post.disable_comments %} checked {% endif %}>
+                </div>
+                <div class="form-check mb-3">                
+                    <label class="form-check-label" for="delete_photo">{{ _('Delete photos') }}</label>
+                    <input class="form-check-input" id="delete_photo" name="delete_photo" type="checkbox">
+                </div>                
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="edit_post">{{ _('Submit') }}</button>
+        </form>                    
+{% endmacro %}
+
+
+{% macro edit_account(action="", user="") %}
+        <form class="d-inline" action="{{ action }}" method="post" enctype="multipart/form-data">
+                <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="col-8 mb-3">
+                    <label for="formFileMultiple" class="form-label">{{ _('Upload picture') }}</label>
+                    <input class="form-control" type="file" id="formFileMultiple" name="picture" accept="image/*, .jpg, .jpeg, .png, .gif" multiple>
+                </div>
+                <div class="col-8 mb-3">
+                    <label class="form-label" for="picture_link">{{ _('Upload with link') }}</label>
+                    <input class="form-control" id="picture_link" maxlength="256" minlength="1" name="picture_link" type="text" autocomplete="off" value="{% if user.picture %}{{ user.picture }}{% endif %}">
+                </div>                
+                <div class="col-8 mb-3">
+                    <label class="form-label" for="name">{{ _('Username - ID') }}</label>
+                    <input class="form-control" id="name" maxlength="64" minlength="0" name="name" type="text" autocomplete="off" value="{{user.username}}  -  {{user.id}}" disabled>
+                </div>              
+                <div class="col-8 mb-3">
+                    <label class="form-label" for="song_name">{{ _('Song name') }}</label>
+                    <input class="form-control" id="song_name" maxlength="64" minlength="0" name="song_name" type="text" autocomplete="off" value="{% if user.song %}{{ user.song.split('^', 1)[0] }}{% endif %}">
+                </div>
+                <div class="col-8 mb-3">
+                    <label class="form-label" for="song_link">{{ _('Song link') }}</label>
+                    <input class="form-control" id="song_link" maxlength="191" minlength="0" name="song_link" type="text" autocomplete="off" value="{% if user.song %}{{ user.song.split('^', 1)[1] }}{% endif %}">
+                </div>
+                <div class="col-8 mb-3">
+                    <label class="form-label" for="location">{{ _('Location') }}</label>
+                    <input class="form-control" id="location" maxlength="64" minlength="0" name="location" type="text" autocomplete="off" value="{% if user.location %}{{ location }}{% endif %}">
+                </div>
+                <div class="col-8 mb-3">
+                    <label class="form-label" for="birth">{{ _('Birth') }}</label>
+                    <input class="form-control" id="birth" name="birth" type="date" value="{% if user.birth %}{{ user.birth }}{% endif %}">
+                </div>
+                <div class="col-8 mb-3">
+                    <label class="form-label" for="phone">{{ _('Phone: +CountryCode-123-456-7890') }}</label>
+                    <input class="form-control" id="phone" name="phone" type="tel" autocomplete="on" pattern="\+\d{1,4}-(?!0)\d{3}-\d{3}-\d{4}" value="{% if user.phone %}{{ user.phone }}{% endif %}">
+                </div>
+                <div class="col-8 mb-3">
+                    <label class="form-label" for="about_me">{{ _('About me') }}</label>
+                    <textarea class="form-control" id="about_me" name="about_me" maxlength="512" rows="5" cols="" autocomplete="off">{% if user.about_me %}{{ user.about_me }}{% endif %}</textarea>
+                </div>
+
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="edit_account">{{ _('Submit') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro edit_account_admin(action="", user="", edit="") %}
+        <form class="d-inline" action="{{ action }}" method="post" enctype="multipart/form-data">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="col-8">
+                    <label class="form-label">{{user.username}}  -  {{user.id}}</label>
+                </div>
+                <div class="col-8 mb-3">
+                    <label class="form-label" for="picture_link">{{ _("Upload with link or 'null'") }}</label>
+                    <input class="form-control" id="picture_link" maxlength="256" minlength="1" name="picture_link" type="text" autocomplete="off" value="{% if user.picture %}{{ user.picture }}{% endif %}">
+                </div>                
+                {% if edit == 'admin' %}
+                <div class="col-8 mb-3">
+                    <label class="form-label" for="email">{{ _('Email') }}</label>
+                    <input class="form-control" id="email" maxlength="64" minlength="0" name="email" type="email" autocomplete="off" value="{{ user.email }}">
+                </div>
+                <div class="col-4">
+                    <label class="form-label">{{ _('Admin Token: ') }}{% if user.admin_token %}{{ user.admin_token }}{% endif %}</label>
+                </div>                
+                {% endif %}                
+                <div class="col-4">
+                    <label class="form-label">{{ _('MFA enabled: ') }}{{ user.mfa_enabled }}</label>
+                </div>            
+                <div class="col-12 form-check mb-3">
+                    <div>
+                    <label class="form-check-label" for="confirmed">{{ _('Confirmed') }}</label>
+                    <input class="form-check-input me-2" type="checkbox" id="confirmed" name="confirmed" {% if user.confirmed %} checked {% endif %}>
+                    </div>
+                    <div>
+                    <label class="form-check-label" for="verified">{{ _('Verified') }}</label>
+                    <input class="form-check-input me-2" type="checkbox" id="verified" name="verified" {% if user.verified %} checked {% endif %}>
+                    </div>
+                    {% if edit == 'admin' %}
+                    <div>
+                    <label class="form-check-label" for="disabled">{{ _('Disabled') }}</label>
+                    <input class="form-check-input" type="checkbox" id="disabled" name="disabled" {% if user.disabled %} checked {% endif %}>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-6 mb-3">
+                    <label class="form-label" for="permission">{{ _('Permission') }}</label>
+                    <select class="form-select" id="permission" name="permission" aria-label="Default select example">
+                        <option {% if user.get_permission() == 'READ' %} selected {% endif %} value="1">READ</option>
+                        <option {% if user.get_permission() == 'COMMENT' %} selected {% endif %} value="2">COMMENT</option>
+                        <option {% if user.get_permission() == 'MESSAGE' %} selected {% endif %} value="4">MESSAGE</option>
+                        <option {% if user.get_permission() == 'WRITE' %} selected {% endif %} value="8">WRITE</option>
+                    {% if edit == 'admin' %}                   
+                        {% if user.confirmed %}<option {% if user.get_permission() == 'MODERATE' %} selected {% endif %} value="16">MODERATE</option>{% endif %}
+                        {% if user.confirmed and user.verified %}<option {% if user.get_permission() == 'ADMIN' %} selected {% endif %} value="32">ADMIN</option>{% endif %}
+                        {% if user.verified and user.mfa_enabled %}<option {% if user.get_permission() == 'ROOT_ADMIN' %} selected {% endif %} value="64">ROOT_ADMIN</option>{% endif %}
+                    {% endif %}
+                    </select>
+                </div>
+                {% if edit == 'admin' %}
+                <div class="col-8">
+                    <label class="form-label">Phone: {% if user.phone %}{{ user.phone }}{% endif %}</label>
+                </div>
+                {% endif %}
+                <div class="col-6 mb-3">
+                    <label class="form-label" for="label">{{ _('Label') }}</label>
+                    <input class="form-control" id="label" type="text" name="label" value="{% if user.label %}{{ user.label }}{% endif %}">
+                </div>                
+                <div class="col-8 mb-3">
+                    <label class="form-label" for="song_name">{{ _('Song name') }}</label>
+                    <input class="form-control" id="song_name" maxlength="64" minlength="0" name="song_name" type="text" autocomplete="off" value="{% if user.song %}{{ user.song.split('^', 1)[0] }}{% endif %}">
+                </div>
+                <div class="col-8 mb-3">
+                    <label class="form-label" for="song_link">{{ _('Song link') }}</label>
+                    <input class="form-control" id="song_link" maxlength="191" minlength="0" name="song_link" type="text" autocomplete="off" value="{% if user.song %}{{ user.song.split('^', 1)[1] }}{% endif %}">
+                </div>                
+                <div class="col-8 mb-3">
+                    <label class="form-label" for="location">{{ _('Location') }}</label>
+                    <input class="form-control" id="location" maxlength="64" minlength="0" name="location" type="text" autocomplete="off" value="{% if user.location %}{{ user.location }}{% endif %}">
+                </div>                              
+                <div class="col-8">
+                    <label class="form-label">{{ _('Birth: ') }}{% if user.birth %}{{ birth }}{% endif %}</label>
+                </div>
+             
+                <div class="mb-3">
+                    <label class="form-label" for="about_me">{{ _('About me') }}</label>
+                    <textarea class="form-control" id="about_me" name="about_me" maxlength="512" rows="5" cols="" autocomplete="off">{% if user.about_me %}{{ user.about_me }}{% endif %}</textarea>
+                </div>
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="edit_account">{{ _('Submit') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro comment(action="", reply="", value="", pin="", input_id="") %}
+        <form action="{{ action }}" id="comment" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+
+                    <textarea autofocus class="form-control" id="body" maxlength="1024" minlength="1" name="body" rows="5" autocomplete="off" required>{{ reply }}</textarea>
+                {% if reply %}<input id="" name="parent_id" type="hidden" value="{{ input_id }}">{% endif %}                    
+                {% if pin %}
+                <div class="form-check pt-1">
+                    <label class="form-check-label" for="pin{{ input_id }}">&#x1F4CC;</label>
+                    <input class="form-check-input" id="pin{{ input_id }}" name="pin_comment" type="checkbox">
+                </div>
+                {% endif %}               
+                <button class="btn btn-outline-primary btn-sm mt-2" type="submit" name="submit" value="{{ value }}">{{ _('Submit') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro flag(action="", count="") %}
+        <fieldset class="d-inline vote-form">
+            <div class="btn-group-vertical vote-form" role="group" aria-label="Vertical button group">
+                <div class="btn-group" role="group">
+                    <form class="d-inline vote-form" id="flag_post" action="{{ action }}" method="post">
+                    <span class="px=1 py-0 btn btn-outline-secondary btn-sm  border border-dark-subtle dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">&#x1F6A9;{{ count }}</span>
+                    <ul class="dropdown-menu">
+                        <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">            
+                        <li><button class="px=1 py-0 btn btn-outline-secondary btn-sm" type="submit" name="flag" value="ADULT">{{ _('Adult') }}</button></li>
+                        <li><button class="px=1 py-0 btn btn-outline-secondary btn-sm" type="submit" name="flag" value="SPAM">{{ _('Spam') }}</button></li>
+                        <li><button class="px=1 py-0 btn btn-outline-secondary btn-sm" type="submit" name="flag" value="VIOLENT">{{ _('Violent') }}</button></li>
+                    </form>
+                    </ul>
+                </div>
+            </div>
+        </fieldset>
+{% endmacro %}
+
+
+{% macro empty(action="", btn="primary", value="", label="", input_id="") %}
+        <form class="d-inline" action="{{ action }}" method="post">
+            <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            {% if input_id %}<input id="" name="input_id" type="hidden" value="{{ input_id }}">{% endif %}
+            {% if value == "delete" %}
+            <button id="showDialog" class="btn btn-outline-danger btn-sm border border-0" type="submit" name="submit" value="{{ value }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                </svg>
+            </button>            
+            {% else %}
+            <button class="btn btn-outline-{{ btn }} btn-sm px-1 py-0" type="submit" name="submit" value="{{ value }}">{{ _(label) }}</button>
+            {% endif %}
+        </form>
+{% endmacro %}
+
+
+{% macro submit_btn() %}
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <button class="btn btn-outline-primary btn-sm" type="submit" name="submit">{{ _('Submit') }}</button>
+{% endmacro %}
+
+
+{% macro delete_account_modal(action="") %}
+        <form action="{{ action }}" method="post">
+            <input id="csrf_token_del" name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <label class="form-label" for="confirmBtn">{{ _('Password') }}</label>
+                <input autofocus class="form-control" id="confirmBtn" maxlength="32" minlength="8" name="password" type="password" autocomplete="off">
+            </div>
+            <div class="d-flex justify-content-between">
+                <button class="btn btn-secondary me-auto" type="button" value="cancel" formmethod="dialog">{{ _('Cancel') }}</button>
+                <button id="" class="btn btn-danger ms-auto" type="submit" name="submit" value="">{{ _('Delete') }}</button>           
+            </div>
+        </form>            
+{% endmacro %}
+
+
+{% macro delete_post_modal(value="", action="") %}
+        <form action="{{ action }}" method="post">
+            <div class="d-flex justify-content-between">
+                <input id="csrf_token_del" name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <button class="btn btn-secondary me-5" value="cancel" formmethod="dialog">{{ _('Cancel') }}</button>
+                <button id="confirmBtn" class="btn btn-danger ms-5" type="submit" name="submit" value="{{ value }}">{{ _('Delete') }}</button>           
+            </div>
+        </form>            
+{% endmacro %}
+
+
+{% macro delete_btn(value="") %}
+            <button id="showDialog" class="btn btn-outline-danger btn-sm border border-0" type="" name="" value="" onclick="deleteBtn()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+            <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
+            </svg>
+            </button>
+{% endmacro %}
+
+
+{% macro vote(value="", input_id="", action="", count="") %}
+        <form class="d-inline vote-form" id="{{value}}" action="{{ action }}" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <input name="input_id" type="hidden" value="{{ input_id }}">
+            <button class="btn btn-outline-dark btn-sm border border-dark-subtle px-1 py-0" id="{{value}}_btn" type="submit" name="submit" value="{{ value }}">&#x21E7; {{ count }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro message() %}
+        <form class="card-footer text-muted d-flex justify-content-start align-items-center p-3" action="" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <div class="me-3">
+                <label for="formFileMultiple" class="form-label">&#x1F4CE;</label>
+                <input class="form-control d-none" type="file" id="formFileMultiple" name="photo" accept="image/*, .jpg, .jpeg, .png, .gif" multiple>
+            </div>
+            <textarea autofocus class="form-control me-3" id="body" maxlength="1000" minlength="0" name="body" required rows=""></textarea>
+            <button class="btn btn-outline-primary btn-sm d-block" type="submit" name="submit" value="message">{{ _('Send') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro textarea(value="") %}
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <label class="form-label" for="body"></label>
+                <textarea autofocus class="form-control" id="body" maxlength="1000" minlength="0" name="body" rows="5" required></textarea>
+            </div>
+            <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="{{ value }}">{{ _('Submit') }}</button>
+{% endmacro %}
+
+
+{% macro search() %}
+            <div class="mb-3">
+                <label class="form-label" for="q"></label>
+                <input class="form-control" id="q" maxlength="100" minlength="0" name="q" type="search" autocomplete="off" required>
+                <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="search"></button>
+            </div>
+{% endmacro %}
+
+
+<!--https://en.wikipedia.org/wiki/URI_fragment#Examples-->
+{% macro pagination(pagination='', endpoint='', fragment='') %}
+<nav aria-label="navigation">
+    {% if pagination.pages > 1 %}
+    <div class="d-flex justify-content-center">
+    <ul class="pagination mt-3 mb-0">
+        <li class="page-item{% if not pagination.has_prev %} disabled{% endif %}">
+            <a class="page-link px-2 py-1" href="{% if pagination.has_prev %}{{ url_for(endpoint, page=pagination.prev_num, **kwargs) }}{{ fragment }}{% else %}#{% endif %}">
+                &laquo;
+            </a>
+        </li>
+        {% for p in pagination.iter_pages() %}
+            {% if p %}
+                {% if p == pagination.page %}
+                <li>
+                    <a class="page-link text-muted px-2 py-1" href="{{ url_for(endpoint, page = p, **kwargs) }}{{ fragment }}">{{ p }}</a>
+                </li>
+                {% else %}
+                <li>
+                    <a class="page-link px-2 py-1" href="{{ url_for(endpoint, page = p, **kwargs) }}{{ fragment }}">{{ p }}</a>
+                </li>
+                {% endif %}
+            {% else %}
+            <li>
+                <a class="page-link px-2 py-1" href="#">&hellip;</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+        
+        <li class="page-item{% if not pagination.has_next %} disabled{% endif %}">
+            <a class="page-link px-2 py-1" href="{% if pagination.has_next %}{{ url_for(endpoint, page=pagination.next_num, **kwargs) }}{{ fragment }}{% else %}#{% endif %}">
+                &raquo;
+            </a>
+        </li>     
+    </ul>
+    </div>
+    {% endif %}        
+    <small class="d-flex justify-content-center text-muted mt-1">
+        {{ pagination.first }} - {{ pagination.last }} of {{ pagination.total }}
+    </small>    
+</nav>
+{% endmacro %}
