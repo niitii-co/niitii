@@ -3,7 +3,7 @@
 
 {% block content %}
     <div class="mx-auto post-div">
-        <div class="card-body">
+        <div id="post{{post.id}}" class="card-body">
             <div>
                 <a class="text-decoration-none" href="{{ url_for('main.user', username=post.author.username) }}">
                 <img class="rounded-circle avatar" {% if post.author.picture %} src="{{ post.author.picture }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">
@@ -97,7 +97,7 @@
                 {% set action %}{{ url_for('main.post', id=post.id) }}{% endset %}
                 {% set id = 'pin_comment' %}
                 
-                {{ macros.comment(action=action, pin=pin, input_id=id, value="comment") }}
+                {{ macros.comment(action=action, pin=pin, value="comment") }}
         </div>
         {% endif %}
     {% include '_comments.html' %}
@@ -138,9 +138,9 @@
             .catch(console.error);
         }
         document.addEventListener('submit', (e) => {
-            let form = e.target;        
+            let form = e.target;
             try {
-                if (form.id !== 'comment') {
+                if (form.id != 'search' && form.id != 'comment') {
                     e.preventDefault();
                     sendVote(form, e.submitter);
                 }

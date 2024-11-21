@@ -91,7 +91,7 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
     disabled: so.Mapped[bool] = so.mapped_column(default=False)
     permission: so.Mapped[int] = so.mapped_column(default=Permission.WRITE.value)
     mfa_enabled: so.Mapped[bool] = so.mapped_column(default=False)
-    otp_secret: so.Mapped[str] = so.mapped_column(sa.Unicode(16), nullable=True)
+    otp_secret: so.Mapped[str] = so.mapped_column(sa.Unicode(16), nullable=True)    
     joined: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc), nullable=True)
     admin_token: so.Mapped[int] = so.mapped_column(nullable=True)
     about_me: so.Mapped[str] = so.mapped_column(sa.UnicodeText(512), nullable=True)
@@ -105,7 +105,7 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
     last_message_read_time: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc), nullable=True)
     last_notification_read_time: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc), nullable=True)
     last_feed_read_time: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc), nullable=True)
-    token: so.Mapped[str] = so.mapped_column(sa.Unicode(32), index=True, unique=True, default=None)
+    token: so.Mapped[str] = so.mapped_column(sa.Unicode(32), index=True, unique=True, default=None, nullable=True)
     token_expiration: so.Mapped[datetime] = so.mapped_column(nullable=True)
 
     following: so.WriteOnlyMapped['User'] = so.relationship(
@@ -160,12 +160,12 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def set_otp_secret(self):
-        self.otp_secret = pyotp.random_base32()
-
     def set_admin_token(self):
         self.admin_token = SystemRandom().randrange(100000, 999999, 1)
 
+    def set_otp_secret(self):
+        self.otp_secret = pyotp.random_base32()
+        
     def get_totp_uri(self):
         return f'otpauth://totp/niitii:{self.username}?secret={self.otp_secret}&issuer=niitii'
 
@@ -405,7 +405,7 @@ class Post(db.Model):
     def __repr__(self):
         return f'<Post "{self.body}">'
         
-    def comments(self):
+    def get_comments(self):
         return sa.select(Comment).where(Comment.post_id == self.id).order_by(Comment.pinned.desc(), Comment.timestamp)
 
     def comments_count(self):
@@ -425,6 +425,12 @@ class Post(db.Model):
         
     def delete_comments(self):
         return db.session.execute(sa.delete(Comment).where(Comment.post_id == self.id))
+        
+    def delete_flags(self):
+        return db.session.execute(sa.delete(Flag).where(Flag.post_id == self.id))        
+        
+    def delete_votes(self):
+        return db.session.execute(sa.delete(Vote).where(Vote.post_id == self.id))
 
     def delete_photos(self):
         if self.photo and self.photo['link']:
@@ -437,13 +443,16 @@ class Post(db.Model):
 #      1- markdown() converts to HTML
 #      2- result is passed to clean() with approved tags. clean() removes unapproved tags
 #      3- linkify() converts URLs written in plain text into proper <a> links. Automatic link generation is not officially in Markdown specification
+#       https://github.com/yourcelf/bleach-allowlist/blob/main/bleach_allowlist/bleach_allowlist.py
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
-        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
-                        'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul', 'img',
-                        'h1', 'h2', 'h3', 'h4', 'h4', 'h5', 'h6', 'p']
+        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'br', 'blockquote', 'code',
+                        'em', 'h1', 'h2', 'h3', 'h4', 'h4', 'h5', 'h6', 'hr'
+                        'i', 'img', 'li', 'ol', 'p', 'pre', 'strong', 'ul']
+        attrs = ['alt', 'href', 'src', 'title']
+        protocols= ['http', 'https', 'ftp']     
         target.body_html = bleach.linkify(bleach.clean(markdown(value, output_format='html'),
-            tags=allowed_tags, strip=True))
+            tags=allowed_tags, attributes=attrs, protocols=protocols, strip=True))
 
 #Will be auto invoked when body field is set to a new value
 db.event.listen(Post.body, 'set', Post.on_changed_body)
@@ -472,11 +481,13 @@ class Comment(db.Model):
         
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
-        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
-                        'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul',
-                        'h1', 'h2', 'h3', 'h4', 'h4', 'h5', 'h6', 'p']
+        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'br', 'blockquote', 'code',
+                        'em', 'h1', 'h2', 'h3', 'h4', 'h4', 'h5', 'h6', 'hr'
+                        'i', 'img', 'li', 'ol', 'p', 'pre', 'strong', 'ul']
+        attrs = ['alt', 'href', 'src', 'title']
+        protocols= ['http', 'https', 'ftp']
         target.body_html = bleach.linkify(bleach.clean(markdown(value, output_format='html'),
-            tags=allowed_tags, strip=True)) 
+            tags=allowed_tags, attributes=attrs, protocols=protocols, strip=True)) 
 
 db.event.listen(Comment.body, 'set', Comment.on_changed_body)
 
@@ -542,6 +553,10 @@ class Message(db.Model):
     def get_url(self):
         return Photo.get_url(self.photo.removeprefix(f"{Photo.SPACES_URL}/message-pics/"))
         
+    def delete_photo(self):
+        name = self.photo.removeprefix(f"{Photo.SPACES_URL}/message-pics/")
+        Photo.delete_object('message-pics', name)
+        
 
 #    Fernet encrypt-decrypt doesn't work. When passing msg = Message(author=current_user, recipient=user, body=form.message.data) from main.routes
 #    TypeError: 'body' is an invalid keyword argument for Message
@@ -598,8 +613,7 @@ class Photo():
             img.save(buf, format= 'JPEG' if ext.lower() == 'jpg' else ext.upper(), optimize=True, quality=85)
             buf.seek(0)
             return buf
-        except Exception as e:
-            print(e)
+        except:
             return f
 
     #https://docs.digitalocean.com/reference/api/spaces-api/

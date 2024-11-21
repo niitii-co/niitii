@@ -62,11 +62,13 @@
         document.addEventListener('submit', (event) => {
             let form = event.target;        
             try {
+                if (form.querySelector('button').value == 'delete') {
                     event.preventDefault();
                     deleteContent(form, event.submitter);
+                }
             }
             catch (error) {
-                console.error(error); 
+                console.error(error);
             }
        });   
     </script> 

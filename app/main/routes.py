@@ -20,10 +20,8 @@ import uuid
 def before_request():
     if current_user.is_authenticated:
         current_user.last_seen = datetime.now(timezone.utc)
-        try:
-            db.session.commit()
-        except Exception as e:
-            print(e)
+        
+        db.session.commit()
     g.locale = str(get_locale())
 
 #print(json.dumps(dict(request.form)))
@@ -43,12 +41,7 @@ def feed():
     query = current_user.following_posts().where(Post.author != current_user).order_by(Post.timestamp.desc())
     pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
     
-    try:
-        db.session.commit()
-    except Exception as e:
-        flash(_('DB Commit Fail - feed()'))
-        print(e)
-
+    db.session.commit()
     return render_template('feed.html', title=_('Feed - ') + f"{current_user.username}", posts=pagination.items, pagination=pagination)
 
 
@@ -93,12 +86,9 @@ def new_post():
             for tag in tags:
                 db.session.add(Tag(name=tag.replace('#', ''), posts=[post]))
 
-        try:
-            db.session.commit()
-        except Exception as e:
-            flash(_('DB Commit Fail - new_post()'))
-            print(e)
+        db.session.commit()
         return redirect(url_for('main.index'))
+
     return render_template('new_post.html', title=_('New Post'))
 
 
@@ -125,34 +115,29 @@ def post(id):
             else:
                 payload = f"{post.title}" + f"\n" + f"{current_user.username} - {request.form.get('body')}"         
                 db.session.add(Notification(user=post.author, name='new_comment', payload_json=payload, item_id=id, item_type='comment'))
-                
-            try:
-                db.session.commit()
-                return redirect(request.referrer)                
-            except Exception as e:
-                flash(_('DB Commit Fail - post()'))
-                print(e)
+
+            db.session.commit()
+            return redirect(request.referrer)
+
         elif request.form.get('submit') == 'reply_comment' and not post.disable_comments:
-            comment = db.session.execute(sa.select(Comment).where(Comment.id == request.form.get('parent_id'))).scalar()
-            post = db.session.execute(sa.select(Post).where(Post.id == comment.post_id)).scalar()
+            post = db.session.execute(sa.select(Post).where(Post.id == id)).scalar()
+            comment = db.session.execute(sa.select(Comment).where(Comment.id == request.form.get('comment_id'))).scalar()
+            comment_author = db.session.execute(sa.select(User).where(User.username == request.form.get('author'))).scalar()
             if comment and post and current_user.can("COMMENT"):
                 reply_comment = Comment(body=request.form.get('body'), author=current_user._get_current_object(), post_id=id, user_id=current_user.id, parent_id=comment.id)
-                notice = db.session.execute(post.author.notifications.select().where((Notification.item_id == id) & (Notification.item_type == 'comment'))).scalar()
+                notice = db.session.execute(comment_author.notifications.select().where((Notification.item_id == id) & (Notification.item_type == 'comment'))).scalar()
                 db.session.add(reply_comment)
                 if notice:
-                    payload = f"{post.title}" + f"\n" + f"{current_user.username} - {request.form.get('body')}"                
+                    payload = f"{post.title}" + f"\n" + f"{current_user.username} - {request.form.get('body')}"
                     notice.payload_json = payload
-                    notice.timestamp = datetime.now(timezone.utc)                    
+                    notice.timestamp = datetime.now(timezone.utc)
                 else:
                     payload = f"{post.title}" + f"\n" + f"{current_user.username} - {request.form.get('body')}"
-                    db.session.add(Notification(user=post.author, name='new_comment', payload_json=payload, item_id=id, item_type='comment'))
-                    
-            try:
+                    db.session.add(Notification(user=comment_author, name='reply_comment', payload_json=payload, item_id=id, item_type='comment'))
+                
                 db.session.commit()
-                return redirect(request.referrer)                
-            except Exception as e:
-                flash(_('DB Commit Fail - post()'))
-                print(e)                    
+                return redirect(request.referrer)
+            
         elif request.form.get('submit') == 'vote_post' and current_user.can('WRITE'):
             vote = db.session.execute(sa.select(Vote).where((Vote.user_id == current_user.id) & (Vote.post_id == id))).scalar()
             count = post.votes_count()
@@ -163,33 +148,29 @@ def post(id):
             else:
                 count -= 1
                 db.session.delete(vote)
-            try:
-                db.session.commit()
-                return {
-                    "count": f"&#x21E7; {count}",
-                }
-            except Exception as e:
-                flash(_('DB Commit Fail - post()'))
-                print(e)
+                
+            db.session.commit()
+            return {
+                "count": f"&#x21E7; {count}",
+            }
+                
         elif request.form.get('submit') == 'vote_comment' and current_user.can('WRITE'):
-            vote = db.session.execute(sa.select(Vote).where((Vote.user_id == current_user.id) & (Vote.comment_id == request.form.get('input_id')))).scalar()
+            vote = db.session.execute(sa.select(Vote).where((Vote.user_id == current_user.id) & (Vote.post_id == id) & (Vote.comment_id == request.form.get('input_id')))).scalar()
             comment = db.session.execute(sa.select(Comment).where(Comment.id == request.form.get('input_id'))).scalar()
             count = comment.votes_count()
             if current_user.can("COMMENT") and vote is None:
-                vote = Vote(user_id=current_user.id, comment_id=request.form.get('input_id'), item_type='comment')
+                vote = Vote(user_id=current_user.id, post_id=id, comment_id=request.form.get('input_id'), item_type='comment')
                 count += 1
                 db.session.add(vote)
             else:
                 count -= 1
                 db.session.delete(vote)
-            try:
-                db.session.commit()
-                return {
-                    "count": f"&#x21E7; {count}",
-                }            
-            except Exception as e:
-                flash(_('DB Commit Fail - post()'))
-                print(e)
+                
+            db.session.commit()
+            return {
+                "count": f"&#x21E7; {count}",
+            }
+            
         elif request.form.get('flag'):
             flag = db.session.execute(sa.select(Flag).where((Flag.user_id == current_user.id) & (Flag.post_id == id))).scalar()
             count = post.flags_count()            
@@ -200,20 +181,17 @@ def post(id):
             else:
                 count -= 1
                 db.session.delete(flag)
-            try:
-                db.session.commit()
-                return {
-                    "count": f"&#x1F6A9; {count}",
-                }           
-            except Exception as e:
-                flash(_('DB Commit Fail - post()'))
-                print(e)
+                
+            db.session.commit()
+            return {
+                "count": f"&#x1F6A9; {count}",
+            }
+            
         return redirect(request.referrer)
     page = request.args.get('page', 1, type=int)
     if page == -1:
         page = (post.comments_count() - 1) // current_app.config['COMMENTS_PER_PAGE'] + 1
-#    query = sa.select(Comment).where(Comment.post_id == id).order_by(Comment.pinned.desc(), Comment.timestamp)
-    query = post.comments()
+    query = post.get_comments()
     pagination = db.paginate(query, page=page, per_page=current_app.config['COMMENTS_PER_PAGE'], error_out=False)
 
     return render_template('post.html', title=_('Post - ') + f"{post.author.username}", post=post, comments=pagination.items, pagination=pagination)
@@ -231,6 +209,7 @@ def edit_post(id):
         post.disable_comments = True if request.form.get('disable_comments') else False
         post.nsfw = True if request.form.get('post_nsfw') else False
         post.label = request.form.get('label') if request.form.get('label') and request.form.get('label') != 'null' and current_user.can('MODERATE') else None
+        post.language = request.form.get('language')
         form_tags = request.form.get('tags').split()[0:5]
         bucket = 'post-pics'
         if post.photo:
@@ -270,14 +249,12 @@ def edit_post(id):
                 old_links = post.photo['link']
                 for i, f in enumerate(old_links):
                     if f not in new_links:
-                        Post.delete_photo(f)
+                        Photo.delete_object('post-pics', f.removeprefix(f"{Photo.SPACES_URL}/post-pics/"))                 
                         old_links.remove(f)
                 # update list after removing old links
                 post.photo['link'] = old_links
                 
                 for i, f in enumerate(new_links):
-                    if f in post.photo['link']:
-                        Post.delete_photo(f)
                     photo_name.append(f"photo{i + 1}")
                     photo_link.append(f)
                 post.photo = {"name": photo_name, "link": photo_link}
@@ -295,7 +272,7 @@ def edit_post(id):
             update_photo = True if post.photo and post.photo['link'] else False
             if post.photo and post.photo['link']:
                 for p in post.photo['link']:
-                    Post.delete_photo(p)
+                    Photo.delete_object('post-pics', p.removeprefix(f"{Photo.SPACES_URL}/post-pics/"))                
 
             nsfw = True if request.form.get('photo_nsfw') else False
             for f in photo_files:
@@ -308,8 +285,6 @@ def edit_post(id):
 
             if update_photo:
                 post.photo = {"name": photo_name, "link": photo_link}
-#                post.photo['name'] = photo_name
-#                post.photo['link'] = photo_link
             else:
                 post.photo = {"name": photo_name, "link": photo_link, "nsfw": nsfw}
 
@@ -319,19 +294,11 @@ def edit_post(id):
                 Post.delete_photo(p)
             post.photo = None
 
-        try:
-            db.session.commit()
-        except Exception as e:
-            flash(_('DB Commit Fail - edit_post()'))
-            print(e)
+        db.session.commit()
         return redirect(url_for('main.post', id=post.id))
 
     elif request.form.get('submit') == 'delete_post':
         if post.user_id == current_user.id or current_user.can("MODERATE"):
-            if post.photo:
-                for p in post.photo['link']:
-                    Post.delete_photo(p)
-
             if post.tags:
                 for tag in post.tags:
                     # remove tag from post.tags list
@@ -339,16 +306,14 @@ def edit_post(id):
                     db.session.execute(sa.delete(Tag).where(Tag.id == tag.id))
 
             # PRAGMA enables cascade in sqlite
-            db.session.execute(sa.text('PRAGMA foreign_keys = ON'))
+#            db.session.execute(sa.text('PRAGMA foreign_keys = ON'))
+            post.delete_votes()
+            post.delete_flags()
             post.delete_comments()
-#            db.session.execute(sa.delete(Comment).where(Comment.post_id == id))
+            post.delete_photos()
             db.session.delete(post)
 
-            try:
-                db.session.commit()
-            except Exception as e:
-                flash(_('DB Commit Fail - edit_post()'))
-                print(e)                
+            db.session.commit()
             return redirect(url_for('main.index'))
             
     tags_value = ""
@@ -371,16 +336,11 @@ def post_comments(id):
                 post.pin_comments -= 1
             db.session.delete(comment)
 
-        try:
-            db.session.commit()
-        except Exception as e:
-            flash(_('DB Commit Fail - post_comments()'))
-            print(e)
+        db.session.commit()
         return redirect(request.referrer)
 
     post = db.first_or_404(sa.select(Post).where(Post.id == id))
-#    query = sa.select(Comment).where(Comment.post_id == id).order_by(Comment.timestamp.desc())
-    query = post.comments()    
+    query = post.get_comments()    
     pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['COMMENTS_PER_PAGE'], error_out=False)
 
     return render_template('post_comments.html', title=_('Post Comments - ') + f"{post.author.username }", post=post, comments=pagination.items, pagination=pagination)
@@ -401,11 +361,7 @@ def user_comments(username):
                 post.pin_comments -= 1
             db.session.delete(comment)
 
-        try:
-            db.session.commit()
-        except Exception as e:
-            flash(_('DB Commit Fail - user_comments()'))
-            print(e)
+        db.session.commit()
         return redirect(request.referrer)
 
     query = user.comments.select().where(Comment.user_id == user.id).order_by(Comment.timestamp.desc())
@@ -446,11 +402,8 @@ def user(username):
         elif request.form.get('submit') == 'ping':
             payload = f"\n" + f"{request.form.get('body')}"
             db.session.add(Notification(user=user, name='new_notice', payload_json=payload, item_id=0, item_type='ping'))
-        try:
-            db.session.commit()
-        except Exception as e:
-            flash(_('DB Commit Fail - user()'))
-            print(e)
+            
+        db.session.commit()
         return redirect(request.referrer)            
         
     query = user.posts.select().order_by(Post.timestamp.desc())    
@@ -506,33 +459,30 @@ def edit_account(id):
                 f.filename = secure_filename(f.filename)
                 if Photo.upload_object(bucket, name, f, 'public-read'):
                     user.picture = f"{Photo.SPACES_URL}/{bucket}/{name}"
-            try:
-                db.session.commit()                        
-            except:
-                flash(_('Invalid input. Check Unique email'))
-            return redirect(request.referrer)
+                    
+            # Email must be unique
+            db.session.commit()                        
+            return redirect(url_for('main.user', username=user.username))
             
         elif request.form.get('submit') == 'enable_mfa':
             user.set_otp_secret()
+            db.session.commit()        
+            return render_template('auth/setup_mfa.html', title=_('Setup MFA')), 200, {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'}
         
         elif request.form.get('submit') == 'disable_mfa':
-            user.otp_secret = None
             user.mfa_enabled = False
 
         elif request.form.get('submit') == 'check_token':
             if user.check_totp(request.form.get('mfa_token')):
                 user.mfa_enabled = True
 
-        try:
-            db.session.commit()
-        except Exception as e:
-            flash(_('DB Commit Fail - edit_account()'))
-            print(e)
+        db.session.commit()
         return redirect(url_for('main.user', username=user.username))            
-            
-    birth = datetime.strftime(user.birth, '%Y-%m-%d') if user.birth else None
-        
-    return render_template('edit_account.html', title=_('Edit account - ') + f"{user.username}", user=current_user, birth=birth)
+                    
+    return render_template('edit_account.html', title=_('Edit account - ') + f"{user.username}", user=current_user)
 
 
 @bp.route('/edit-account-admin/<username>', methods=['GET', 'POST'])
@@ -569,11 +519,7 @@ def edit_account_admin(username):
         if request.form.get('submit') == 'set_admin_token' and current_user.can('ADMIN'):
             user.set_admin_token()
 
-        try:
-            db.session.commit()
-        except Exception as e:
-            flash(_('DB Commit Fail - edit_account_admin()'))
-            print(e)
+        db.session.commit()
         return redirect(url_for('main.user', username=user.username))
             
     return render_template('edit_account_admin.html', title=_('Edit account admin - ') + f"{user.username}", username=user.username, user=user)
@@ -592,13 +538,14 @@ def delete_account(id):
         posts = db.session.execute(user.posts.select()).scalars()
         for p in posts:
             p.delete_comments()
+            p.delete_flags()            
+            p.delete_votes()
             p.delete_photos()
 
         messages = db.session.execute(user.messages_sent.select()).scalars()
         for m in messages:
             if m.photo:
-                name = message.photo.removeprefix(f"{Photo.SPACES_URL}/message-pics/")
-                Photo.delete_object(bucket, name)
+                m.delete_photo()
 
         # PRAGMA enables cascade in sqlite
         db.session.execute(sa.text('PRAGMA foreign_keys = ON'))
@@ -611,13 +558,9 @@ def delete_account(id):
         db.session.execute(follows_tbl.delete().where((follows_tbl.c.follower_id == user.id) | (follows_tbl.c.followed_id == user.id)))
         db.session.delete(user)
 
-        try:
-            db.session.commit()
-            return redirect(url_for('main.index'))
-        except Exception as e:
-            flash(_('DB Commit Fail - delete_account()'))
-            print(e)            
-            return redirect(request.referrer)
+        db.session.commit()
+        return redirect(url_for('main.index'))
+        
     else:
         flash(_('Invalid'))
         return redirect(request.referrer)  
@@ -630,12 +573,7 @@ def inbox():
     current_user.last_message_read_time = datetime.now(timezone.utc)
     db.session.execute(current_user.notifications.update().where((Notification.user_id == current_user.id) & (Notification.name == 'unread_message_count')).values(payload_json=0, timestamp=datetime.now(timezone.utc)))
     
-    try:
-        db.session.commit()
-    except Exception as e:
-        flash(_('DB Commit Fail - inbox()'))
-        print(e)
-        return redirect(request.referrer)
+    db.session.commit()
 
     query = sa.select(Message, sa.func.max(Message.timestamp)).where((Message.recipient_id == current_user.id) | (Message.sender_id == current_user.id)).group_by(Message.sender_id, Message.recipient_id).order_by(Message.timestamp.desc())
     pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
@@ -651,7 +589,8 @@ def message(username):
     user = db.first_or_404(sa.select(User).where(User.username == username))
     if request.method == 'POST':
         msg = Message(sender=current_user, recipient=user, _body=request.form.get('body'))
-        db.session.add(msg)    
+        db.session.add(msg)
+        print(json.dumps(dict(request.form)))            
         if request.files['photo'].filename:
             f = request.files['photo']
             bucket = 'message-pics'
@@ -661,18 +600,14 @@ def message(username):
                 if Photo.upload_object(bucket, name, f, 'private'):
                     msg.photo = f"{Photo.SPACES_URL}/{bucket}/{name}"
 
-        try:
-            db.session.commit()
-            message = db.session.execute(user.messages_received.select().where(Message.sender == current_user).order_by(Message.id.desc())).scalar()
-            return {
-                "body": message._body,
-                "timestamp": message.timestamp,
-                "photo": Photo.get_url(message.photo.removeprefix(f"{Photo.SPACES_URL}/message-pics/")) if message.photo else None
-            }        
-        except Exception as e:
-            flash(_('DB Commit Fail - message()'))
-            print(e)
-            return redirect(request.referrer)
+        db.session.commit()
+        message = db.session.execute(user.messages_received.select().where(Message.sender == current_user).order_by(Message.id.desc())).scalar()
+        return {
+            "body": message._body,
+            "timestamp": message.timestamp,
+            "photo": Photo.get_url(message.photo.removeprefix(f"{Photo.SPACES_URL}/message-pics/")) if message.photo else None
+        }        
+
 
     current_user.last_message_read_time = datetime.now(timezone.utc)
     db.session.commit()
@@ -695,11 +630,7 @@ def edit_messages():
             Photo.delete_object(bucket, name)
         db.session.delete(message)
         
-        try:
-            db.session.commit()
-        except Exception as e:
-            flash(_('DB Commit Fail - edit_messages()'))
-            print(e)
+        db.session.commit()
         return redirect(request.referrer)
     
     query = current_user.messages_sent.select().order_by(Message.timestamp.desc())
@@ -715,12 +646,8 @@ def view_notifications():
     if request.method == 'POST':
         db.session.execute(current_user.notifications.delete().where(Notification.id == request.form.get('input_id')))
         
-    try:
-        db.session.commit()
-    except Exception as e:
-        flash(_('DB Commit Fail - view_notifications()'))
-        print(e)
-
+    db.session.commit()
+    
     query = current_user.notifications.select().where((Notification.item_type == 'comment') | (Notification.item_type == 'ping')).order_by(Notification.id.desc())
     pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['COMMENTS_PER_PAGE'], error_out=False)
 

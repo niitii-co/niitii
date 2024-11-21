@@ -7,8 +7,8 @@
         <div class="card">
           <div class="rounded-top d-flex flex-row mb-2 h-100" >
             <div class="ms-4 mt-1 w-50 d-flex flex-column h-100" >
-              <img class="rounded-circle img-fluid mx-auto mt-5 mb-2" {% if user.picture %} src="{{ user.picture }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %}alt="photo" >
-              <p class="mb-0 fs-1 d-flex justify-content-center {% if user.confirmed %} text-success {% endif %}">{{ user.username }}{% if age != None %}, {{ age }}{% endif %}{% if user.verified %}&#x2713;{% elif user.confirmed %}&#xB7;{% endif %}</p>
+              <img class="rounded-circle avatar-lg mx-auto mt-5 mb-2" {% if user.picture %} src="{{ user.picture }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %}alt="photo" >
+              <p class="mb-0 fs-3 d-flex justify-content-center {% if user.confirmed %} text-success {% endif %}">{{ user.username }}{% if age != None %}, {{ age }}{% endif %}{% if user.verified %}&#x2713;{% elif user.confirmed %}&#xB7;{% endif %}</p>
                 {% if user.label %}                
                     <p class="badge rounded-pill text-bg-secondary m-0">{{ user.label }}</p>
                 {% endif %}
@@ -133,11 +133,13 @@
             .catch(console.error);
         }
         document.addEventListener('submit', (e) => {
-            let form = e.target;        
+            let form = e.target;
             try {
+                if (form.id != 'search') {
                     e.preventDefault();
                     sendForm(form, e.submitter);
                     form.reset()
+                }
             }
             catch (error) {
                 console.error(error); 

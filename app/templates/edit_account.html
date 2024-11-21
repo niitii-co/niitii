@@ -18,7 +18,7 @@
     {% if user.mfa_enabled %}
         {{ macros.empty(action="", value="disable_mfa", label="Disable MFA") }}
     {% else %}
-        {{ macros.empty(action="", value="enable_mfa", label="Enable MFA") }}
+        {{ macros.empty(action=action, value="enable_mfa", label="Enable MFA") }}
     {% endif %}
     </div>
     {% if not user.confirmed %}

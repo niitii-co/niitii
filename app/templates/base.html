@@ -27,7 +27,7 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav m-auto ">
             <search class="navbar-form">
-                <form class="d-flex" role="search" action="{{ url_for('main.search') }}" method="get">
+                <form class="d-flex" role="search" id="search" action="{{ url_for('main.search') }}" method="get">
                     <input class="form-control m-auto" type="search" id="query" name="q" />
                     <button class="btn btn-outline-secondary btn-md border-0" type="submit">
                         &#x1F50D;
@@ -36,13 +36,6 @@
             </search>
             </ul>
             <ul class="navbar-nav mb-2 mb-lg-0">
-            {% if g.search_form %}
-            <form class="navbar-form navbar-left" method="get" action="">
-                <div class="container-fluid">
-                    {{ g.search_form.q(size=20, class='form-control', placeholder=g.search_form.q.label.text) }}
-                </div>
-            </form>
-            {% endif %}
           </ul>
           <ul class="navbar-nav mb-2 mb-lg-0">
             {% if current_user.is_anonymous %}        
@@ -132,7 +125,7 @@
     <footer class="footer mt-auto sm-body-tertiary">
         <div class="container">
             <ul class="nav justify-content-center mt-5">
-                <li class="nav-item"><a href="https://www.digitalocean.com/?refcode=019bffa21a2e&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg" class="" alt="DigitalOcean Referral Badge" /></a></li>                      
+                <li class="nav-item small"><a href="https://www.digitalocean.com/?refcode=019bffa21a2e&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg" class="" alt="DigitalOcean Referral Badge" /></a></li>                      
             </ul>
             <ul class="nav justify-content-center my-3">
                 <li class="nav-item small"><a href="#" class="nav-link px-2 text-body-secondary">&copy; 2024 niitii</a></li>

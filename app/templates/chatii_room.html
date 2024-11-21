@@ -42,27 +42,29 @@
 
         let imgData;
         document.addEventListener('submit', (e) => {
-            e.preventDefault();
-            let msg = e.target.message.value
-            let file = e.target.photo.files[0];
-            let photo = document.getElementById("photo").files[0];
-            if (msg == "" && typeof file == 'undefined') {
-                return;
+            if (form.id != 'search') {
+                e.preventDefault();
+                let msg = e.target.message.value
+                let file = e.target.photo.files[0];
+                let photo = document.getElementById("photo").files[0];
+                if (msg == "" && typeof file == 'undefined') {
+                    return;
+                }
+                let reader = new FileReader();
+                reader.addEventListener('load', () => {
+                    socket.emit('message', {body: msg, img: reader.result});
+                    e.target.reset();
+                },
+                false,
+                );
+                if (file) {            
+                    reader.readAsDataURL(file);
+                }
+                else {
+                    socket.emit('message', {body: msg, img: null});
+                    e.target.reset();                
+                };
             }
-            let reader = new FileReader();
-            reader.addEventListener('load', () => {
-                socket.emit('message', {body: msg, img: reader.result});
-                e.target.reset();
-            },
-            false,
-            );
-            if (file) {            
-                reader.readAsDataURL(file);
-            }
-            else {
-                socket.emit('message', {body: msg, img: null});
-                e.target.reset();                
-            };
         });
                
         const createMessage = (name, body, image, time) => {

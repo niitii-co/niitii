@@ -72,11 +72,7 @@
             postForm.append('photo', form.photo.files[0]);
             
             fetch(url, {
-                method: 'POST',
-                headers: { 
-                'Accept': 'application/json; charset=utf-8',
-                'Credentials': 'include',
-                },            
+                method: 'POST',          
                 body: postForm,
             })
             .then((response) => response.json())
@@ -112,26 +108,28 @@
             .catch(console.error);
         }
         document.addEventListener('submit', (e) => {
-            // Create DataTransfer to check files over 10MB
-            let dt = new DataTransfer();
-            let files = e.target.photo.files
-            
-            if (files.length > 0) {
-                for (let i = 0; i < files.length; i++) {
-                    if (files[i].size > (1024 * 1024 * 10)) {
-                        continue; // Skip. Do not add to dt
+            if (form.id != 'search') {
+                // Create DataTransfer to check files over 10MB
+                let dt = new DataTransfer();
+                let files = e.target.photo.files
+                
+                if (files.length > 0) {
+                    for (let i = 0; i < files.length; i++) {
+                        if (files[i].size > (1024 * 1024 * 10)) {
+                            continue; // Skip. Do not add to dt
+                        }
+                        // add files to dt object
+                        dt.items.add(files[i]);
                     }
-                    // add files to dt object
-                    dt.items.add(files[i]);
                 }
-            }
-            // update event files before submitting
-            e.target.photo.files = dt.files;
-                    
-            let form = e.target;
-            e.preventDefault();
-            showMessage(form, e.submitter);
-            form.reset();
+                // update event files before submitting
+                e.target.photo.files = dt.files;
+                        
+                let form = e.target;
+                e.preventDefault();
+                showMessage(form, e.submitter);
+                form.reset();
+           }
        }); 
     </script>    
 {% endblock %}

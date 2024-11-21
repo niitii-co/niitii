@@ -1,6 +1,6 @@
 {% import "_macros.html" as macros %}
 
-    <div class="card-body mx-auto p-0 {% if not user_page %}card-width{% endif %}">
+    <div id="post{{post.id}}" class="card-body mx-auto p-0 {% if not user_page %}card-width{% endif %}">
         <div>
             <a class="text-decoration-none" href="{{ url_for('main.user', username=post.author.username) }}">
                 <img class="rounded-circle avatar" {% if post.author.picture %} src="{{ post.author.picture }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">

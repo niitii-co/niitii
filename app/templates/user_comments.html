@@ -101,8 +101,10 @@
         document.addEventListener('submit', (event) => {
             let form = event.target;        
             try {
+                if (form.id != 'search') {            
                     event.preventDefault();
                     deleteContent(form, event.submitter);
+                }
             }
             catch (error) {
                 console.error(error); 

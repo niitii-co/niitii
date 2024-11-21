@@ -192,8 +192,12 @@
                     <input class="form-check-input" type="checkbox" id="post_nsfw" name="post_nsfw" type="checkbox" {% if post.nsfw %} checked {% endif %}>
                 </div>                
                 <div class="mb-3">
-                    <label class="form-label" for="tags">{{ _('Tags') }}:</label>
+                    <label class="form-label" for="tags">{{ _('Tags') }}</label>
                     <input class="form-control" id="tags" maxlength="100" minlength="0" name="tags" type="text" autocomplete="off" value="{{tags}}" placeholder="{{ _('Max: 5') }}">
+                </div>
+                <div class="col-2 mb-3">
+                    <label class="form-label" for="language">{{ _('language - ISO 639') }}</label>
+                    <input class="form-control" id="language" maxlength="8" minlength="1" name="language" type="text" autocomplete="off" value="{{post.language}}">
                 </div>
                 {% if label %}
                 <div class="mb-3">
@@ -251,11 +255,11 @@
                 </div>
                 <div class="col-8 mb-3">
                     <label class="form-label" for="location">{{ _('Location') }}</label>
-                    <input class="form-control" id="location" maxlength="64" minlength="0" name="location" type="text" autocomplete="off" value="{% if user.location %}{{ location }}{% endif %}">
+                    <input class="form-control" id="location" maxlength="64" minlength="0" name="location" type="text" autocomplete="off" value="{% if user.location %}{{ user.location }}{% endif %}">
                 </div>
                 <div class="col-8 mb-3">
                     <label class="form-label" for="birth">{{ _('Birth') }}</label>
-                    <input class="form-control" id="birth" name="birth" type="date" value="{% if user.birth %}{{ user.birth }}{% endif %}">
+                    <input class="form-control" id="birth" name="birth" type="date" value="{% if user.birth %}{{ user.birth.strftime('%Y-%m-%d') }}{% endif %}">
                 </div>
                 <div class="col-8 mb-3">
                     <label class="form-label" for="phone">{{ _('Phone: +CountryCode-123-456-7890') }}</label>
@@ -282,13 +286,15 @@
                     <input class="form-control" id="picture_link" maxlength="256" minlength="1" name="picture_link" type="text" autocomplete="off" value="{% if user.picture %}{{ user.picture }}{% endif %}">
                 </div>                
                 {% if edit == 'admin' %}
-                <div class="col-8 mb-3">
-                    <label class="form-label" for="email">{{ _('Email') }}</label>
-                    <input class="form-control" id="email" maxlength="64" minlength="0" name="email" type="email" autocomplete="off" value="{{ user.email }}">
-                </div>
-                <div class="col-4">
-                    <label class="form-label">{{ _('Admin Token: ') }}{% if user.admin_token %}{{ user.admin_token }}{% endif %}</label>
-                </div>                
+                    <div class="col-8 mb-3">
+                        <label class="form-label" for="email">{{ _('Email') }}</label>
+                        <input class="form-control" id="email" maxlength="64" minlength="0" name="email" type="email" autocomplete="off" value="{{ user.email }}">
+                    </div>
+                    {% if user.admin_token %}
+                    <div class="col-4">
+                        <label class="form-label">{{ _('Admin Token: ') }}{{ user.admin_token }}</label>
+                    </div>
+                    {% endif %}
                 {% endif %}                
                 <div class="col-4">
                     <label class="form-label">{{ _('MFA enabled: ') }}{{ user.mfa_enabled }}</label>
@@ -345,7 +351,7 @@
                     <input class="form-control" id="location" maxlength="64" minlength="0" name="location" type="text" autocomplete="off" value="{% if user.location %}{{ user.location }}{% endif %}">
                 </div>                              
                 <div class="col-8">
-                    <label class="form-label">{{ _('Birth: ') }}{% if user.birth %}{{ birth }}{% endif %}</label>
+                    <label class="form-label">{{ _('Birth: ') }}{% if user.birth %}{{ user.birth.strftime('%Y-%m-%d') }}{% endif %}</label>
                 </div>
              
                 <div class="mb-3">
@@ -357,12 +363,15 @@
 {% endmacro %}
 
 
-{% macro comment(action="", reply="", value="", pin="", input_id="") %}
+{% macro comment(action="", author="", value="", pin="", comment_id="") %}
         <form action="{{ action }}" id="comment" method="post">
             <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
 
-                    <textarea autofocus class="form-control" id="body" maxlength="1024" minlength="1" name="body" rows="5" autocomplete="off" required>{{ reply }}</textarea>
-                {% if reply %}<input id="" name="parent_id" type="hidden" value="{{ input_id }}">{% endif %}                    
+                    <textarea autofocus class="form-control" id="body" maxlength="1024" minlength="1" name="body" rows="5" autocomplete="off" required>{% if author %}@{{ author }} {% endif %}</textarea>
+                {% if author %}
+                    <input name="comment_id" type="hidden" value="{{ comment_id }}">
+                    <input name="author" type="hidden" value="{{ author }}">
+                {% endif %}                    
                 {% if pin %}
                 <div class="form-check pt-1">
                     <label class="form-check-label" for="pin{{ input_id }}">&#x1F4CC;</label>
@@ -462,7 +471,7 @@
 
 
 {% macro message() %}
-        <form class="card-footer text-muted d-flex justify-content-start align-items-center p-3" action="" method="post">
+        <form class="card-footer text-muted d-flex justify-content-start align-items-center p-3" enctype="multipart/form-data" action="" method="post">
             <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
             <div class="me-3">
                 <label for="formFileMultiple" class="form-label">&#x1F4CE;</label>
@@ -475,7 +484,7 @@
 
 
 {% macro textarea(value="") %}
-            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
             <div class="mb-3">
                 <label class="form-label" for="body"></label>
                 <textarea autofocus class="form-control" id="body" maxlength="1000" minlength="0" name="body" rows="5" required></textarea>
@@ -487,6 +496,7 @@
 {% macro search() %}
             <div class="mb-3">
                 <label class="form-label" for="q"></label>
+<!--                CRSF not needed for get-->
                 <input class="form-control" id="q" maxlength="100" minlength="0" name="q" type="search" autocomplete="off" required>
                 <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="search"></button>
             </div>

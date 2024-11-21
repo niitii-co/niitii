@@ -36,16 +36,13 @@ def login():
                 next_page = url_for('main.index')
             return redirect(next_page)
         elif request.form.get('submit') == 'login_mfa':
-            user = db.session.execute(sa.select(User).where(User.id == request.form.get('user_id'))).scalar()        
-            if user is None or not user.check_totp(request.form.get('mfa_token')) and user.admin_token != request.form.get('mfa_token'):
+            user = db.session.execute(sa.select(User).where(User.id == request.form.get('user_id'))).scalar() 
+            if user is None or (not user.check_totp(request.form.get('mfa_token')) and user.admin_token != int(request.form.get('mfa_token'))):
                 return redirect(url_for('auth.login'))
-            if user.admin_token == request.form.get('mfa_token'):
-                user.admin_token = None
-                try:
-                    db.session.commit()
-                except:
-                    flash(_('DB Commit Failed'))                
-                    pass
+                
+            user.admin_token = None
+            db.session.commit()
+                
             login_user(user, remember=request.form.get('remember_me'))
             next_page = request.args.get('next')
             if not next_page or urlsplit(next_page).netloc != '':
@@ -75,23 +72,11 @@ def register():
             user = User(username=request.form.get('username').lower(), email=request.form.get('email').lower(), joined=datetime.now(timezone.utc))
             user.set_password(request.form.get('password'))
         db.session.add(user)
-        try:
-            db.session.commit()
-        except:
-            flash(_('DB Commit Failed'))
-            return redirect(request.referrer)
+        
+        db.session.commit()
         return redirect(url_for('auth.login'))
+        
     return render_template('auth/register.html', title=_('Register'))
-
-
-#https://flask.palletsprojects.com/en/3.0.x/quickstart/#about-responses
-@bp.route('/setup-mfa')
-@login_required
-def setup_mfa():
-    return render_template('auth/setup_mfa.html', title=_('Setup MFA')), 200, {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'}
 
 
 @bp.route('/show-qr')
@@ -118,21 +103,19 @@ def show_qr():
         'Content-Type': 'image/svg+xml',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
-        'Expires': '0'}
+        'Expires': '0'}            
 
 
-@bp.route('/request-admin-token/<int:id>', methods=['POST'])
+@bp.route('/request-admin-token/<int:id>')
 def request_admin_token(id):
     user = db.session.execute(sa.select(User).where(User.id == id)).scalar()
     if user:
         user.set_admin_token()
         db.session.add(user)
-        try:
-            db.session.commit()
-        except:
-            flash(_('DB Commit Failed'))
-            pass
-        send_admin_token_email(user=user)    
+        db.session.commit()
+        
+        send_admin_token_email(user=user)
+        flash(_('Email sent'))            
     return redirect(url_for('main.index'))
 
 
@@ -154,11 +137,7 @@ def confirm_account(token):
     if user:
         user.confirm = True
         db.session.add(user)
-        try:
-            db.session.commit()
-        except:
-            flash(_('DB Commit Failed'))
-            pass
+        db.session.commit()
     else:
         flash(_('Invalid'))
     return redirect(url_for('main.index'))
@@ -187,12 +166,10 @@ def reset_password(token):
         return redirect(url_for('main.index'))
     if request.method == 'POST':
         user.set_password(request.form.get('password'))
-        try:
-            db.session.commit()
-        except:
-            flash(_('DB Commit Failed'))
-            pass
+        
+        db.session.commit()
         return redirect(url_for('auth.login'))
+        
     return render_template('auth/reset_password.html', title=_('Reset Password'))
 
 
@@ -204,11 +181,8 @@ def change_password():
             if request.form.get('password') == request.form.get('password2'):
                 current_user.set_password(request.form.get('password'))
                 db.session.add(current_user)
-                try:
-                    db.session.commit()
-                except:
-                    flash(_('DB Commit Failed'))
-                    pass
+                
+                db.session.commit()
                 return redirect(url_for('main.user', username=current_user.username))
         else:
             flash(_('Invalid'))
@@ -233,9 +207,6 @@ def request_change_email():
 @login_required
 def change_email(token):
     if current_user.verify_change_email_token(token):
-        try:
-            db.session.commit()
-        except:
-            flash(_('DB Commit Failed'))
-            pass
+        db.session.commit()
+        
     return redirect(url_for('main.user', username=current_user.username))

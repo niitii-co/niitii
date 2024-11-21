@@ -1,5 +1,5 @@
 {% for comment in comments %}
-<div class="card border-0">
+<div id="comment{{comment.id}}" class="card border-0">
     <div class="card-body pt-2 p-0">
         <div>
             <a class="text-decoration-none" href="{{ url_for('main.user', username=comment.author.username) }}">
@@ -34,9 +34,9 @@
                 </button>
                 <div class="collapse" id="reply_comment_{{ comment.id }}">
                         {% set action %}{{ url_for('main.post', id=post.id) }}{% endset %}
-                        {% set reply %}@{{ comment.author.username }} {% endset %}
+                        {% set author %}{{ comment.author.username }}{% endset %}
                         
-                        {{ macros.comment(action=action, reply=reply, input_id=comment.id, value="reply_comment") }}
+                        {{ macros.comment(action=action, author=author, comment_id=comment.id, value="reply_comment") }}
                 </div>                
             {% else %}
                 <span class="btn btn-outline-dark btn-sm border border-dark-subtle disabled px-1 py-0">
