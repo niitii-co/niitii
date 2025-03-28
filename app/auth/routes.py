@@ -1,6 +1,7 @@
 from app import db
 from app.auth import bp
 from app.auth.email import send_password_reset_email, send_confirm_account_email, send_change_email, send_admin_token_email
+from app.decorators import permission_required
 from app.email import send_email
 from app.models import User
 from datetime import datetime, timezone
@@ -14,8 +15,6 @@ import qrcode
 import qrcode.image.svg
 
 
-
-#https://stackoverflow.com/questions/15974730/how-do-i-get-the-different-parts-of-a-flask-requests-url/46176337#46176337
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -27,22 +26,17 @@ def login():
                 return redirect(url_for('auth.login'))
             if user.disabled:
                 flash(_('Account disabled'))
-                return redirect(url_for('main.index'))                
+                return redirect(url_for('main.index'))
             if user and user.mfa_enabled:
-                return render_template('auth/login_mfa.html', title=_('MFA Login'), user=user)
-            login_user(user, remember=request.form.get('remember_me'))
-            next_page = request.args.get('next')
-            if not next_page or urlsplit(next_page).netloc != '':
-                next_page = url_for('main.index')
-            return redirect(next_page)
-        elif request.form.get('submit') == 'login_mfa':
-            user = db.session.execute(sa.select(User).where(User.id == request.form.get('user_id'))).scalar() 
-            if user is None or (not user.check_totp(request.form.get('mfa_token')) and user.admin_token != int(request.form.get('mfa_token'))):
-                return redirect(url_for('auth.login'))
-                
-            user.admin_token = None
+                if not request.form.get('mfa_token') or not user.check_totp(request.form.get('mfa_token')) and user.admin_token != int(request.form.get('mfa_token')):
+                    flash(_('Invalid token'))
+                    return redirect(url_for('auth.login'))
+                if user.admin_token != None:
+                    user.admin_token = None
+                db.session.commit()
+            user.language = request.form.get('language') if request.form.get('language') else 'en-US'
+            user.utc_offset = request.form.get('utc_offset') if request.form.get('utc_offset') else 0
             db.session.commit()
-                
             login_user(user, remember=request.form.get('remember_me'))
             next_page = request.args.get('next')
             if not next_page or urlsplit(next_page).netloc != '':
@@ -103,20 +97,47 @@ def show_qr():
         'Content-Type': 'image/svg+xml',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
-        'Expires': '0'}            
+        'Expires': '0'}
 
 
-@bp.route('/request-admin-token/<int:id>')
-def request_admin_token(id):
+@bp.route('/setup-mfa', methods=['GET', 'POST'])
+@login_required
+def setup_mfa():
+    if request.method == 'POST':
+        if current_user.check_totp(request.form.get('mfa_token')):
+            current_user.mfa_enabled = True
+            db.session.commit()
+            return redirect(url_for('main.user', username=current_user.username))
+
+    current_user.set_otp_secret()
+    db.session.commit()
+
+    return render_template('auth/setup_mfa.html', title=_('Setup MFA')), 200, {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'}
+
+
+@bp.route('/disable-mfa', methods=['POST'])
+@login_required
+def disable_mfa():
+    current_user.mfa_enabled = False
+    current_user.otp_secret = None
+    db.session.commit()
+
+    return redirect(url_for('main.user', username=current_user.username))
+
+
+@bp.route('/set-admin-token/<int:id>', methods=['POST'])
+@permission_required('MODERATE')
+@login_required
+def set_admin_token(id):
     user = db.session.execute(sa.select(User).where(User.id == id)).scalar()
-    if user:
+    if user and user.mfa_enabled:
         user.set_admin_token()
-        db.session.add(user)
         db.session.commit()
-        
-        send_admin_token_email(user=user)
-        flash(_('Email sent'))            
-    return redirect(url_for('main.index'))
+
+    return redirect(request.referrer)
 
 
 @bp.route('/request-confirm-account')
@@ -135,12 +156,27 @@ def confirm_account(token):
         return redirect(url_for('main.index'))
     user = User.confirm_token(token)
     if user:
-        user.confirm = True
-        db.session.add(user)
+        user.confirmed = True
         db.session.commit()
     else:
         flash(_('Invalid'))
     return redirect(url_for('main.index'))
+
+
+@bp.route('/request-admin-token', methods=['GET', 'POST'])
+def request_admin_token():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    if request.method == 'POST':
+        user = db.session.execute(sa.select(User).where(User.username == request.form.get('username'))).scalar()
+        if user is None or not user.mfa_enabled:
+            return redirect(url_for('auth.login'))
+        user.set_admin_token()
+        db.session.commit()
+        send_admin_token_email(user=user)
+        flash(_('Email sent'))
+        return redirect(url_for('main.index'))
+    return render_template('auth/request_admin_token.html', title=_('Request Admin Token'))
 
 
 @bp.route('/request-password-reset', methods=['GET', 'POST'])
@@ -157,38 +193,6 @@ def request_password_reset():
     return render_template('auth/request_password_reset.html', title=_('Request Password Reset'))
 
 
-@bp.route('/reset-password/<token>', methods=['GET', 'POST'])
-def reset_password(token):
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
-    user = User.verify_reset_password_token(token)
-    if not user:
-        return redirect(url_for('main.index'))
-    if request.method == 'POST':
-        user.set_password(request.form.get('password'))
-        
-        db.session.commit()
-        return redirect(url_for('auth.login'))
-        
-    return render_template('auth/reset_password.html', title=_('Reset Password'))
-
-
-@bp.route('/change-password', methods=['GET', 'POST'])
-@login_required
-def change_password():
-    if request.method == 'POST':
-        if current_user.check_password(request.form.get('old_password')):
-            if request.form.get('password') == request.form.get('password2'):
-                current_user.set_password(request.form.get('password'))
-                db.session.add(current_user)
-                
-                db.session.commit()
-                return redirect(url_for('main.user', username=current_user.username))
-        else:
-            flash(_('Invalid'))
-    return render_template('auth/change_password.html', title=_('Change Password'))
-
-
 @bp.route('/request-change-email', methods=['GET', 'POST'])
 @login_required
 def request_change_email():
@@ -203,10 +207,40 @@ def request_change_email():
     return render_template('auth/change_email.html', title=_('Change Email'))
 
 
+@bp.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    if request.method == 'POST':
+        if current_user.check_password(request.form.get('old_password')) and request.form.get('password') == request.form.get('password2'):
+            current_user.set_password(request.form.get('password'))
+            db.session.commit()
+            return redirect(url_for('main.user', username=current_user.username))
+        else:
+            flash(_('Invalid'))
+    return render_template('auth/change_password.html', title=_('Change Password'))
+
+
+@bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    user = User.verify_reset_password_token(token)
+    if not user:
+        return redirect(url_for('main.index'))
+    if request.method == 'POST':
+        user.set_password(request.form.get('password'))
+        db.session.commit()
+        return redirect(url_for('auth.login'))
+        
+    return render_template('auth/reset_password.html', title=_('Reset Password'))
+
+
 @bp.route('/change-email/<token>')
 @login_required
 def change_email(token):
-    if current_user.verify_change_email_token(token):
+    email = current_user.verify_change_email_token(token)
+    if email:
+        current_user.email = email
         db.session.commit()
         
     return redirect(url_for('main.user', username=current_user.username))

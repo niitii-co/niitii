@@ -6,7 +6,7 @@
         <div class="card-body py-0 mx-auto card-width" id="comment{{comment.id}}">
             <div>
                 <a class="text-decoration-none" href="{{ url_for('main.user', username=comment.author.username) }}">
-                    <img class="rounded-circle avatar" height="" width="25" {% if comment.author.picture %} src="{{ comment.author.picture }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">
+                    <img class="rounded-circle avatar" {% if comment.author.photo %} src="{{ comment.author.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">
                 </a>            
                 {% set user_link %}
                     <a class="text-decoration-none d-inline-block fs-6 text-body" href="{{ url_for('main.user', username=comment.author.username) }}">
@@ -33,39 +33,48 @@
                 <span class="btn btn-outline-dark btn-sm border border-dark-subtle disabled px-1 py-0">
                     &#x21E7; {{ comment.votes_count() }}
                 </span>                
-                <small class="d-inline ms-2"><a class="text-decoration-none" href="{{ url_for('main.post', id=comment.post_id) }}">{{ _('View post') }}</a></small>
+                <p class="d-inline mx-1 small"><a class="text-decoration-none" href="{{ url_for('main.post', id=comment.post_id) }}">{{ _('View post') }}</a></p>
                 {% if current_user.is_authenticated %}
                     {% if current_user == comment.author or current_user.can("MODERATE") %}
                     <div class="d-inline m-0">
-                        {% set action %}{{ url_for('main.user_comments', username=comment.author.username) }}{% endset %}
-                        {{ macros.empty(action=action, value="delete", input_id=comment.id) }}
-                        
-                        {% if comment.disabled %}
-                            {{ macros.empty(action=action, value="enable", label="Enable", input_id=comment.id) }}
-                        {% else %}
-                            {{ macros.empty(btn="danger", value="disable", label="Disable", input_id=comment.id) }}
-                        {% endif %}
+                    {% set action %}{{ url_for('main.disable_comment', id=comment.id) }}{% endset %}
+                    {% if comment.disabled %}
+                        {{ macros.empty(action=action, value="enable", label="Enable", input_id=comment.id) }}
+                    {% else %}
+                        {{ macros.empty(action=action, btn="danger", value="disable", label="Disable", input_id=comment.id) }}
+                    {% endif %}
+
+                    {% set action %}{{ url_for('main.delete_comment', id=comment.id) }}{% endset %}
+                    {{ macros.empty(action=action, value="delete", input_id=comment.id) }}
                     </div>
                     {% endif %}
                 {% endif %}
             </div>
             <hr class="my-2">
-            <span id="disabled" hidden>{{ _('Disabled') }}</span>            
         </div>
     {% endfor %}
-    
+
+<!-- babel transalation text to update after fetch()-->
+            <span id="enable" hidden>{{ _('Enable') }}</span>
+            <span id="disable" hidden>{{ _('Disable') }}</span>
+
     {{ macros.pagination(pagination, 'main.user_comments', username=user.username) }}
-    
+
+
     <script type="text/javascript">
-        function deleteContent(form, submitter) {
-            let postForm = new FormData(form);
-            // FormData only send the <input>. <button> is appended to the form            
+        function sendForm(target, submitter) {
+            let postForm = new FormData(target);
+// FormData only send the <input>. <button> is appended to the form
             postForm.append('submit', submitter.value);
-            postForm.append('input_id', form.input_id.value);
-                
+            if (target.input_id) {
+                postForm.append('input_id', target.input_id.value);
+            }
+
             const SCRIPT_ROOT = {{ request.script_root|tojson }};
-            let input_id = form.input_id.value;
-            let url = `${SCRIPT_ROOT}/post-comments/${input_id}`;
+            const url = target.action;
+            const enableText = document.getElementById('enable').innerHTML;
+            const disableText = document.getElementById('disable').innerHTML;
+            const commentId = input_id = target.input_id.value;
 
             fetch(url, {
                 method: 'POST',
@@ -74,41 +83,37 @@
             .then((response) => response.text())
             .then((text) => {
                 if (submitter.value === 'delete') {
-                    document.getElementById(`comment${input_id}`).remove();
+// remove comment from view
+                    document.getElementById(`comment${commentId}`).remove();
                 }
                 else if (submitter.value === 'disable') {
-                    document.getElementById(`comment_body${input_id}`).innerHTML = `
-                        <p><i>${document.getElementById('disabled').innerHTML}</i></p>
-                    `;                
+// update button value for disable/enable
+                    document.getElementById(`comment_body${commentId}`).innerHTML = `
+                        <p><i>${document.getElementById('disable').innerHTML}</i></p>
+                    `;
                     submitter.className = 'btn btn-outline-primary btn-sm px-1 py-0';
-                    submitter.innerHTML = 'Enable';
+                    submitter.innerHTML = `${enableText}`;
                     submitter.value = 'enable';
                 }
                 else {
                     const parser = new DOMParser();
-                    const doc = parser.parseFromString(text, "text/html");
-                    
-                    content = doc.getElementById(`comment_body${input_id}`).innerHTML;
-                    document.getElementById(`comment_body${input_id}`).innerHTML = content;
-                    
+                    const resDoc = parser.parseFromString(text, "text/html");
+
+                    content = resDoc.getElementById(`comment_body${commentId}`).innerHTML;
+                    document.getElementById(`comment_body${commentId}`).innerHTML = content;
+
                     submitter.className = 'btn btn-outline-danger btn-sm px-1 py-0';
-                    submitter.innerHTML = 'Disable';
+                    submitter.innerHTML = `${disableText}`;
                     submitter.value = 'disable';
                 };
             })
             .catch(console.error);
         }
-        document.addEventListener('submit', (event) => {
-            let form = event.target;        
-            try {
-                if (form.id != 'search') {            
-                    event.preventDefault();
-                    deleteContent(form, event.submitter);
-                }
+        document.addEventListener('submit', (e) => {
+            if (e.target.id != 'search') {
+                e.preventDefault();
+                sendForm(e.target, e.submitter);
             }
-            catch (error) {
-                console.error(error); 
-            }
-       });   
-    </script> 
+       });
+    </script>
 {% endblock %}

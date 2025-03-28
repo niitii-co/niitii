@@ -26,9 +26,10 @@ nosetests.xml
 # Translations
 #*.mo
 
-# ignore hidden files except gitignore
+# ignore hidden files except !files
 .*
 !.gitignore
+!.flaskenv
 
 venv
 log*

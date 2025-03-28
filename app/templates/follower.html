@@ -7,13 +7,13 @@
     {% for user in users %}
     <div class="card-body py-0">
         <div>
-            <a class="text-decoration-none" href="{{ url_for('main.user', username=user.username) }}">        
-                <img class="rounded-circle avatar" {% if user.picture %} src="{{ user.picture }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">
+            <a class="text-decoration-none" href="{{ url_for('main.user', username=user.username) }}">
+                <img class="rounded-circle avatar" {% if user.photo %} src="{{ user.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">
             </a>
             {% set user_link %}
-                <a class="text-decoration-none d-inline-block fs-3 text-body" href="{{ url_for('main.user', username=user.username) }}">
+                <a class="text-decoration-none d-inline-block fs-4 text-body" href="{{ url_for('main.user', username=user.username) }}">
                     {{ user.username }}{% if user.verified %}&#x2713;{% elif user.confirmed %}&#xB7;{% endif %}
-                </a>            
+                </a>
                 {% if user.label %}<span class="badge rounded-pill text-bg-secondary py-0 px-1">{{ user.label }}</span>{% endif %}
             {% endset %}
             <span>{{ _('%(username)s', username=user_link) }}</span>
@@ -21,7 +21,7 @@
         </div>
         <hr class="my-2">
     </div>
-    {% endfor %}                   
+    {% endfor %}
     </div>
     </div>
     {{ macros.pagination(pagination, 'main.following', username=user.username) }}

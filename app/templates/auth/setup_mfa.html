@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% import "_macros.html" as macros %}
+{% import "auth/auth_macros.html" as macros %}
 
 {% block content %}
     <div class="row justify-content-center align-items-center mt-3">
     <div class="col-sm-12 col-md-10 col-lg-8 col-xl-6 col-xxl-6">
         <h1>{{ _('Scan QR') }}</h1>
         <div class="mb-3"><img id="qrcode" src="{{ url_for('auth.show_qr') }}" alt="QR Code"></div>
-        {% set action %}{{ url_for('main.edit_account', id=current_user.id) }}{% endset %}        
+        {% set action %}{{ url_for('auth.setup_mfa', id=current_user.id) }}{% endset %}
         {{ macros.check_token(action=action)}}
     </div>
     </div>
