@@ -3,23 +3,25 @@
 
 {% block content %}
     {% for comment in comments %}
+        {% set user = comment.author %}    
         <div class="card-body py-0 mx-auto card-width" id="comment{{comment.id}}">
             <div>
-                <a class="text-decoration-none" href="{{ url_for('main.user', username=comment.author.username) }}">
-                    <img class="rounded-circle avatar" {% if post.author.photo %} src="{{ post.author.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %}alt="photo">
-                </a>
-                {% set user_link %}
-                    <a class="text-decoration-none d-inline-block fs-6 text-body" href="{{ url_for('main.user', username=comment.author.username) }}">
-                        {{ comment.author.username }}{% if comment.author.verified %}&#x2713;{% elif comment.author.confirmed %}&#xB7;{% endif %}
-                    </a>            
-                    {% if comment.author.label %}<span class="badge rounded-pill text-bg-secondary py-0 px-1">{{ comment.author.label }}</span>{% endif %}
-                    <span>{{comment.id}} - {{ _('%(when)s', when=moment(comment.timestamp).format('D/MM/YY H:mm:ss')) }}</span>
-                    {% if comment.pinned %}<span>&#x1F4CC;</span>{% endif %}
-                {% endset %}
-                <span>{{ _('%(username)s', username=user_link) }}</span>
+                {% if not comment.ghost %}            
+                {{ macros.avatar(user) }}
+                <span>{{ macros.user_link(user=user) }}</span>
+                {% endif %}
+                {% if comment.pinned %}
+                <span>&#x1F4CC;</span>
+                {% endif %}
+                {% if comment.direct %}
+                <span>&#x1F576;</span>
+                {% endif %}
+                <span>{{loop.index}} - 
+                <time datetime="{{comment.timestamp}}">{{ moment(comment.timestamp).format('D/MM/YY H:mm:ss') }}</time>
+                </span>
             </div>
 
-            <div class="pt-1">
+            <div>
                 <div id="comment_body{{comment.id}}">
                 {% if comment.disabled %}
                     <p><i>{{ _('Disabled') }}</i></p>
@@ -31,11 +33,10 @@
                     {% endif %}
                 {% endif %}
                 </div>
-                <span class="btn btn-outline-dark btn-sm border border-dark-subtle disabled px-1 py-0">
-                    &#x21E7; {{ comment.votes_count() }}
-                </span>             
+                <span class="btn btn-outline-dark btn-sm border border-dark-subtle disabled px-1 py-0">&#x21E7; {{ comment.vote_count() }}</span>
                 <p class="d-inline mx-1 small"><a class="text-decoration-none" href="{{ url_for('main.post', id=comment.post_id) }}">{{ _('view post') }}</a></p>
-                {% if current_user.is_authenticated %}                
+
+                {% if current_user.is_authenticated %}
                     {% if current_user == post.author or current_user.can("MODERATE") %}
                     <div class="d-inline m-0">
                     {% set action %}{{ url_for('main.disable_comment', id=comment.id) }}{% endset %}
@@ -45,11 +46,11 @@
                         {{ macros.empty(action=action, btn="danger", value="disable", label="Disable", input_id=comment.id) }}
                     {% endif %}
 
-                    {% set action %}{{ url_for('main.delete_comment', id=comment.id) }}{% endset %}
+                    {% set action %}{{ url_for('main.del_comment', id=comment.id) }}{% endset %}
                     {{ macros.empty(action=action, value="delete", input_id=comment.id) }}
                     </div>
                     {% endif %}
-                {% endif %}                
+                {% endif %}
             </div>
             <hr class="my-2">
         </div>
@@ -58,6 +59,7 @@
 <!-- babel transalation text to update after fetch()-->
             <span id="enable" hidden>{{ _('Enable') }}</span>
             <span id="disable" hidden>{{ _('Disable') }}</span>
+            <span id="disabled" hidden>{{ _('Disabled') }}</span>
             
     {{ macros.pagination(pagination, 'main.post_comments', id=post.id) }}
     
@@ -71,10 +73,10 @@
                 postForm.append('input_id', target.input_id.value);
             }
 
-            const SCRIPT_ROOT = {{ request.script_root|tojson }};
             const url = target.action;
-            const enableText = document.getElementById('enable').innerHTML;
-            const disableText = document.getElementById('disable').innerHTML;
+            const enable = document.getElementById('enable').innerHTML;
+            const disable = document.getElementById('disable').innerHTML;
+            const disabled = document.getElementById('disabled').innerHTML;
             const commentId = input_id = target.input_id.value;
 
             fetch(url, {
@@ -90,10 +92,10 @@
                 else if (submitter.value === 'disable') {
 // update button value for disable/enable
                     document.getElementById(`comment_body${commentId}`).innerHTML = `
-                        <p><i>${document.getElementById('disable').innerHTML}</i></p>
+                        <p><i>${disabled}</i></p>
                     `;
                     submitter.className = 'btn btn-outline-primary btn-sm px-1 py-0';
-                    submitter.innerHTML = `${enableText}`;
+                    submitter.innerHTML = `${enable}`;
                     submitter.value = 'enable';
                 }
                 else {
@@ -104,7 +106,7 @@
                     document.getElementById(`comment_body${commentId}`).innerHTML = content;
 
                     submitter.className = 'btn btn-outline-danger btn-sm px-1 py-0';
-                    submitter.innerHTML = `${disableText}`;
+                    submitter.innerHTML = `${disable}`;
                     submitter.value = 'disable';
                 };
             })

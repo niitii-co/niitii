@@ -2,21 +2,15 @@
 {% import "_macros.html" as macros %}
 
 {% block content %}
+    {% set user = sender %}
     <div class="row justify-content-center align-items-center mt-3">
       <div class="col-sm-12 col-md-10 col-lg-8 col-xl-6 col-xxl-6">
         <div class="card">
           <div class="card-header d-flex justify-content-center align-items-center p-2">
-            {% set user_link %}
-<!-- d-inline-block remove trailing space from <a> tag -->
-              <a class="text-decoration-none d-inline-block fs-6 text-body" href="{{ url_for('main.user', username=sender.username) }}">
-                   {{ sender.username }}{% if sender.verified %}&#x2713;{% elif sender.confirmed %}&#xB7;{% endif %}
-              </a>
-                {% if sender.label %}<span class="badge rounded-pill text-bg-info text-body small py-0 px-1">{{ sender.label }}</span>{% endif %}
-            {% endset %}
-            <img class="rounded-circle img-fluid me-1 avatar-md" {% if sender.photo %} src="{{ sender.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">
-              <span>{{ _('%(username)s', username=user_link) }}</span>
+            <img class="rounded-circle img-fluid avatar-md me-1" {% if user.photo %} src="{{ user.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">
+            <span>{{ macros.user_link(user=user) }}</span>
           </div>
-          
+
           <div id="messages" class="card-body w-auto overflow-y-auto">
             {% for m in messages %}
                 {% set m_photos = m.get_photos()['link'] %}
@@ -29,25 +23,29 @@
                     <div class="d-flex flex-row justify-content-end mb-3">
                         <div>
                             <p class="p-1 m-0 rounded-3 fs-5">{{ m.decrypt() }}</p>
-                            <p class="me-1 rounded-3 text-body text-end message-time">{{ moment(m.timestamp).format('D MMM H:mm') }}</p>
-                        </div>                
+                            <p class="me-1 rounded-3 text-body text-end message-time">
+                            <time datetime="{{m.timestamp}}">{{ moment(m.timestamp).format('D MMM H:mm') }}</time>
+                            </p>
+                        </div>
                     </div>
                 {% else %}
                     {% if m_photos %}
                     <div class="d-flex flex-row justify-content-start">
                       <img class="img-fluid object-fit-scale mb-2" src="{{ m.get_url() }}" alt="message photo" loading="lazy">
                     </div>
-                    {% endif %}                
+                    {% endif %}
                     <div class="d-flex flex-row justify-content-start mb-3">
-                      <div>                
+                      <div>
                         <p class="p-1 m-0 rounded-3 fs-5">{{ m.decrypt() }}</p>
-                        <p class="ms-1 rounded-3 text-body text-start message-time">{{ moment(m.timestamp).format('D MMM H:mm') }}</p>
+                        <p class="ms-1 rounded-3 text-body text-start message-time">
+                        <time datetime="{{m.timestamp}}">{{ moment(m.timestamp).format('D MMM H:mm') }}</time>
+                        </p>
                       </div>
                     </div>
                 {% endif %}
             {% endfor %}
          </div>
-                {% set action %}{{ url_for('main.send_message', username=sender.username) }}{% endset %}
+                {% set action %}{{ url_for('main.send_message', username=user.username) }}{% endset %}
                 {{ macros.message(action=action) }}
         </div>
       </div>

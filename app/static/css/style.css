@@ -184,6 +184,14 @@ form .form-check {
     display: none;
 }
 
+#directComment input[type = checkbox] {
+    display: none;
+}
+
+#ghostComment input[type = checkbox] {
+    display: none;
+}
+
 /*#pinComment input[type = checkbox]:checked + label:after{*/
 #pin:checked + label:after{
     content: "\1F4CC";
@@ -194,6 +202,28 @@ form .form-check {
 
 #pinComment label:after {
     content: "\1F4CC";
+}
+
+#direct:checked + label:after{
+    content: "\1F576";
+    outline: var(--checkbox-outline);
+    background: var(--checkbox-background);
+    border-radius: var(--checkbox-border-radius);
+}
+
+#directComment label:after {
+    content: "\1F576";
+}
+
+#ghost:checked + label:after{
+    content: "\1F47B";
+    outline: var(--checkbox-outline);
+    background: var(--checkbox-background);
+    border-radius: var(--checkbox-border-radius);
+}
+
+#ghostComment label:after {
+    content: "\1F47B";
 }
 
 /*user*/

@@ -10,7 +10,6 @@ from io import BytesIO
 from markdown import markdown
 from PIL import Image
 from random import SystemRandom
-from sqlalchemy.ext.hybrid import hybrid_property
 from string import digits
 from time import time
 from typing import List
@@ -61,11 +60,12 @@ follows = sa.Table(
     'follows',
     db.metadata,
     sa.Column('follower_id', sa.Integer, sa.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True),
-    sa.Column('followed_id', sa.Integer, sa.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)
+    sa.Column('followed_id', sa.Integer, sa.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True),
+    sa.Column('timestamp', sa.DateTime, default=lambda: datetime.now(timezone.utc))
 )
 
 
-class Permission(Enum):
+class AccountPermission(Enum):
     READ = 1
     COMMENT = 2
     MESSAGE = 4
@@ -75,31 +75,44 @@ class Permission(Enum):
     ROOT_ADMIN = 64
 
 
+class UserViewer(Enum):
+    PUBLIC = 1
+    USER = 2
+    FOLLOWER = 4
+
+
+class PostViewer(Enum):
+    PUBLIC = 1
+    USER = 2
+    FOLLOWER = 4
+
+
 class User(PaginatedAPIMixin, UserMixin, db.Model):
     __tablename__ = 'user'
     id: so.Mapped[int] = so.mapped_column(primary_key=True, default=SystemRandom().randrange(1000000000, 9999999999, 1))
-    username: so.Mapped[str] = so.mapped_column(sa.UnicodeText, index=True, unique=True)
-    email: so.Mapped[str] = so.mapped_column(sa.UnicodeText, index=True, unique=True)
+    username: so.Mapped[str] = so.mapped_column(sa.UnicodeText, unique=True, index=True)
+    email: so.Mapped[str] = so.mapped_column(sa.UnicodeText, unique=True)
     contact_email: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)
-    password_hash: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)
+    password_hash: so.Mapped[str] = so.mapped_column(sa.UnicodeText)
     confirmed: so.Mapped[bool] = so.mapped_column(default=False)
     verified: so.Mapped[bool] = so.mapped_column(default=False)
     disabled: so.Mapped[bool] = so.mapped_column(default=False)
-    permission: so.Mapped[int] = so.mapped_column(default=Permission.WRITE.value)
+    permission: so.Mapped[int] = so.mapped_column(default=AccountPermission.WRITE.value)
+    viewer: so.Mapped[int] = so.mapped_column(default=UserViewer.PUBLIC.value)
     mfa_enabled: so.Mapped[bool] = so.mapped_column(default=False)
-    otp_secret: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)    
+    otp_secret: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)
     admin_token: so.Mapped[int] = so.mapped_column(nullable=True)
     about_me: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)
     photo: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)
     song: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)
-    language: so.Mapped[str] = so.mapped_column(sa.UnicodeText, default='en-US')    
+    language: so.Mapped[str] = so.mapped_column(sa.UnicodeText, default='en-US')
     location: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)
     phone: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)
     label: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)
     banner_flag: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)
     token: so.Mapped[str] = so.mapped_column(sa.UnicodeText, unique=True, nullable=True)
     editor: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)
-    utc_offset: so.Mapped[int] = so.mapped_column(default=0)
+    utc_offset: so.Mapped[float] = so.mapped_column(default=0)
     birth: so.Mapped[datetime] = so.mapped_column(nullable=True)
     joined: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc))
     token_expiration: so.Mapped[datetime] = so.mapped_column(nullable=True)
@@ -126,48 +139,60 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
     tasks: so.WriteOnlyMapped['Task'] = so.relationship(back_populates='user', cascade='all, delete', passive_deletes=True)
 
     __table__args = (
-        sa.CheckConstraint(sa.func.char_length(username) <= 32),
-        sa.CheckConstraint(sa.func.char_length(email) <= 128),
-        sa.CheckConstraint(sa.func.char_length(contact_email) <= 128),
-        sa.CheckConstraint(sa.func.char_length(about_me) <= 1024),
-        sa.CheckConstraint(sa.func.char_length(photo) <= 256),
-        sa.CheckConstraint(sa.func.char_length(song) <= 256),
+        sa.CheckConstraint(sa.func.char_length(username) <= 64),
+        sa.CheckConstraint(sa.func.char_length(email) <= 320),
+        sa.CheckConstraint(sa.func.char_length(contact_email) <= 320),
+        sa.CheckConstraint(sa.func.char_length(about_me) <= 500),
+        sa.CheckConstraint(sa.func.char_length(photo) <= 200),
+        sa.CheckConstraint(sa.func.char_length(song) <= 300),
         sa.CheckConstraint(sa.func.char_length(language) <= 16),
         sa.CheckConstraint(sa.func.char_length(phone) <= 64),
-        sa.CheckConstraint(sa.func.char_length(location) <= 128),
+        sa.CheckConstraint(sa.func.char_length(location) <= 200),
         sa.CheckConstraint(sa.func.char_length(label) <= 32),
         sa.CheckConstraint(sa.func.char_length(banner_flag) <= 8),
         sa.CheckConstraint(sa.func.char_length(token) <= 32),
     )
 
 
-    def __repr__(self):
-        return f'<User "{self.username}">'
+    @so.validates("email")
+    def validate_email(self, key, email):
+        if "@" not in email:
+            raise ValueError("failed email validation")
+        return email
+        
+    @so.validates("utc_offset")
+    def validate_email(self, key, utc_offset):
+        if not  -12 < float(utc_offset) < 12:
+            raise ValueError("failed utc_offset validation")
+        return utc_offset
 
     def is_moderator(self):
-        return self.permission == Permission.MODERATE.value
+        return self.permission == AccountPermission.MODERATE.value
 
     def is_admin(self):
-        return self.permission == Permission.ADMIN.value
+        return self.permission == AccountPermission.ADMIN.value
 
     def is_site_admin(self):
-        return self.permission == Permission.ROOT_ADMIN.value
+        return self.permission == AccountPermission.ROOT_ADMIN.value
 
     def can(self, key):
-        return self.permission >= Permission[key].value
+        return self.permission >= AccountPermission[key].value
 
-    def get_permission(self):
-        return Permission(self.permission).name
+    def get_account_permission(self):
+        return AccountPermission(self.permission).name
+
+    def get_viewer(self):
+        return UserViewer(self.viewer).name
 
     def set_permission(self, key):
         if key == 'MODERATE' and not self.confirmed:
             pass
-        elif key == "ADMIN" and not self.confirmed and not self.verified:
+        elif key == 'ADMIN' and not self.confirmed and not self.verified:
             pass
-        elif key == "ROOT_ADMIN" and not self.verified and not self.mfa_enabled:
+        elif key == 'ROOT_ADMIN' and not self.verified and not self.mfa_enabled:
             pass
         else:
-            self.permission = Permission[key].value
+            self.permission = AccountPermission[key].value
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -193,14 +218,6 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
     def generate_confirmation_token(self, expiration=3600):
         return jwt.encode({'confirm': self.id, 'exp': time() + expiration}, current_app.config['SECRET_KEY'], algorithm='HS256')
 
-#    static method has no access to (self). static methods do not receive the class as a first argument.
-    @staticmethod
-    def confirm_token(token):
-        try:
-            id = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])['confirm']
-        except:
-            return None
-        return db.session.get(User, id)
 
     def generate_change_email_token(self, email, expiration=3600):
         return jwt.encode({'id': self.id, 'email': email, 'exp': time() + expiration}, current_app.config['SECRET_KEY'], algorithm='HS256')
@@ -218,24 +235,16 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
     def get_reset_password_token(self, expiration=600):
         return jwt.encode({'reset_password': self.id, 'exp': time() + expiration}, current_app.config['SECRET_KEY'], algorithm='HS256')
 
-    @staticmethod
-    def verify_reset_password_token(token):
-        try:
-            id = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])['reset_password']
-        except:
-            return None
-        return db.session.get(User, id)
-
     def follow(self, user):
-        if not self.is_following(user):
+        if not self.is_following(user.id):
             self.following.add(user)
 
     def unfollow(self, user):
-        if self.is_following(user):
+        if self.is_following(user.id):
             self.following.remove(user)
 
-    def is_following(self, user):
-        query = self.following.select().where(User.id == user.id)
+    def is_following(self, user_id):
+        query = self.following.select().where(User.id == user_id)
         return db.session.execute(query).scalar() is not None
 
     def get_followers(self):
@@ -371,6 +380,53 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
     def revoke_token(self):
         self.token_expiration = datetime.now(timezone.utc) - timedelta(seconds=1)
 
+    def del_photo(self):
+        if f"{Photo.SPACES_URL}/profile-pics/" in self.photo:
+            name = self.photo.removeprefix(f"{Photo.SPACES_URL}/profile-pics/")
+            Photo.del_object('profile-pics', name)
+            self.photo = None
+
+    def del_all_sent_messages(self):
+        db.session.execute(self.messages_sent.delete())
+
+    def del_all_comments(self):
+        db.session.execute(self.comments.delete())
+
+    def del_all_votes(self):
+        db.session.execute(self.votes.delete())
+
+    def del_all_flags(self):
+        db.session.execute(self.flags.delete())
+
+    def del_all_notifications(self):
+        db.session.execute(self.notifications.delete())
+
+    def del_all_posts(self):
+        db.session.execute(self.posts.delete())
+        
+    def del_user(self):
+        db.session.delete(self)
+
+    @staticmethod
+    def del_all_follow():
+        db.session.execute(follows.delete().where((follows.c.follower_id == user.id) | (follows.c.followed_id == user.id)))
+
+    @staticmethod
+    def confirm_token(token):
+        try:
+            id = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])['confirm']
+        except:
+            return None
+        return db.session.get(User, id)
+
+    @staticmethod
+    def verify_reset_password_token(token):
+        try:
+            id = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])['reset_password']
+        except:
+            return None
+        return db.session.get(User, id)
+
 #   check if token is invalid or expired
     @staticmethod
     def check_token(token):
@@ -378,12 +434,6 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
         if user is None or user.token_expiration.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
             return None
         return user
-
-    def delete_photo(self):
-        if f"{Photo.SPACES_URL}/profile-pics/" in self.photo:
-            name = self.photo.removeprefix(f"{Photo.SPACES_URL}/profile-pics/")
-            Photo.delete_object('profile-pics', name)
-            self.photo = None
 
 
 @login.user_loader
@@ -395,7 +445,8 @@ tags = sa.Table(
     'tags',
     db.metadata,
     sa.Column('post_id', sa.Integer, sa.ForeignKey('post.id', ondelete='CASCADE'), primary_key=True),
-    sa.Column('tag_id', sa.Integer, sa.ForeignKey('tag.id', ondelete='CASCADE'), primary_key=True)
+    sa.Column('tag_id', sa.Integer, sa.ForeignKey('tag.id', ondelete='CASCADE'), primary_key=True),
+    sa.Column('timestamp', sa.DateTime, default=lambda: datetime.now(timezone.utc))
 )
 
 
@@ -405,35 +456,54 @@ class Post(db.Model):
     title: so.Mapped[str] = so.mapped_column(sa.UnicodeText)
     body: so.Mapped[str] = so.mapped_column(sa.UnicodeText)
     body_html: so.Mapped[str] = so.mapped_column(sa.UnicodeText)
-    language: so.Mapped[str] = so.mapped_column(sa.UnicodeText, default='en-US')
+    language: so.Mapped[str] = so.mapped_column(sa.UnicodeText, default='en-US', index=True)
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id', ondelete='CASCADE'))
     author: so.Mapped['User'] = so.relationship(back_populates='posts')
-    votes: so.Mapped[int] = so.mapped_column(index=True, default=0)
+    votes: so.Mapped[int] = so.mapped_column(default=0, index=True)
     flags: so.Mapped[int] = so.mapped_column(default=0)
-    comments: so.Mapped[int] = so.mapped_column(index=True, default=0)
+    comments: so.Mapped[int] = so.mapped_column(default=0, index=True)
     pin_comments: so.Mapped[int] = so.mapped_column(default=0)
+    removed_comments: so.Mapped[int] = so.mapped_column(default=0)
+    direct_comments: so.Mapped[int] = so.mapped_column(default=0)
     disable_comments: so.Mapped[bool] = so.mapped_column(default=False)
     nsfw: so.Mapped[bool] = so.mapped_column(default=False)
     label: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)
+    viewer: so.Mapped[int] = so.mapped_column(default=PostViewer.PUBLIC.value)
     locked: so.Mapped[bool] = so.mapped_column(default=False)
     photos: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)
     editor: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)
-    utc_offset: so.Mapped[int] = so.mapped_column(default=0)
-    timestamp: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc))
+    utc_offset: so.Mapped[float] = so.mapped_column(default=0, index=True)
+    timestamp: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc), index=True)
     edit_timestamp: so.Mapped[datetime] = so.mapped_column(nullable=True)
     tags: so.Mapped[List['Tag']] = so.relationship(secondary=tags, back_populates='posts', cascade='all, delete', passive_deletes=True)
 
     __table__args = (
-        sa.CheckConstraint(sa.func.char_length(title) <= 256),
-        sa.CheckConstraint(sa.func.char_length(body) <= 4096),
+        sa.CheckConstraint(sa.func.char_length(title) <= 3000),
+        sa.CheckConstraint(sa.func.char_length(body) <= 20000),
         sa.CheckConstraint('pin_comments <= 2'),
         sa.CheckConstraint(sa.func.char_length(language) <= 16),
-        sa.CheckConstraint(sa.func.char_length(label) <= 32),
+        sa.CheckConstraint(sa.func.char_length(label) <= 30),
     )
 
+    @so.validates("utc_offset")
+    def validate_email(self, key, utc_offset):
+        if not  -12 < float(utc_offset) < 12:
+            raise ValueError("failed utc_offset validation")
+        return utc_offset
 
-    def __repr__(self):
-        return f'<Post "{self.body}">'
+    def can_view(self):
+        if PostViewer(self.viewer).name == 'PUBLIC':
+            return True
+        elif PostViewer(self.viewer).name != 'PUBLIC' and not current_user.is_authenticated:
+            return False
+        elif self.author == current_user or (current_user.is_authenticated and current_user.can('MODERATE')):
+            return True
+        elif PostViewer(self.viewer).name == 'USER':
+            return True
+        elif PostViewer(self.viewer).name == 'FOLLOWER' and self.author.is_following(current_user.id):
+            return True
+        else:
+            return False
 
     def add_photos(p):
         return json.dumps(p)
@@ -448,7 +518,13 @@ class Post(db.Model):
         self.comments = count
         return count
 
-    def votes_count(self):
+    def direct_comments_count(self):
+        query= sa.select(Comment).where((Comment.post_id == self.id) & (Comment.direct == True))
+        count = db.session.execute(sa.select(sa.func.count()).select_from(query.subquery())).scalar()
+        self.direct_comments = count        
+        return count
+
+    def vote_count(self):
         query= sa.select(Vote).where(Vote.post_id == self.id)
         count = db.session.execute(sa.select(sa.func.count()).select_from(query.subquery())).scalar()
         self.votes = count
@@ -468,23 +544,43 @@ class Post(db.Model):
         for tag in self.tags:
             post_tags.append(tag.name)
         return post_tags
-#        return sa.select(Tag).where(Tag.posts == self.tags)
 
-    def delete_comments(self):
+    def get_viewer(self):
+        return PostViewer(self.viewer).name
+
+    def del_all_comments(self):
         return db.session.execute(sa.delete(Comment).where(Comment.post_id == self.id))
 
-    def delete_flags(self):
+    def del_all_flags(self):
         return db.session.execute(sa.delete(Flag).where(Flag.post_id == self.id))
 
-    def delete_votes(self):
+    def del_all_votes(self):
         return db.session.execute(sa.delete(Vote).where(Vote.post_id == self.id))
 
-    def delete_photos(self):
+    def del_all_tags(self):
+        if self.tags:
+            for tag in self.tags:
+                db.session.execute(sa.delete(Tag).where(Tag.id == tag.id))
+                db.session.execute(tags.delete().where(tags.c.tag_id == tag.id))
+
+    def del_all_photos(self):
         photos = json.loads(self.photos) if self.photos else None
         if photos:
             for p in photos['link']:
                 if f"{Photo.SPACES_URL}/post-pics/" in p:
-                    Photo.delete_object('post-pics', p.removeprefix(f"{Photo.SPACES_URL}/post-pics/"))
+                    Photo.del_object('post-pics', p.removeprefix(f"{Photo.SPACES_URL}/post-pics/"))
+
+    @staticmethod
+    def del_tag(tag_id):
+        db.session.execute(sa.delete(Tag).where(Tag.id == tag_id))
+        db.session.execute(tags.delete().where(tags.c.tag_id == tag_id))
+
+    @staticmethod
+    def tag_query(name):
+        return db.select(Post)\
+        .join(tags, tags.c.post_id == Post.id)\
+        .join(Tag, tags.c.tag_id == Tag.id)\
+        .where(Tag.name == name)
 
 #     renders HTML version of body and store in body_html in 3 steps
 #      1- markdown() converts to HTML
@@ -517,27 +613,32 @@ class Comment(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     body: so.Mapped[str] = so.mapped_column(sa.UnicodeText)
     body_html: so.Mapped[str] = so.mapped_column(sa.UnicodeText)
+    language: so.Mapped[str] = so.mapped_column(sa.UnicodeText, default='en-US')
+    direct: so.Mapped[bool] = so.mapped_column(default=False)
     disabled: so.Mapped[bool] = so.mapped_column(default=False)
     pinned: so.Mapped[bool] = so.mapped_column(default=False)
+    ghost: so.Mapped[bool] = so.mapped_column(default=False)
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id', ondelete='CASCADE'))
     author: so.Mapped['User'] = so.relationship(back_populates='comments')
-    votes: so.Mapped[int] = so.mapped_column(default=0)
+    votes: so.Mapped[int] = so.mapped_column(default=0, index=True)
     post_id: so.Mapped[int] = so.mapped_column()
     parent_id: so.Mapped[int] = so.mapped_column(nullable=True)
-    language: so.Mapped[str] = so.mapped_column(sa.UnicodeText, default='en-US')    
-    utc_offset: so.Mapped[int] = so.mapped_column(default=0)
-    timestamp: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc))
+    utc_offset: so.Mapped[float] = so.mapped_column(default=0)
+    timestamp: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc), index=True)
 
     __table__args = (
-        sa.CheckConstraint(sa.func.char_length(body) <= 1024),
+        sa.CheckConstraint(sa.func.char_length(body) <= 5000),
         sa.CheckConstraint(sa.func.char_length(language) <= 16),
+        sa.CheckConstraint('utc_offset < 12 AND utc_offset > -12'),
     )
 
+    @so.validates("utc_offset")
+    def validate_email(self, key, utc_offset):
+        if not  -12 < float(utc_offset) < 12:
+            raise ValueError("failed utc_offset validation")
+        return utc_offset
 
-    def __repr__(self):
-        return f'<Comment "{self.body}">'
-
-    def votes_count(self):
+    def vote_count(self):
         query= sa.select(Vote).where(Vote.comment_id == self.id)
         count = db.session.execute(sa.select(sa.func.count()).select_from(query.subquery())).scalar()
         self.votes = count
@@ -566,11 +667,11 @@ db.event.listen(Comment.body, 'set', Comment.on_changed_body)
 class Vote(db.Model):
     __talename__ = 'vote'
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id', ondelete='CASCADE'))
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id', ondelete='CASCADE'), index=True)
     user: so.Mapped['User'] = so.relationship(back_populates='votes')
-    post_id: so.Mapped[int] = so.mapped_column(nullable=True)
+    post_id: so.Mapped[int] = so.mapped_column(nullable=True, index=True)
     comment_id: so.Mapped[int] = so.mapped_column(nullable=True)
-    utc_offset: so.Mapped[int] = so.mapped_column(default=0)    
+    utc_offset: so.Mapped[float] = so.mapped_column(default=0)    
     timestamp: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc))
 
 
@@ -580,14 +681,12 @@ class Tag(db.Model):
     __tablename__ = 'tag'
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.UnicodeText)
+    timestamp: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc))
     posts: so.Mapped[List['Post']] = so.relationship(secondary=tags, back_populates='tags', passive_deletes=True)
 
     __table__args = (
-        sa.CheckConstraint(sa.func.char_length(name) <= 32),
+        sa.CheckConstraint(sa.func.char_length(name) <= 30),
     )
-
-    def __repr__(self):
-        return f'<Tag "{self.name}">'
 
 
 class FlagReason(Enum):
@@ -600,24 +699,20 @@ class Flag(db.Model):
     __tablename__ = 'flag'
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     reason: so.Mapped[int] = so.mapped_column(default=0)
-    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id', ondelete='CASCADE'))
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id', ondelete='CASCADE'), index=True)
     user: so.Mapped['User'] = so.relationship(back_populates='flags')
     post_id: so.Mapped[int] = so.mapped_column()
-
-    def __repr__(self):
-        return f'<Flag "{self.reason}">'
+    utc_offset: so.Mapped[float] = so.mapped_column(default=0)
+    timestamp: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc))
 
 
 class Conversation(db.Model):
     __tablename__ = 'conversation'
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     mailbox: so.Mapped[int] = so.mapped_column()
-    message_id: so.Mapped[int] = so.mapped_column()
-    sender_id: so.Mapped[int] = so.mapped_column()
-    recipient_id: so.Mapped[int] = so.mapped_column()
-
-    def __repr__(self):
-        return f'<Mailbox "{self.mailbox}">'
+    message_id: so.Mapped[int] = so.mapped_column(index=True)
+    sender_id: so.Mapped[int] = so.mapped_column(index=True)
+    recipient_id: so.Mapped[int] = so.mapped_column(index=True)
 
 
 class Message(db.Model):
@@ -631,16 +726,13 @@ class Message(db.Model):
     body: so.Mapped[str] = so.mapped_column(sa.LargeBinary)
     language: so.Mapped[str] = so.mapped_column(sa.UnicodeText, default='en-US')    
     photos: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)
-    utc_offset: so.Mapped[int] = so.mapped_column(default=0)    
-    timestamp: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc))
+    utc_offset: so.Mapped[float] = so.mapped_column(default=0)
+    timestamp: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc), index=True)
 
     __table__args = (
-        sa.CheckConstraint(sa.func.char_length(body) <= 1024),
+        sa.CheckConstraint(sa.func.char_length(body) <= 5000),
         sa.CheckConstraint(sa.func.char_length(language) <= 16),
     )
-
-    def __repr__(self):
-        return f'<Message ID - "{self.id}">'
 
     def get_url(self):
         photos = json.loads(self.photos)['link']
@@ -650,13 +742,13 @@ class Message(db.Model):
         if self.photos:
             return json.loads(self.photos)
 
-    def delete_photos(self):
+    def del_all_photos(self):
         photos = json.loads(self.photos) if self.photos else None
         if photos:
             for p in photos['link']:
                 if f"{Photo.SPACES_URL}/post-pics/" in p:
                     name = p.removeprefix(f"{Photo.SPACES_URL}/message-pics/")
-                    Photo.delete_object('message-pics', name)
+                    Photo.del_object('message-pics', name)
 # encode() converts str to bytes with b''. current_app.config['MESSAGE_KEY'].encode() gets an "app.context" error
     key = Config.MESSAGE_KEY.encode()
 
@@ -670,18 +762,18 @@ class Message(db.Model):
 class Notification(db.Model):
     __tablename__ = 'notification'
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    name: so.Mapped[str] = so.mapped_column(sa.UnicodeText)
-    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id', ondelete='CASCADE'), index=True)
+    name: so.Mapped[str] = so.mapped_column(sa.UnicodeText, index=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id', ondelete='CASCADE'))
     user: so.Mapped['User'] = so.relationship(back_populates='notifications')
     payload_json: so.Mapped[str] = so.mapped_column(sa.UnicodeText)
     item_id: so.Mapped[int] = so.mapped_column()
-    item_type: so.Mapped[str] = so.mapped_column(sa.UnicodeText)
+    item_type: so.Mapped[str] = so.mapped_column(sa.UnicodeText, index=True)
     language: so.Mapped[str] = so.mapped_column(sa.UnicodeText, default='en-US')
-    utc_offset: so.Mapped[int] = so.mapped_column(default=0)
-    timestamp: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc))
+    utc_offset: so.Mapped[float] = so.mapped_column(default=0)
+    timestamp: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc), index=True)
 
     __table__args = (
-        sa.CheckConstraint(sa.func.char_length(name) <= 128),
+        sa.CheckConstraint(sa.func.char_length(name) <= 100),
         sa.CheckConstraint(sa.func.char_length(item_type) <= 32),
         sa.CheckConstraint(sa.func.char_length(language) <= 16),
     )
@@ -747,7 +839,7 @@ class Photo():
         except:
             return False
 
-    def delete_object(bucket, name):
+    def del_object(bucket, name):
         try:
             Photo.client.delete_object(
                 Bucket=bucket,
@@ -798,8 +890,8 @@ class Task(db.Model):
     
     __table__args = (
         sa.CheckConstraint(sa.func.char_length(id) <= 64),
-        sa.CheckConstraint(sa.func.char_length(name) <= 128),
-        sa.CheckConstraint(sa.func.char_length(description) <= 256),
+        sa.CheckConstraint(sa.func.char_length(name) <= 100),
+        sa.CheckConstraint(sa.func.char_length(description) <= 200),
     )
 
 #   loads RQ Job instance from a given task id, which comes from Task model. Job.fetch() loads Job instance from data in Redis

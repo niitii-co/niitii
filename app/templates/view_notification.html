@@ -18,7 +18,7 @@
         </div>
         <div>
             {% if n.item_id %}<small class="d-inline"><a class="text-decoration-none" href="{{ url_for('main.post', id=n.item_id) }}">{{ _('View post') }}</a></small>{% endif %}
-            {% set action %}{{ url_for('main.delete_notification', id=n.id) }}{% endset %}
+            {% set action %}{{ url_for('main.del_notification', id=n.id) }}{% endset %}
             {{ macros.empty(action=action, value="delete", input_id=n.id) }}
         </div>
         <hr class="my-2">

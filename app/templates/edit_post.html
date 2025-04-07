@@ -18,9 +18,9 @@
         <div class="fs-5 mb-4"><a class="text-decoration-none" href="{{ url_for('main.post_comment', id=post.id) }}">{{ _('Edit Comment') }}</a>
         </div>
         <h3>{{ _('Delete Post') }}</h3>
-            {% set action %}{{ url_for('main.delete_post', id=post.id) }}{% endset %}
-            {{ macros.delete_post_modal(action=action, value="delete_post")}}
-            {{ macros.delete_btn() }}
+            {% set action %}{{ url_for('main.del_post', id=post.id) }}{% endset %}
+            {{ macros.del_post_modal(action=action, value="del_post")}}
+            {{ macros.del_btn() }}
     {% if post.editor %}
         <p class="mt-3">{{ post.editor }}</p>
     {% endif %}            

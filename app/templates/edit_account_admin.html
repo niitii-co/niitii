@@ -8,28 +8,40 @@
 
     <div class="my-3">
         <img class="rounded-circle avatar-lg" {% if user.photo %} src="{{ user.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">
-        <a class="d-block fs-3 text-decoration-none mt-2" href="{{ url_for('main.user', username=user.username) }}">
-            {{ user.username }}{% if user.verified %}&#x2713;{% elif user.confirmed %}&#xB7;{% endif %} - {{ user.id }}
+        <a class="fs-3 text-decoration-none ms-2" href="{{ url_for('main.user', username=user.username) }}">
+            {{ user.username }}
+            {% if user.verified %}
+            &#x2713;
+            {% elif user.confirmed %}
+            &#xB7;
+            {% endif %}
+            {{ user.id }}
+            {% if user.banner_flag %}
+            <span>{{ user.banner_flag }}</span>
+            {% endif %}
+            {% if user.label %}
+            <span class="badge rounded-pill text-bg-secondary py-0 px-1">{{ user.label }}</span>
+            {% endif %}
         </a>
     </div>
         
     {% if current_user.can("ADMIN") %}
 <!--Administrator Permission-->
         <div class="mb-4">
-            {% set action %}{{ url_for('main.edit_account_admin', username=user.username) }}{% endset %}
-            {{ macros.edit_account_admin(action=action, user=user, admin=True) }}
+        {% set action %}{{ url_for('main.edit_account_admin', username=user.username) }}{% endset %}
+        {{ macros.edit_account_admin(action=action, user=user, admin=True) }}
         </div>
         <div class="mt-3">
             <span class="d-block fs-3">{{ _('Delete Account') }}</span>
-            {% set action %}{{ url_for('main.delete_account', id=user.id) }}{% endset %}
-            {{ macros.delete_account_modal(action=action) }}
-            {{ macros.delete_btn() }}
+            {% set action %}{{ url_for('main.del_account', id=user.id) }}{% endset %}
+            {{ macros.del_account_modal(action=action) }}
+            {{ macros.del_btn() }}
         </div>
     {% elif current_user.can("MODERATE") %}
 <!--Moderator Permission-->
         <div class="mb-4">            
-            {% set action %}{{ url_for('main.edit_account_admin', username=user.username) }}{% endset %}
-            {{ macros.edit_account_admin(action=action, user=user) }}
+        {% set action %}{{ url_for('main.edit_account_admin', username=user.username) }}{% endset %}
+        {{ macros.edit_account_admin(action=action, user=user) }}
         </div>
     {% else %}
         {% if user.mfa_enabled %}

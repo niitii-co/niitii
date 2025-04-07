@@ -7,7 +7,7 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between">
                 <h3 class="font-weight-bold mb-3 text-lg-start">{{ _('Inbox') }}</h3>
-                <p><a class="text-decoration-none text-lg-end" href="{{ url_for('main.edit_message') }}">{{ _('Delete Messages') }}</a></p>
+                <p><a class="text-decoration-none text-lg-end" href="{{ url_for('main.edit_message') }}">{{ _('Edit Messages') }}</a></p>
             </div>
           <div class="card-body w-auto h-10 overflow-y-auto">
             <ul class="list-unstyled mb-0">
@@ -31,7 +31,9 @@
                         <p class="small text-muted">{{  message.decrypt() | truncate(40) }}</p>
                     </div>
                   </div>
-                    <p class="small text-muted ms-2"">{{ _('%(when)s', when=moment(message.timestamp).format('D MMM H:mm')) }}</p>
+                    <p class="small text-muted ms-2"">
+                    <time datetime="{{message.timestamp}}">{{ moment(message.timestamp).format('D MMM H:mm') }}</time>
+                    </p>
                 </a>
               </li>
               {% endfor %}

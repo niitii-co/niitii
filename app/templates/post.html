@@ -2,32 +2,22 @@
 {% import "_macros.html" as macros %}
 
 {% block content %}
+    {% set user = post.author %}
     <div class="mx-auto post-div">
         <div id="post{{post.id}}" class="card-body">
             <div>
-                <img class="rounded-circle avatar" {% if post.author.photo %} src="{{ post.author.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">
-                
-                {% set user_link %}
-                    <a class="text-decoration-none fs-5 text-body" href="{{ url_for('main.user', username=post.author.username) }}" target="_blank" rel="noopener noreferrer">
-                        {{ post.author.username }}
-                        {% if post.author.verified %}
-                        &#x2713;
-                        {% elif post.author.confirmed %}
-                        &#xB7;
-                        {% endif %}
-                    </a>
-                {% endset %}
-                <span>{{ _('%(username)s', username=user_link) }}</span>
-
-                {% if post.author.label %}
-                <span class="badge rounded-pill text-bg-info px-1 py-0">{{ post.author.label }}</span>
-                {% endif %}
-                <span>{{ _('%(when)s', when=moment(post.timestamp).format('D/MM/YY H:mm:ss')) }}</span>
-                {% if post.edit_timestamp %}
-                <span>{{ _('*%(when)s', when=moment(post.edit_timestamp).format('D/MM/YY H:mm:ss')) }}</span>
-                {% endif %}
+                {{ macros.avatar(user) }}
+                <span>{{ macros.user_link(user=user) }}</span>
                 {% if post.locked %}
-                    <span class="fs-6">&#x1F512;</span>
+                <span class="fs-6">&#x1F512;</span>
+                {% endif %}
+                <span>
+                <time datetime="{{post.timestamp}}">{{ moment(post.timestamp).format('D/MM/YY H:mm:ss') }}</time>
+                </span>
+                {% if post.edit_timestamp %}
+                <span> -
+                *<time datetime="{{post.timestamp}}">{{ moment(post.edit_timestamp).format('D/MM/YY H:mm:ss') }}</time>
+                </span>
                 {% endif %}
             </div>
 
@@ -93,11 +83,16 @@
                         &#x21E7; {{ post.votes }}
                     </span>
                 {% endif %}             
-                    <span class="px-1 small">{{ post.comments }} {{ _('Comments') }}</span>
+                    <span class="px-1 small">
+                    {{ post.comments }} {{ _('Comments') }} ({{ post.removed_comments }})
+                    </span>
+                    <span class="btn btn-outline-dark btn-sm border border-dark-subtle py-0 px-1" id="showDirect">
+                    &#x1F576; {{ post.direct_comments }}
+                    </span>                    
                 {% if current_user.is_authenticated %}
                     {% set action %}{{ url_for('main.flag', id=post.id) }}{% endset %}
                     {{ macros.flag(action=action, count=post.flags) }}
-                    {% if current_user == post.author or current_user.can("MODERATE") %}
+                    {% if current_user == user or current_user.can("MODERATE") %}
                     <a class="text-decoration-none focus-ring focus-ring-dark py-1 ms-3" href="{{ url_for('main.edit_post', id=post.id) }}">{{ _('Edit') }}</a>
                     {% endif %}
                 {% endif %}
@@ -108,23 +103,32 @@
         <button class="btn btn-md dropdown-toggle mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#Comment" aria-expanded="False" aria-controls="Comment">
             {{_('Comment')}}
         </button>
-        <div class="collapse" id="Comment">
-                {% if post.pin_comments < 3 and current_user.is_authenticated and (current_user == post.author or current_user.can("MODERATE")) %}
+        <div class="collapse mb-3" id="Comment">
+            {% if current_user.is_authenticated %}
+                {% if post.pin_comments < 3 and (current_user == user or current_user.can("MODERATE")) %}
                     {% set pin = True %}
                 {% else %}
                     {% set pin = False %}
                 {% endif %}
+                {% if current_user != post.author %}
+                    {% set direct = True %}
+                    {% set ghost = True %}
+                {% else %}
+                    {% set direct = False %}
+                    {% set ghost = False %}
+                {% endif %}
                 {% set action %}{{ url_for('main.comment', id=post.id) }}{% endset %}
                 {% set id = 'pin_comment' %}
-                
-                {{ macros.comment(action=action, pin=pin, value="comment") }}
+
+                {{ macros.comment(action=action, pin=pin, direct=direct, ghost=ghost, value="comment") }}
+        {% endif %}
         </div>
         {% endif %}
+
     {% include '_comment.html' %}
     </div>
 
     {{ macros.pagination(pagination, 'main.post', id=post.id) }}
-
 
     <script type="text/javascript">
 
@@ -157,6 +161,7 @@
             })
             .catch(console.error);
         }
+
         document.addEventListener('submit', (e) => {
             try {
                 if (e.target.id != 'search' && e.target.id != 'comment') {
@@ -168,7 +173,6 @@
                 console.error(error);
             }
        });
-
 
         document.addEventListener('DOMContentLoaded', function() {
 // create div at the end of <body>
@@ -214,6 +218,21 @@
                 ele.classList.remove('border');
             });            
             {% endif %}
+            
+            const directComment = document.querySelector('#showDirect')
+            
+            directComment.addEventListener('click', e => {
+                Array.from(document.querySelectorAll('.comment')).forEach((ele, index) => {
+                    console.log(directComment);
+                    if (ele.style.display === "none") {
+                        ele.style.display = "block";
+                        directComment.classList.remove('bg-secondary');
+                    } else {
+                        ele.style.display = "none";
+                        directComment.classList.add('bg-secondary');
+                    }
+                });
+            });
 
         });
 

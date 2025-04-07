@@ -135,7 +135,7 @@
                     <a href="{{ url_for('main.about') }}" class="nav-link px-2 text-body-secondary">{{ _('About') }}</a>
                 </li>
                 <li class="nav-item small">
-                    <a href="https://github.com/niitii-co/niitii" class="nav-link px-2 text-body-secondary">{{ _('Github') }}</a>
+                    <a href="https://github.com/niitii-co/niitii" class="nav-link px-2 text-body-secondary">{{ _('Code') }}</a>
                 </li>
                 <li class="nav-item small">
                     <a href="{{ url_for('main.contact') }}" class="nav-link px-2 text-body-secondary">{{ _('Contact') }}</a>
@@ -216,15 +216,10 @@
 
 
         document.addEventListener('DOMContentLoaded', function() {
-            const utc_offset = document.querySelector('input[name="utc_offset"]');
-            const language = document.querySelector('input[name="language"]');
-            if (utc_offset) {
-                dt = new Date();
-                utc_offset.value = dt.getTimezoneOffset() / 60;
-            }
-            if (language) {
-                language.value = navigator.language;
-            }
+            const dt = new Date();
+            Array.from(document.querySelectorAll('input[name="utc_offset"]')).forEach((ele, index) =>{
+                ele.value = dt.getTimezoneOffset() / 60;
+            });
 
             Array.from(document.querySelectorAll('img')).forEach((ele, index) => {
 // replace Spaces origin url with cdn url. https://niitii-spaces.nyc3.digitaloceanspaces.com/ to https://niitii-spaces.nyc3.cdn.digitaloceanspaces.com/

@@ -1,31 +1,23 @@
 {% for comment in comments %}
-<div id="comment{{comment.id}}" class="card border-0">
+    {% set user = comment.author %}
+<div id="comment{{comment.id}}" class="card border-0 {% if not comment.direct %} comment {% endif %}">
     <div class="card-body p-0 mb-3">
         <div>
-            <img class="rounded-circle avatar" {% if post.author.picture %} src="{{ post.author.picture }}" {% else %} src="https://www.gravatar.com/avatar/?d=mp&s=200" {% endif %}alt="photo">
-
-            {% set user_link %}
-<!--                 d-inline-block remove trailing space from <a> tag -->            
-                <a class="text-decoration-none d-inline-block fs-6 text-body" href="{{ url_for('main.user', username=comment.author.username) }}" target="_blank" rel="noopener noreferrer">
-                    {{ comment.author.username }}
-                    {% if comment.author.verified %}
-                    &#x2713;
-                    {% elif comment.author.confirmed %}
-                    &#xB7;
-                    {% endif %}
-                </a>
-            {% endset %}
-
-            <span>{{ _('%(username)s', username=user_link) }}</span>
-            {% if comment.author.label %}
-            <span class="badge rounded-pill text-bg-secondary py-0 px-1">{{ comment.author.label }}</span>
+            {% if not comment.ghost %}
+            {{ macros.avatar(user) }}
+            <span>{{ macros.user_link(user=user) }}</span>
             {% endif %}
-            <span id="c{{comment.id}}">{{comment.id}} - {{ _('%(when)s', when=moment(comment.timestamp).format('D/MM/YY H:mm:ss')) }}</span>
             {% if comment.pinned %}
             <span>&#x1F4CC;</span>
             {% endif %}
+            {% if comment.direct %}
+            <span>&#x1F576;</span>
+            {% endif %}
+            <span id="c{{comment.id}}">{{loop.index}} - 
+            <time datetime="{{comment.timestamp}}">{{ moment(comment.timestamp).format('D/MM/YY H:mm:ss') }}</time>
+            </span>
 
-            <div class="pt-2 comment-body">
+            <div class="comment-body">
                 {% if comment.disabled %}
                     <p class="small fst-italic">{{ _('Disabled') }}</p>
                 {% else %}
@@ -45,7 +37,7 @@
                 </button>
                 <div class="collapse" id="reply_comment_{{ comment.id }}">
                 {% set action %}{{ url_for('main.reply_comment', id=post.id) }}{% endset %}
-                {{ macros.comment(action=action, author=comment.author, comment_id=comment.id, value="reply_comment") }}
+                {{ macros.comment(action=action, author=user, comment_id=comment.id, value="reply_comment") }}
                 </div>
             {% else %}
                 <span class="btn btn-outline-dark btn-sm border border-dark-subtle disabled px-1 py-0">

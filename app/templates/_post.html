@@ -2,26 +2,12 @@
     {% set user = post.author %}
     <div id="post{{post.id}}" class="card-body mx-auto p-0 {% if not user_page %}card-width{% endif %}">
         <div>
-            <img class="rounded-circle avatar" {% if user.photo %} src="{{ user.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">
+            {{ macros.avatar(user) }}
+            <span>{{ macros.user_link(user=user) }}</span>
+            <span>
+            <time datetime="{{post.timestamp}}">{{ moment(post.timestamp).format('D/MM/YY H:mm:ss') }}</time>
+            </span>
 
-            {% set user_link %}
-<!-- d-inline-block remove trailing space from <a> tag -->
-                <a class="text-decoration-none d-inline-block fs-6 text-body" href="{{ url_for('main.user', username=user.username) }}">
-                    {{ user.username }}
-                    {% if user.verified %}
-                    &#x2713;
-                    {% elif user.confirmed %}
-                    &#xB7;
-                    {% endif %}
-                    {% if user.banner_flag %}<span>{{ user.banner_flag }}</span>{% endif %}
-                </a>
-            {% endset %}
-            <span>{{ _('%(username)s', username=user_link) }}</span>
-
-            {% if user.label %}
-            <span class="badge rounded-pill text-bg-info px-1 py-0">{{ user.label }}</span>
-            {% endif %}
-            <span>{{ _('%(when)s', when=moment(post.timestamp).format('D/MM/YY H:mm:ss')) }}</span>
         </div>
         <div>
             <div class="ps-0 pt-2 pb-2 post-link" >

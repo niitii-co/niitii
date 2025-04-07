@@ -8,18 +8,30 @@
 
     <div class="my-3">
         <img class="rounded-circle avatar-lg" {% if user.photo %} src="{{ user.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">
-        <p class="text-decoration-none fs-3 text-body mt-2" href="{{ url_for('main.user', username=user.username) }}">
-            {{ user.username }}{% if user.verified %}&#x2713;{% elif user.confirmed %}&#xB7;{% endif %} - {{ user.id }}
-        </p>
-    </div>  
+        <a class="text-decoration-none fs-3 text-body ms-2" href="{{ url_for('main.user', username=user.username) }}">
+            {{ user.username }}
+            {% if user.verified %}
+            &#x2713;
+            {% elif user.confirmed %}
+            &#xB7;
+            {% endif %}
+            {{ user.id }}
+            {% if user.banner_flag %}
+            <span>{{ user.banner_flag }}</span>
+            {% endif %}
+            {% if user.label %}
+            <span class="badge rounded-pill text-bg-secondary py-0 px-1">{{ user.label }}</span>
+            {% endif %}
+        </a>
+    </div>
         {% set action = url_for('main.edit_account', username=user.username) %}
         {{ macros.edit_account(action=action, user=user) }}
     <div class="my-3">
     {% if user.mfa_enabled %}
-        {% set action = url_for('auth.disable_mfa') %}    
+        {% set action = url_for('auth.disable_mfa') %}
         {{ macros.empty(action=action, value="disable_mfa", label="Disable MFA") }}
     {% else %}
-        {% set action = url_for('auth.setup_mfa') %}    
+        {% set action = url_for('auth.setup_mfa') %}
         {{ macros.empty(action=action, value="enable_mfa", label="Enable MFA") }}
     {% endif %}
     </div>
@@ -30,9 +42,9 @@
         <p class="m-0"><a class="fs-5 text-decoration-none" href="{{ url_for('auth.change_password') }}">{{ _('Change password') }}</a></p>
         <p><a class="fs-5 text-decoration-none" href="{{ url_for('auth.request_change_email') }}">{{ _('Change email') }}</a></p>
         <span class="d-block fs-3">{{ _('Delete Account') }}</span>
-        {% set action %}{{ url_for('main.delete_account', id=user.id) }}{% endset %}
-        {{ macros.delete_account_modal(action=action) }}
-        {{ macros.delete_btn() }}
+        {% set action %}{{ url_for('main.del_account', id=user.id) }}{% endset %}
+        {{ macros.del_account_modal(action=action) }}
+        {{ macros.del_btn() }}
     </div>
     </div>
     </div>    

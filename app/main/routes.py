@@ -1,7 +1,7 @@
 from app import db, socketio
 from app.decorators import permission_required
 from app.main import bp
-from app.models import User, Post, Comment, Conversation, follows as follows_tbl, Message, Notification, Tag, tags as tags_tbl, Vote, Permission, Photo, Flag, FlagReason, Chatii
+from app.models import User, Post, Comment, Conversation, Message, Notification, Tag, Vote, AccountPermission, Photo, Flag, FlagReason, Chatii
 from datetime import datetime, timezone, timedelta
 from flask import abort, render_template, flash, redirect, request, url_for, g, current_app, request, make_response, session, json
 from flask_login import current_user, login_required
@@ -17,12 +17,22 @@ import uuid
 
 
 @bp.before_app_request
+def before_app_request():
+# g object is designed to store data that needs to be available throughout the request context
+    g.locale = str(get_locale())
+
+
+@bp.before_request
 def before_request():
     if current_user.is_authenticated:
         current_user.last_seen = datetime.now(timezone.utc)
-        
+
         db.session.commit()
-    g.locale = str(get_locale())
+
+    if request.method == 'POST':
+# >>>type(request.accept_languages)... <class 'werkzeug.datastructures.accept.LanguageAccept'>
+        g.language = str(request.accept_languages).split(',')[0] if request.accept_languages != '*' else 'en-US'
+
 
 #print(json.dumps(dict(request.form)))
 @bp.route('/')
@@ -30,9 +40,13 @@ def before_request():
 @bp.route('/index')
 def index():
     query = sa.select(Post).order_by(Post.votes.desc(), Post.comments.desc(), Post.timestamp.desc()).limit(200)
-    posts = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
+    pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
 
-    return render_template('index.html', title=_('Index'), posts=posts.items, pagination=posts)
+    for post in pagination.items:
+        if not post.can_view():
+            pagination.items.remove(post)
+
+    return render_template('index.html', title=_('Index'), posts=pagination.items, pagination=pagination)
 
 
 @bp.route('/feed')
@@ -53,17 +67,16 @@ def new_post():
     if request.method == 'POST':
         nsfw = True if request.form.get('nsfw') else False
         disable_comments = True if request.form.get('disable_comments') else False
-        language = request.form.get('language')
         utc_offset = request.form.get('utc_offset')
-        post = Post(title=request.form.get('title'), body=request.form.get('body'), author=current_user, disable_comments=disable_comments, nsfw=nsfw, language=language, utc_offset=utc_offset)
+        post = Post(title=request.form.get('title'), body=request.form.get('body'), author=current_user, disable_comments=disable_comments, nsfw=nsfw, language=g.language, utc_offset=utc_offset)
         db.session.add(post)
         form_link = request.form.getlist('add_photos')[0:5]
         photo_name = []
         photo_link = []
         p_count = 0
 
-# form_link will be true even if values are empty. form_link[i] will be true only if values are true
-        if form_link:
+# form_link will return ['', '', '', '', ''] if empty. len(form_link) = 5
+        if form_link[0] != '':
             for i, f in enumerate(form_link):
                 if form_link[i]:
                     photo_name.append(f"photo{i + 1}")
@@ -72,20 +85,20 @@ def new_post():
             post.photos = json.dumps({"name": photo_name, "link": photo_link, "nsfw": nsfw})
 
 # max uploads is 5. Cannot upload photo files if 5 links are added
-        if request.files['photo'] and p_count < 5:
+# If the user does not select a file, the browser submits an empty file without a filename.
+# Empty files will return [<FileStorage: '' ('application/octet-stream')>]
+        if request.files['photo'].filename != '' and p_count < 5:
             photo_files = request.files.getlist('photo')[0:5]
-    # Empty files will return list[0] = [<FileStorage: '' ('application/octet-stream')>]
-            if photo_files[0].filename != '':
-                bucket = 'post-pics'
-                for f in photo_files:
-                    if f.filename != '' and Photo.allowed_file(f.filename):
-    # sanitize filename before setting name
-                        f.filename = secure_filename(f.filename)    
-                        name = f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-%f')}-{current_user.username}-{f.filename}"
-                        if Photo.upload_object(bucket, name, f, 'public-read'):
-                            photo_name.append(f.filename)
-                            photo_link.append(f"{Photo.SPACES_URL}/{bucket}/{name}")
-                post.photos = json.dumps({"name": photo_name, "link": photo_link, "nsfw": nsfw})
+            bucket = 'post-pics'
+            for f in photo_files:
+                if f.filename != '' and Photo.allowed_file(f.filename):
+# sanitize filename before setting name
+                    f.filename = secure_filename(f.filename)    
+                    name = f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-%f')}-{current_user.username}-{f.filename}"
+                    if Photo.upload_object(bucket, name, f, 'public-read'):
+                        photo_name.append(f.filename)
+                        photo_link.append(f"{Photo.SPACES_URL}/{bucket}/{name}")
+            post.photos = json.dumps({"name": photo_name, "link": photo_link, "nsfw": nsfw})
 
         if request.form.get('tags'):
             form_tags = request.form.get('tags').split()[0:5]
@@ -106,11 +119,17 @@ def new_post():
 @bp.route('/post/<int:id>')
 def post(id):
     post = db.first_or_404(sa.select(Post).where(Post.id == id))
+    if not post.can_view():
+        return redirect(url_for('main.user', username=post.author.username))
     page = request.args.get('page', 1, type=int)
     if page == -1:
         page = (post.comments_count() - 1) // current_app.config['COMMENTS_PER_PAGE'] + 1
     query = post.get_comments()
     pagination = db.paginate(query, page=page, per_page=current_app.config['COMMENTS_PER_PAGE'], error_out=False)
+
+    if current_user != post.author:
+        for c in pagination.items:
+            pagination.items.remove(c) if c.direct else None
 
     return render_template('post.html', title= f"{post.title} - {post.author.username}", post=post, comments=pagination.items, pagination=pagination)
 
@@ -130,12 +149,18 @@ def comment(id):
             pin_comments = post.pin_comments
             pinned = False
 
-        comment = Comment(body=request.form.get('body'), author=current_user._get_current_object(), post_id=id, user_id=current_user.id, pinned=pinned)
+        direct = True if request.form.get('direct_comment') else False
+        ghost = True if request.form.get('ghost_comment') else False
+        utc_offset = request.form.get('utc_offset')
+        comment = Comment(author=current_user._get_current_object(), body=request.form.get('body'), post_id=id, user_id=current_user.id, pinned=pinned, direct=direct, ghost=ghost, language=g.language, utc_offset=utc_offset)
         post.pin_comments = pin_comments
+
         db.session.add(comment)
         db.session.flush()
+        if request.form.get('direct_comment'):
+            post.direct_comments_count()
         post.comments_count()
-        
+
         notice = db.session.execute(post.author.notifications.select().where((Notification.item_id == id) & (Notification.name == 'new_comment'))).scalar()
         if notice:
 # comment = db.session.execute(sa.select(Comment, sa.func.max(Comment.id))).scalar()
@@ -147,7 +172,8 @@ def comment(id):
             post.author.add_notification(name='new_comment', payload=payload, item_id=id, item_type='comment')
 
         db.session.commit()
-        return redirect(request.referrer)
+        
+    return redirect(request.referrer)
 
 
 @bp.route('/reply-comment/<int:id>', methods=['POST'])
@@ -161,15 +187,19 @@ def reply_comment(id):
         comment = db.session.execute(sa.select(Comment).where(Comment.id == request.form.get('comment_id'))).scalar()
         c_author = db.session.execute(sa.select(User).where(User.id == request.form.get('authorId'))).scalar()
         if comment:
-            reply_comment = Comment(body=request.form.get('body'), author=current_user._get_current_object(), post_id=id, user_id=current_user.id, parent_id=comment.id)
-            db.session.add(reply_comment)
+            utc_offset = request.form.get('utc_offset')
+            reply = Comment(author=current_user._get_current_object(), body=request.form.get('body'), post_id=id, user_id=current_user.id, parent_id=comment.id, language=g.language, utc_offset=utc_offset)
+
+            db.session.add(reply)
             db.session.flush()
             post.comments_count()
+
             payload = {"key": f"{post.title} \n{request.form.get('body')} \n{current_user.username}"}
             c_author.add_notification(name='reply_comment', payload=payload, item_id=id, item_type='comment')
 
             db.session.commit()
-            return redirect(request.referrer)
+
+    return redirect(request.referrer)
 
 
 @bp.route('/vote-post/<int:id>', methods=['POST'])
@@ -178,20 +208,21 @@ def reply_comment(id):
 def vote_post(id):
     post = db.first_or_404(sa.select(Post).where(Post.id == id))
     vote = db.session.execute(sa.select(Vote).where((Vote.user_id == current_user.id) & (Vote.post_id == id))).scalar()
-# locked post will return the current count. JS fetch() expects a response
+
     if post.locked:
         return {
-        "count": f"&#x21E7; {post.votes_count()}",
-        }    
+        "count": f"&#x21E7; {post.votes}",
+        }
     if vote is None:
-        vote = Vote(user_id=current_user.id, post_id=id)
+        utc_offset = request.form.get('utc_offset')
+        vote = Vote(user_id=current_user.id, post_id=id, utc_offset=utc_offset)
         db.session.add(vote)
         db.session.flush()
-        count = post.votes_count()
+        count = post.vote_count()
     else:
         db.session.delete(vote)
         db.session.flush()
-        count = post.votes_count()
+        count = post.vote_count()
 
     db.session.commit()
     return {
@@ -207,19 +238,21 @@ def vote_comment(id):
     vote = db.session.execute(sa.select(Vote).where((Vote.user_id == current_user.id) & \
     (Vote.post_id == id) & (Vote.comment_id == request.form.get('input_id')))).scalar()
     comment = db.session.execute(sa.select(Comment).where(Comment.id == request.form.get('input_id'))).scalar()
+
     if post.locked:
         return {
-            "count": f"&#x21E7; {comment.votes_count()}",
+            "count": f"&#x21E7; {comment.votes}",
         }
     if vote is None:
-        vote = Vote(user_id=current_user.id, post_id=id, comment_id=comment.id)
+        utc_offset = request.form.get('utc_offset')
+        vote = Vote(user_id=current_user.id, post_id=id, comment_id=comment.id, utc_offset=utc_offset)
         db.session.add(vote)
         db.session.flush()
-        count = comment.votes_count()
+        count = comment.vote_count()
     else:
         db.session.delete(vote)
         db.session.flush()
-        count = comment.votes_count()
+        count = comment.vote_count()
 
     db.session.commit()
     return {
@@ -234,10 +267,11 @@ def flag(id):
     flag = db.session.execute(sa.select(Flag).where((Flag.user_id == current_user.id) & (Flag.post_id == id))).scalar()
     if post.locked:
         return {
-            "count": f"&#x1F6A9; {post.flags_count()}",
+            "count": f"&#x1F6A9; {post.flags}",
         }
     if not flag:
-        flag = Flag(reason=FlagReason[request.form.get('flag')].value, user_id=current_user.id, post_id=id)
+        utc_offset = request.form.get('utc_offset')
+        flag = Flag(reason=FlagReason[request.form.get('flag')].value, user_id=current_user.id, post_id=id, utc_offset=utc_offset)
         db.session.add(flag)
         db.session.flush()
         count = post.flags_count()
@@ -260,15 +294,16 @@ def edit_post(id):
         return redirect(request.referrer)
 
     if request.method == 'POST':
-        post.body = request.form.get('body')
+        post.body = request.form.get('body') if request.form.get('body') else post.body
         post.edit_timestamp = datetime.now(timezone.utc)
         post.disable_comments = True if request.form.get('disable_comments') else False
-        post.language = request.form.get('language')
+        post.language = g.language
         utc_offset = request.form.get('utc_offset')
         utc_time = datetime.now(timezone.utc).strftime('%Y%m%d-%H:%M')
         post.editor = f"{current_user.username}_{utc_time}_{utc_offset}"
         nsfw = True if request.form.get('nsfw') else False
         post.nsfw = nsfw
+        post.viewer = int(request.form.get('viewer'))
         form_tags = request.form.get('tags').split()[0:5]
         bucket = 'post-pics'
         p_photos = post.get_photos()
@@ -277,14 +312,17 @@ def edit_post(id):
             post.locked = True if request.form.get('lock_post') else False
             post.label = request.form.get('label') if request.form.get('label') and request.form.get('label') != 'null' else None
 
-        if request.form.get('tags') and post.tags:
+        if not form_tags:
+            post.del_all_tags()
+
+        if form_tags and post.tags:
             post_tags = post.get_tags()
 
 # loop body needs to reference tag.id since there will be duplicate tag.name. Only tags mapped to this post need to be deleted
             for tag in post.tags:
                 if tag.name not in form_tags:
-                    db.session.execute(sa.delete(Tag).where(Tag.id == tag.id))
-                    db.session.execute(tags_tbl.delete().where(tags_tbl.c.tag_id == tag.id))
+                    post.del_tag(tag.id)
+
 # check for duplicate tags in form then add
             for tag in form_tags:
                 if tag not in post_tags:
@@ -300,7 +338,6 @@ def edit_post(id):
                     new_tag = Tag(name=tag.replace('#', ''), posts=[post])
                     db.session.add(new_tag)
 
-#        print(json.dumps(dict(request.form)))
         photo_name = []
         photo_link = []
 # p_max gets the count so photo_name = photo<number>. max uploads is 5
@@ -328,7 +365,7 @@ def edit_post(id):
             for i in range(len(request.form.getlist('del_photos')) - 1, -1, -1):
                 p = p_photos['link'][i]
                 if "niitii-spaces" in p:
-                    Photo.delete_object('post-pics', p.removeprefix(f"{Photo.SPACES_URL}/post-pics/"))
+                    Photo.del_object('post-pics', p.removeprefix(f"{Photo.SPACES_URL}/post-pics/"))
 
                 del p_photos['name'][i]
                 del p_photos['link'][i]
@@ -337,7 +374,7 @@ def edit_post(id):
             photo_link = p_photos['link']
             post.photos = json.dumps({"name": photo_name, "link": photo_link, "nsfw": nsfw})
 
-        if request.files['photo']:
+        if request.files['photo'].filename != '':
             photo_files = request.files.getlist('photo')[0:p_max]
             for f in photo_files:
                 if f.filename != '' and Photo.allowed_file(f.filename):
@@ -357,9 +394,9 @@ def edit_post(id):
     return render_template('edit_post.html', title=_('Edit Post') + f" - {post.author.username }", post=post, tags=post_tags)
 
 
-@bp.route('/delete-post/<int:id>', methods=['POST'])
+@bp.route('/del-post/<int:id>', methods=['POST'])
 @login_required
-def delete_post(id):
+def del_post(id):
     post = db.first_or_404(sa.select(Post).where(Post.id == id))
 
     if post.user_id == current_user.id or current_user.can("MODERATE"):
@@ -371,10 +408,11 @@ def delete_post(id):
 
 # PRAGMA enables cascade in sqlite
 # db.session.execute(sa.text('PRAGMA foreign_keys = ON'))
-        post.delete_votes()
-        post.delete_flags()
-        post.delete_comments()
-        post.delete_photos()
+        post.del_all_votes()
+        post.del_all_flags()
+        post.del_all_comments()
+        post.del_all_photos()
+        post.del_all_tags()
         db.session.delete(post)
 
         db.session.commit()
@@ -391,10 +429,14 @@ def post_comment(id):
     query = post.get_comments()
     pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['COMMENTS_PER_PAGE'], error_out=False)
 
+    if current_user != post.author:
+        for c in pagination.items:
+            pagination.items.remove(c) if c.direct else None
+
     return render_template('post_comment.html', title=_('Post Comment') + f" - {post.author.username }", post=post, comments=pagination.items, pagination=pagination)
 
 
-@bp.route('/user-comment/<username>', methods=['GET', 'POST'])
+@bp.route('/user-comment/<username>')
 @login_required
 def user_comment(username):
     if current_user.username != username and not current_user.can("MODERATE"):
@@ -413,7 +455,7 @@ def disable_comment(id):
     comment = db.first_or_404(sa.select(Comment).where(Comment.id == id))
     post = db.first_or_404(sa.select(Post).where(Post.id == comment.post_id))
 
-    if current_user != post.author and current_user != post.author and not current_user.can("MODERATE"):
+    if current_user != comment.author and current_user != post.author and not current_user.can("MODERATE"):
         return redirect(request.referrer)
 
     comment.disabled = True if request.form.get('submit') == 'disable' else False
@@ -424,17 +466,20 @@ def disable_comment(id):
     return redirect(request.referrer)
 
 
-@bp.route('/delete-comment/<int:id>', methods=['POST'])
+@bp.route('/del-comment/<int:id>', methods=['POST'])
 @login_required
-def delete_comment(id):
+def del_comment(id):
     comment = db.first_or_404(sa.select(Comment).where(Comment.id == id))
     post = db.first_or_404(sa.select(Post).where(Post.id == comment.post_id))
 
-    if current_user != post.author and current_user != post.author and not current_user.can("MODERATE"):
+    if current_user != comment.author and current_user != post.author and not current_user.can("MODERATE"):
         return redirect(request.referrer)
 
-    if comment.pinned and (current_user == post.author or current_user.can('MODERATE')):
-        post.pin_comments -= 1
+    if (current_user == post.author or current_user.can('MODERATE')):
+        if comment.pinned:
+            post.pin_comments -= 1
+
+        post.removed_comments += 1
 
     db.session.delete(comment)
     db.session.flush()
@@ -447,10 +492,8 @@ def delete_comment(id):
 @bp.route('/tag/<name>')
 def view_tag(name):
     tag = db.first_or_404(sa.select(Tag).where(Tag.name == name))
-    query = db.select(Post)\
-            .join(tags_tbl, tags_tbl.c.post_id == Post.id)\
-            .join(Tag, tags_tbl.c.tag_id == Tag.id)\
-            .where(Tag.name == name)
+    query = Post.tag_query(name)
+
     pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
 
     return render_template('tag.html', title=_('Tag'), posts=pagination.items, pagination=pagination)
@@ -462,6 +505,10 @@ def user(username):
     query = user.posts.select().order_by(Post.timestamp.desc())
     pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
     age = (datetime.now() - user.birth).days // 365 if user.birth else None
+    
+    for post in pagination.items:
+        if not post.can_view():
+            pagination.items.remove(post)
 
     return render_template('user.html',  title=_('User') + f" - {user.username }", user=user, posts=pagination.items, pagination=pagination, age=age)
 
@@ -473,8 +520,10 @@ def ping(id):
     sender = f"\n{current_user.username}" if request.form.get('pingCheck') else '\n...'
     payload = {"key": f"Ping \n{request.form.get('body')} {sender}"}
     user.add_notification(name='new_ping', payload=payload, item_id=0, item_type='ping')
+
     db.session.flush()
     ping_count = db.session.execute(user.notifications.select().where(Notification.name == 'ping_count')).scalar()
+
     if ping_count:
         ping_count.update_payload({"key": f"{user.ping_count()}"})
     else:
@@ -540,20 +589,24 @@ def edit_account(username):
             current_user.banner_flag = request.form.get('banner_flag')
             current_user.contact_email = request.form.get('contact_email')
             current_user.about_me = request.form.get('about_me')
+            current_user.language = g.language
+            current_user.utc_offset = request.form.get('utc_offset')
+            current_user.viewer = int(request.form.get('viewer'))
             current_user.song = json.dumps({'name':request.form.get('song_name'), 'link': request.form.get('song_link')}) if request.form.get('song_name') and request.form.get('song_link') else None
             current_user.birth = datetime.strptime(request.form.get('birth'), '%Y-%m-%d') if request.form.get('birth') else None
+
             if request.form.get('photo_link'):
                 if current_user.photo:
-                    current_user.delete_photo()
+                    current_user.del_photo()
                     current_user.photo = request.form.get('photo_link') if not request.form.get('del_photo') else None
                 else:
                     current_user.photo = request.form.get('photo_link') if not request.form.get('del_photo') else None
 
-            if request.files['photo']:
-                f = request.files.getlist('photo')[0]
+            if request.files['photo'].filename != '':
+                f = request.files['photo']
                 if f.filename != '' and Photo.allowed_file(f.filename):
                     if current_user.photo:
-                        current_user.delete_photo()
+                        current_user.del_photo()
 
                     f.filename = secure_filename(f.filename)
                     name = f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-%f')}-{current_user.username}-{f.filename}"
@@ -583,6 +636,7 @@ def edit_account_admin(username):
             user.label = request.form.get('label')
             user.song = json.dumps({'name':request.form.get('song_name'), 'link': request.form.get('song_link')}) if request.form.get('song_name') and request.form.get('song_link') else None
             user.location = request.form.get('location') if request.form.get('location') else None
+
             utc_offset = request.form.get('utc_offset')
             utc_time = datetime.now(timezone.utc).strftime('%Y%m%d-%H:%M')            
             user.editor = f"{current_user.username}_{utc_time}_{utc_offset}"
@@ -591,7 +645,7 @@ def edit_account_admin(username):
             if current_user.can('ADMIN'):
                 user.disabled = request.form.get('disabled') if request.form.get('disabled') else False
                 if int(request.form.get('permission')) <= current_user.permission:
-                    user.set_permission(Permission(int(request.form.get('permission'))).name)
+                    user.set_permission(AccountPermission(int(request.form.get('permission'))).name)
 
         db.session.commit()
         return redirect(url_for('main.user', username=user.username))
@@ -599,39 +653,40 @@ def edit_account_admin(username):
     return render_template('edit_account_admin.html', title=_('Edit account admin') + f" - {user.username}", user=user)
 
 
-@bp.route('/delete-account/<int:id>', methods=['POST'])
+@bp.route('/del-account/<int:id>', methods=['POST'])
 @login_required
-def delete_account(id):
+def del_account(id):
     user = db.first_or_404(sa.select(User).where(User.id == id))
     if user is None or current_user.id != user.id and not current_user.can('ADMIN'):
         return redirect(url_for('main.index'))
     elif user.check_password(request.form.get('password')) or current_user.check_password(request.form.get('password')):
         if user.photo:
-            user.delete_photo()
+            user.del_photo()
 # Delete post photos from storage Spaces
         posts = db.session.execute(user.posts.select()).scalars()
         for p in posts:
-            p.delete_comments()
-            p.delete_flags()
-            p.delete_votes()
-            p.delete_photos()
+            p.del_all_comments()
+            p.del_all_flags()
+            p.del_all_votes()
+            p.del_all_tags()
+            p.del_all_photos()
 
         messages = db.session.execute(user.messages_sent.select()).scalars()
 
         for m in messages:
             if m.get_photos():
-                m.delete_photos()
+                m.del_all_photos()
 
 # PRAGMA enables cascade in sqlite
         db.session.execute(sa.text('PRAGMA foreign_keys = ON'))
-        db.session.execute(user.messages_sent.delete())
-        db.session.execute(user.comments.delete())
-        db.session.execute(user.votes.delete())
-        db.session.execute(user.flags.delete())
-        db.session.execute(user.notifications.delete())
-        db.session.execute(user.posts.delete())
-        db.session.execute(follows_tbl.delete().where((follows_tbl.c.follower_id == user.id) | (follows_tbl.c.followed_id == user.id)))
-        db.session.delete(user)
+        user.del_all_sent_messages()
+        user.del_all_comments()
+        user.del_all_votes()
+        user.del_all_flags()
+        user.del_all_notifications()
+        user.del_all_posts()
+        user.del_all_follows()
+        user.del_user()
 
         db.session.commit()
         return redirect(url_for('main.index'))
@@ -668,7 +723,7 @@ def inbox():
     return render_template('inbox.html', title=_('Inbox') + f" - {current_user.username}", messages=pagination.items, pagination=pagination)
 
 
-@bp.route('/message/<username>', methods=['GET', 'POST'])
+@bp.route('/message/<username>')
 @login_required
 @permission_required('MESSAGE')
 def message(username):
@@ -696,8 +751,9 @@ def message(username):
 @login_required
 def send_message(username):
     user = db.first_or_404(sa.select(User).where(User.username == username))
-    
-    msg = Message(sender=current_user, recipient=user, body=Message.encrypt(request.form.get('body')))
+
+    utc_offset = request.form.get('utc_offset')
+    msg = Message(sender=current_user, recipient=user, body=Message.encrypt(request.form.get('body')), language=g.language, utc_offset=utc_offset)
     db.session.add(msg)
     db.session.flush()
     if request.files['photo'].filename:
@@ -713,7 +769,7 @@ def send_message(username):
     if convo:
 # Create entry with existing conversation mailbox number
         new_convo = Conversation(mailbox=convo, message_id=msg.id, sender_id=current_user.id, recipient_id=user.id)
-        db.session.add(new_convo)            
+        db.session.add(new_convo)
     else:
         mailbox_id = db.session.execute(sa.select(Conversation.mailbox, sa.func.max(Conversation.mailbox))).scalar()
 # Create a new mailbox with highest mailbox + 1
@@ -750,19 +806,19 @@ def edit_message():
     return render_template('edit_message.html', title=_('Edit Message'), messages=pagination.items, pagination=pagination)
 
 
-@bp.route('/delete-message/<int:id>', methods=['POST'])
+@bp.route('/del-message/<int:id>', methods=['POST'])
 @login_required
-def delete_message(id):
+def del_message(id):
     message = db.session.execute(sa.select(Message).where(Message.id == id)).scalar()
     if current_user != message.sender:
         return redirect(request.referrer)
     if message.photos:
         bucket = 'message-pics'
         name = message.get_photos()['link'].removeprefix(f"{Photo.SPACES_URL}/{bucket}/")
-        Photo.delete_object(bucket, name)
+        Photo.del_object(bucket, name)
 # delete from conversation table
     convo = db.session.execute(sa.select(Conversation).where(Conversation.message_id == request.form.get('input_id'))).scalar()
-    
+
     db.session.delete(message)
     db.session.delete(convo)
     db.session.commit()
@@ -789,20 +845,20 @@ def notification():
     since = int(request.args.get('since', 0.0, type=float))
     query = current_user.notifications.select().where((Notification.timestamp > datetime.fromtimestamp(since)) & (Notification.name != "ping_count") & (Notification.name != "new_message_count")).order_by(Notification.timestamp.asc())
     notifications = db.session.execute(query).scalars()
-                
+
     try:
         return [{
             'name': n.name,
             'data': n.get_payload()['key'],
             'timestamp': n.timestamp.timestamp()
-        } for n in notifications]       
+        } for n in notifications]
     except:
         return {}
 
 
-@bp.route('/delete-notification/<int:id>', methods=['POST'])
+@bp.route('/del-notification/<int:id>', methods=['POST'])
 @login_required
-def delete_notification(id):
+def del_notification(id):
     query = db.session.execute(current_user.notifications.select().where(Notification.item_type != "count").order_by(Notification.timestamp.desc())).scalars()
     db.session.execute(current_user.notifications.delete().where(Notification.id == id))
     db.session.flush()
@@ -826,7 +882,7 @@ def search():
         pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
     else:
         return redirect(request.referrer)
-        
+
     return render_template('search.html', title=_('Search'), posts=pagination.items, pagination=pagination, q=q)
 
 
