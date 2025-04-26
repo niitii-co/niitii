@@ -1,13 +1,14 @@
 <!doctype html>
 <html lang="en" class="h-100" data-bs-theme="auto">
   <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {% if title %}
     <title>{{ title }}</title>
     {% else %}
-    <title>niitii</title>    
+    <title>niitii</title>
     {% endif %}
+    <link type="text/plain" rel="author" href="https://niitii.com/humans.txt">
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
         rel="stylesheet"
@@ -30,8 +31,8 @@
                 <form class="d-flex" role="search" id="search" action="{{ url_for('main.search') }}" method="get">
                     <div class="search-wrap">
                         <input class="form-control m-auto search pe-5" type="search" id="query" name="q" placeholder="{{ _('Search') }}"/>
-                        <button class="btn btn-outline-secondary btn-md border-0" type="submit">&#x1F50D;</button>
-                    <div>
+                        <button class="btn btn-outline-secondary btn-md border-0" type="submit">&#x1F50D;&#xfe0e;</button>
+                    </div>
                 </form>
             </search>
             </ul>
@@ -42,10 +43,10 @@
             </li>
             {% else %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('main.new_post') }}">&#x1F4DD;</a>
+                    <a class="nav-link" href="{{ url_for('main.new_post') }}">&#x1F4DD;&#xfe0e;</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link position-relative" href="{{ url_for('main.feed') }}">&#x1F4F0;
+                    <a class="nav-link position-relative" href="{{ url_for('main.feed') }}">&#x1F4F0;&#xfe0e;
                     {% set new_feed_count = current_user.new_feed_count() %}
                     <span id="feed_count" class="badge text-bg-danger position-absolute top-0 end-0 {% if new_feed_count %}visible notice-badge{% else %}invisible{% endif %}">
                     {% if new_feed_count %}{{ new_feed_count }}{% endif %}
@@ -53,7 +54,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link p-1 position-relative" href="{{ url_for('main.view_notification') }}">&#x1F514;
+                    <a class="nav-link p-1 position-relative" href="{{ url_for('main.view_notification') }}">&#x1F514;&#xfe0e;
                     {% set ping_count = current_user.ping_count() %}
                     <span id="ping_count" class="badge text-bg-primary notice-badge position-absolute top-0 start-0 {% if ping_count %}visible{% else %}invisible{% endif %}">
                     {% if ping_count %}{{ ping_count }}{% endif %}
@@ -65,10 +66,10 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('main.chatii') }}">&#x1F4AC;</a>
+                    <a class="nav-link" href="{{ url_for('main.chatii') }}">&#x1F4AC;&#xfe0e;</a>
                 </li>                    
                 <li class="nav-item">
-                  <a class="nav-link position-relative" href="{{ url_for('main.inbox') }}">&#x2709;
+                  <a class="nav-link position-relative" href="{{ url_for('main.inbox') }}">&#x2709;&#xfe0e;
                     {% set new_message_count = current_user.new_message_count() %}
                     <span id="message_count" class="badge text-bg-danger position-absolute top-0 end-0 {% if new_message_count %}visible notice-badge{% else %}invisible{% endif %}">
                         {{ new_message_count }}
@@ -76,7 +77,7 @@
                   </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('main.user', username=current_user.username) }}">&#x1F464;</a>
+                    <a class="nav-link" href="{{ url_for('main.user', username=current_user.username) }}">&#x1F464;&#xfe0e;</a>
                 </li>
                 <li class="nav-item dropdown-center">
                   <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-current="page" href="#">
@@ -84,8 +85,8 @@
                         {% if current_user.photo %} src="{{ current_user.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %}>
                         {{current_user.username}} <b class="caret"></b>
                   </a>
-                  <ul class="dropdown-menu">
-                    <li class="w-auto d-inline-block"><a class="dropdown-item" href="{{ url_for('auth.logout') }}">{{ _('Logout') }}</a>
+                  <ul class="dropdown-menu w-25 px-0 py-1">
+                    <li class="d-inline-block"><a class="dropdown-item px-2 py-0" href="{{ url_for('auth.logout') }}">{{ _('Logout') }}</a>
                   </ul>
                 </li>
             {% endif %}
@@ -172,7 +173,6 @@
                 count.innerText = n;
                 count.classList.remove("invisible");
             }
-//            count.style.visibility = n ? 'visible' : 'hidden';
         }
 
         function set_ping_count(n) {
@@ -184,7 +184,6 @@
 //            count.style.visibility = n ? 'visible' : 'hidden';
         }
 
-// USER AUTHENTICATED
     {% if current_user.is_authenticated %}
         function initialize_notifications() {
             let since = 0;
@@ -206,7 +205,6 @@
 //                            notifications[i].data.progress);
 //                        break;
                         default:
-                            // no action
                             break;
                     }
                 }
@@ -229,9 +227,8 @@
                 }
             });
             
-// USER AUTHENTICATED            
             {% if current_user.is_authenticated %}
-                initialize_notifications;
+                initialize_notifications();
             {% endif %}
         });
     </script>

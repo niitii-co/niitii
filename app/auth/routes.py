@@ -87,6 +87,33 @@ def show_qr():
     qr.make(fit=True)
     
     img = qr.make_image(image_factory=qrcode.image.svg.SvgPathFillImage)
+
+    # save qr to stream buffer
+    stream = BytesIO()
+    img.save(stream)
+    stream.seek(0)
+    
+    return stream.getvalue(), 200, {
+        'Content-Type': 'image/svg+xml',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'}
+
+
+@bp.route('/show-mypage-qr')
+@login_required
+def show_mypage_qr():
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=20,
+        border=4,
+    )
+
+    qr.add_data(f"{url_for('main.user', username=current_user.username, _external=True)}")
+    qr.make(fit=True)
+    
+    img = qr.make_image(image_factory=qrcode.image.svg.SvgPathFillImage)
     
     # save qr to stream buffer
     stream = BytesIO()
@@ -95,6 +122,15 @@ def show_qr():
     
     return stream.getvalue(), 200, {
         'Content-Type': 'image/svg+xml',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'}
+
+
+@bp.route('/mypage-qr')
+@login_required
+def mypage_qr():
+    return render_template('auth/mypage_qr.html', title=_('My Page')), 200, {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0'}
@@ -128,12 +164,12 @@ def disable_mfa():
     return redirect(url_for('main.user', username=current_user.username))
 
 
-@bp.route('/set-admin-token/<int:id>', methods=['POST'])
+@bp.route('/set-admin-token/<username>', methods=['POST'])
 @permission_required('MODERATE')
 @login_required
-def set_admin_token(id):
-    user = db.session.execute(sa.select(User).where(User.id == id)).scalar()
-    if user and user.mfa_enabled:
+def set_admin_token(username):
+    user = db.first_or_404(sa.select(User).where(User.username == username))
+    if user.mfa_enabled:
         user.set_admin_token()
         db.session.commit()
 

@@ -17,12 +17,20 @@
                 <div class="mb-3">
                     <p class="mb-1">{{ _('Link photos') }}</p>
                     {% for i in range(5) %}
-                    <input class="form-control mb-2" id="photo{{ loop.index }}" maxlength="300" name="add_photos" type="text" name="label" placeholder="{{ _('add photo link') }}">
+                    <input class="form-control mb-2" id="photo{{ loop.index }}" maxlength="300" name="add_photos" type="text" name="label" placeholder="{{ _('add 1 photo link') }}">
                     {% endfor %}
                 </div>
                 <div class="mb-3">
                     <label for="fileInput" class="form-label">{{ _('Upload photo') }}</label>
                     <input class="form-control" id="fileInput" type="file" name="photo" accept="image/*, .jpg, .jpeg, .png, .gif" multiple>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="viewer">{{ _('Viewer') }}</label>
+                    <select class="form-select" id="viewer" name="viewer" aria-label="Default select example">
+                        <option selected value="1">PUBLIC</option>
+                        <option value="2">USER</option>
+                        <option value="4">FOLLOWER</option>
+                    </select>
                 </div>
                 <div class="form-check mb-3">
                     <label class="form-check-label" for="nsfw">{{ _('NSFW') }}</label>
@@ -67,7 +75,7 @@
                     {% for p in photos['link'] %}
                       <li class="list-group-item">
                         <input class="form-check-input me-1" type="checkbox" name="del_photos" value="{{ p }}" id="del_photo{{ loop.index }}">
-                        <label class="form-check-label d-inline" for="del_photo{{ loop.index }}">{{ p }}</label>
+                        <label class="form-check-label d-inline text-break" for="del_photo{{ loop.index }}">{{ p }}</label>
                       </li>
                       {% endfor %}
                     </ul>
@@ -76,21 +84,23 @@
                 {% endif %}
 
                 {% if photos %}
-                    {% set max %}{{ (photos | length) - 1 }}{% endset %}
+                    {% set max %}{{ 5 - (photos['link'] | length) }}{% endset %}
                 {% else %}
                     {% set max %}{{ 5 }}{% endset %}
                 {% endif %}
-                
+
+                {% if (max | int()) > 0 %}
                 <div class="mb-3">
                     <p class="mb-1">{{ _('Link photos') }}</p>
                     {% for i in range(max | int) %}
-                    <input class="form-control mb-2" id="photo{{ loop.index }}" name="add_photos" type="text" name="label" placeholder="{{ _('add photo link') }}">
+                    <input class="form-control mb-2" id="photo{{ loop.index }}" name="add_photos" type="text" name="label" placeholder="{{ _('add 1 photo link') }}">
                     {% endfor %}
                 </div>
                 <div class="mb-3">
                     <label for="fileInput" class="form-label">{{ _('Upload photo') }}</label>
                     <input class="form-control" type="file" id="fileInput" name="photo" accept="image/*, .jpg, .jpeg, .png, .gif" multiple>
                 </div>
+                {% endif %}
                 <div class="mb-3">
                     <label class="form-label" for="viewer">{{ _('Viewer') }}</label>
                     <select class="form-select" id="viewer" name="viewer" aria-label="Default select example">
@@ -98,7 +108,7 @@
                         <option {% if post.get_viewer() == 'USER' %} selected {% endif %} value="2">USER</option>
                         <option {% if post.get_viewer() == 'FOLLOWER' %} selected {% endif %} value="4">FOLLOWER</option>
                     </select>
-                </div>                
+                </div>
                 <div class="form-check mb-3">
                     <label class="form-check-label" for="nsfw">{{ _('NSFW') }}</label>
                     <input class="form-check-input" type="checkbox" id="nsfw" name="nsfw" type="checkbox" {% if post.nsfw or photos['nsfw'] %} checked {% endif %}>
@@ -256,11 +266,11 @@
                     {% endif %}
                 </select>
             </div>
-            {% endif %}
             <div>
                 <label class="form-check-label" for="disabled">{{ _('Disabled') }}</label>
                 <input class="form-check-input" type="checkbox" id="disabled" name="disabled" {% if user.disabled %} checked {% endif %}>
             </div>
+            {% endif %}
             <div>
                 <label class="form-check-label" for="confirmed">{{ _('Confirmed') }}</label>
                 <input class="form-check-input me-2" type="checkbox" id="confirmed" name="confirmed" {% if user.confirmed %} checked {% endif %}>
@@ -274,34 +284,30 @@
 {% endmacro %}
 
 
-{% macro comment(action="", author="", value="", pin="", direct="", ghost="", comment_id="") %}
+{% macro comment(action="", author="", value="", pin="", direct="", comment_id="") %}
         <form action="{{ action }}" id="comment" method="post">
             <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
             <input name="utc_offset" type="hidden" value="">
-            <textarea autofocus class="form-control" id="body" maxlength="5000" minlength="1" name="body" rows="5" autocomplete="off" required>{% if author %}@{{ author.username }} {% endif %}</textarea>
-            {% if author %}
-                <input name="comment_id" type="hidden" value="{{ comment_id }}">
-                <input name="authorId" type="hidden" value="{{ author.id }}">
-            {% endif %}
+            <input name="comment_id" type="hidden" value="{{ comment_id }}">
+            <input name="authorName" type="hidden" value="{{ author.username }}">
+            <textarea autofocus class="form-control" maxlength="5000" minlength="1" name="body" rows="5" autocomplete="off" required>{% if author %}@{{ author.username }} {% endif %}</textarea>
             <div class="d-flex justify-content-between mt-2">
             <div class="d-flex justify-content-between">
-            {% if pin %}
-            <span class="form-check px-2 py-2 me-2 d-flex justify-content-start" id="pinComment">
-<!-- "input" before "label" for stylesheet to select #pin + label-->
-                <input class="form-check-input" id="pin" name="pin_comment" type="checkbox">
-                <label class="form-check-label" for="pin"></label>
+            <span class="form-check px-2 me-2 mb-0 ghostComment">
+                <input class="form-check-input ghost" id="ghost{{comment_id}}" name="ghost_comment" type="checkbox">
+                <label class="form-check-label" for="ghost{{comment_id}}"></label>
             </span>
-            {% endif %}
             {% if direct %}
-            <span class="form-check px-2 py-2 me-2 d-flex justify-content-start" id="directComment">
-                <input class="form-check-input" id="direct" name="direct_comment" type="checkbox">
-                <label class="form-check-label" for="direct"></label>
+            <span class="form-check px-2 me-2 mb-0 d-flex justify-content-start directComment">
+                <input class="form-check-input direct" id="direct{{comment_id}}" name="direct_comment" type="checkbox">
+                <label class="form-check-label" for="direct{{comment_id}}"></label>
             </span>
             {% endif %}
-            {% if ghost %}
-            <span class="form-check px-2 py-2 me-2 " id="ghostComment">
-                <input class="form-check-input" id="ghost" name="ghost_comment" type="checkbox">
-                <label class="form-check-label" for="ghost"></label>
+            {% if pin %}
+            <span class="form-check px-2 me-2 mb-0 d-flex justify-content-start pinComment">
+<!-- "input" before "label" for stylesheet to select #pin + label-->
+                <input class="form-check-input pin" id="pin{{comment_id}}" name="pin_comment" type="checkbox">
+                <label class="form-check-label" for="pin{{comment_id}}"></label>
             </span>
             {% endif %}
             </div>
@@ -318,7 +324,7 @@
             <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
             <input name="utc_offset" type="hidden" value="">
             <input name="input_id" type="hidden" value="{{ input_id }}">
-            <button class="btn btn-outline-dark btn-sm border border-dark-subtle px-1 py-0" id="{{value}}_btn" type="submit" name="submit" value="{{ value }}">&#x21E7; {{ count }}</button>
+            <button class="btn btn-outline-dark btn-sm border border-dark-subtle px-1 py-0"  type="submit" name="submit" value="{{ value }}">&#x21E7;&#xfe0e; {{ count }}</button>
         </form>
 {% endmacro %}
 
@@ -330,9 +336,9 @@
                     <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
                     <input name="utc_offset" type="hidden" value="">
 <!-- add space before {{ count }}-->
-                    <span class="px-1 py-0 btn btn-outline-secondary btn-sm  border border-dark-subtle dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">&#x1F6A9;  {{ count }}</span>
+                    <span class="px-1 py-0 btn btn-outline-secondary btn-sm  border border-dark-subtle dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">&#x1F6A9;&#xfe0e;  {{ count }}</span>
                     <ul class="dropdown-menu">
-                        <li><button class="py-0 btn btn-outline-secondary btn-sm dropdown-item" type="submit" name="flag" value="ADULT">{{ _('Adult') }}</button></li>
+                        <li><button class="py-0 btn btn-outline-secondary btn-sm dropdown-item" type="submit" name="flag" value="NSFW">{{ _('NSFW') }}</button></li>
                         <li><button class="py-0 btn btn-outline-secondary btn-sm dropdown-item" type="submit" name="flag" value="SPAM">{{ _('Spam') }}</button></li>
                         <li><button class="py-0 btn btn-outline-secondary btn-sm dropdown-item" type="submit" name="flag" value="VIOLENT">{{ _('Violent') }}</button></li>
                     </ul>
@@ -352,9 +358,9 @@
                 <a class="text-decoration-none d-inline-block fs-6 text-body" href="{{ url_for('main.user', username=user.username) }}" target="_blank" rel="noopener noreferrer">
                     {{ user.username }}
                     {% if user.verified %}
-                    &#x2713;
+                    &#x2713;&#xfe0e;
                     {% elif user.confirmed %}
-                    &#xB7;
+                    &#xB7;&#xfe0e;
                     {% endif %}
                     {% if user.banner_flag %}
                     <span>{{ user.banner_flag }}</span>
@@ -366,19 +372,29 @@
 {% endmacro %}
 
 
-{% macro ping_user_modal(action="") %}
+{% macro ping_user_modal(action="", follower="") %}
             <dialog class="border rounded" id="pingDialog">
                 <form action="{{ action }}" id="ping" method="post">
                     <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
                     <input name="utc_offset" type="hidden" value="">
                     <div class="mb-3 text-center">
+                        {% if not follower %}
                         <label class="form-label" for="body">{{ _('Note') }}</label>
+                        {% else %}
+                        <label class="form-label" for="body">{{ _('To active followers') }}</label>
+                        {% endif %}
                         <textarea autofocus class="form-control" maxlength="300" minlength="1" id="body" name="body" rows="2" required></textarea>                                    
                     </div>
+                    {% if not follower %}
                     <div class="mb-3 d-flex justify-content-end">
                         <input class="form-check-input" id="pingCheck" name="pingCheck" type="checkbox">
                         <label class="form-check-label" for="pingCheck"></label>
                     </div>
+                    {% else %}
+                    <div class="mb-3 d-flex justify-content-end">
+                        <span class="bg-primary rounded-4 py-0 px-1">&#x2713;&#xfe0e;</span>
+                    </div>
+                    {% endif %}
                     <div class="d-flex justify-content-between">
                         <button id="close" class="btn btn-secondary me-auto" type="button" value="cancel" formmethod="dialog">{{ _('Cancel') }}</button>
                         <button id="confirm" class="btn btn-primary ms-auto" type="submit" name="submit" value="ping">{{ _('Send') }}</button>
@@ -386,7 +402,7 @@
                 </form>
             </dialog>
 <!-- button has no "type" or "name"-->            
-            <button id="showDialog" class="btn btn-sm border border-0">&#x1F4E2;</button>
+            <button id="showDialog" class="btn btn-sm border border-0">&#x1F4E2;&#xfe0e;</button>
 {% endmacro %}
 
 
@@ -407,7 +423,7 @@
                 </form>
             </dialog>
 <!-- button has no "type" or "name"-->            
-            <button id="showDialog" class="btn btn-sm border border-0 fs-3">&#x1F465;</button>
+            <button id="showDialog" class="btn btn-sm border border-0 fs-3">&#x1F465;&#xfe0e;</button>
 {% endmacro %}
 
 
@@ -416,7 +432,7 @@
             <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
             <input name="utc_offset" type="hidden" value="">
             <div class="me-3">
-                <label for="formFileMultiple" class="form-label">&#x1F4CE;</label>
+                <label for="formFileMultiple" class="form-label">&#x1F4CE;&#xfe0e;</label>
                 <input class="form-control d-none" type="file" id="formFileMultiple" name="photo" accept="image/*, .jpg, .jpeg, .png, .gif" multiple>
             </div>
             <textarea autofocus class="form-control me-3" id="body" maxlength="5000" minlength="1" name="body" rows="" required></textarea>
@@ -451,16 +467,12 @@
                 <button id="confirm" class="btn btn-danger ms-5" type="submit" name="submit" value="{{ value }}">{{ _('Delete') }}</button>           
             </div>
         </form>
-        </dialog>        
+        </dialog>
 {% endmacro %}
 
 
 {% macro del_btn(value="") %}
-            <button id="showDialog" class="btn btn-outline-danger btn-sm border border-0" type="" name="" value="">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
-            <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
-            </svg>
-            </button>
+            <button id="showDialog" class="btn btn-outline-danger btn-sm border border-0 text-danger" type="" name="" value="">&#x1F5D1;&#xfe0e;</button>
 {% endmacro %}
 
 
@@ -471,14 +483,9 @@
             <input id="" name="input_id" type="hidden" value="{{ input_id }}">
             {% endif %}
             {% if value == "delete" %}
-            <button id="showDialog" class="btn btn-outline-danger btn-sm border border-0" type="submit" name="submit" value="{{ value }}">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                </svg>
-            </button>            
+            <button id="showDialog" class="btn btn-outline-danger btn-sm border border-0 text-danger" type="submit" name="submit" value="{{ value }}">&#x1F5D1;&#xfe0e;</button>            
             {% else %}
-            <button class="btn btn-outline-{{ btn }} btn-sm px-1 py-0" type="submit" name="submit" value="{{ value }}">{{ _(label) }}</button>
+            <button class="btn btn-outline-{{ btn }} btn-sm px-1 py-0" type="submit" name="submit" value="{{ value }}">{{ label }}</button>
             {% endif %}
         </form>
 {% endmacro %}

@@ -31,8 +31,9 @@ def send_change_email(user, email):
 
 
 def send_admin_token_email(user):
+    token = user.admin_token
     send_email(_('[niitii] Admin Token'),
                sender=current_app.config['MAIL_SENDER'],
                recipients=[user.email],
-               text_body=render_template('email/admin_token.txt', user=user, token=user.admin_token),
-               html_body=render_template('email/admin_token.html', user=user, token=user.admin_token))
+               text_body=render_template('email/admin_token.txt', user=user, token=token),
+               html_body=render_template('email/admin_token.html', user=user, token=token))

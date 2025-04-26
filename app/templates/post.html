@@ -25,9 +25,7 @@
                 <p class="h3">
                     {{ post.title }}
                 </p>
-<!--                Get post photos as dictionary-->
                 {% set photos = post.get_photos() %}
-
                 {% if photos and photos['link'] %}
                 <div id="carousel" class="carousel slide mt-3" data-bs-theme="dark">
                   <div class="carousel-inner">
@@ -86,9 +84,11 @@
                     <span class="px-1 small">
                     {{ post.comments }} {{ _('Comments') }} ({{ post.removed_comments }})
                     </span>
+                {% if current_user == post.author %}
                     <span class="btn btn-outline-dark btn-sm border border-dark-subtle py-0 px-1" id="showDirect">
                     &#x1F576; {{ post.direct_comments }}
-                    </span>                    
+                    </span>
+                {% endif %}
                 {% if current_user.is_authenticated %}
                     {% set action %}{{ url_for('main.flag', id=post.id) }}{% endset %}
                     {{ macros.flag(action=action, count=post.flags) }}
@@ -112,15 +112,13 @@
                 {% endif %}
                 {% if current_user != post.author %}
                     {% set direct = True %}
-                    {% set ghost = True %}
                 {% else %}
                     {% set direct = False %}
-                    {% set ghost = False %}
                 {% endif %}
                 {% set action %}{{ url_for('main.comment', id=post.id) }}{% endset %}
                 {% set id = 'pin_comment' %}
 
-                {{ macros.comment(action=action, pin=pin, direct=direct, ghost=ghost, value="comment") }}
+                {{ macros.comment(action=action, pin=pin, direct=direct, value="comment") }}
         {% endif %}
         </div>
         {% endif %}
@@ -221,18 +219,20 @@
             
             const directComment = document.querySelector('#showDirect')
             
-            directComment.addEventListener('click', e => {
-                Array.from(document.querySelectorAll('.comment')).forEach((ele, index) => {
-                    console.log(directComment);
-                    if (ele.style.display === "none") {
-                        ele.style.display = "block";
-                        directComment.classList.remove('bg-secondary');
-                    } else {
-                        ele.style.display = "none";
-                        directComment.classList.add('bg-secondary');
-                    }
+            if (directComment) {
+                directComment.addEventListener('click', e => {
+                    Array.from(document.querySelectorAll('.comment')).forEach((ele, index) => {
+                        console.log(directComment);
+                        if (ele.style.display === "none") {
+                            ele.style.display = "block";
+                            directComment.classList.remove('bg-secondary');
+                        } else {
+                            ele.style.display = "none";
+                            directComment.classList.add('bg-secondary');
+                        }
+                    });
                 });
-            });
+            };
 
         });
 

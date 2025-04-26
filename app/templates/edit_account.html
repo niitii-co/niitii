@@ -15,7 +15,6 @@
             {% elif user.confirmed %}
             &#xB7;
             {% endif %}
-            {{ user.id }}
             {% if user.banner_flag %}
             <span>{{ user.banner_flag }}</span>
             {% endif %}
@@ -24,17 +23,24 @@
             {% endif %}
         </a>
     </div>
+    <p>{{ _('Joined') }}: {{ moment(user.joined).format('D MMM YY') }}</p>
+
         {% set action = url_for('main.edit_account', username=user.username) %}
         {{ macros.edit_account(action=action, user=user) }}
     <div class="my-3">
     {% if user.mfa_enabled %}
         {% set action = url_for('auth.disable_mfa') %}
-        {{ macros.empty(action=action, value="disable_mfa", label="Disable MFA") }}
+        {% set disable %}{{ _('disable MFA') }}{% endset %}
+
+        {{ macros.empty(action=action, value="disable_mfa", label=disable) }}
     {% else %}
         {% set action = url_for('auth.setup_mfa') %}
-        {{ macros.empty(action=action, value="enable_mfa", label="Enable MFA") }}
+        {% set enable %}{{ _('enable MFA') }}{% endset %}
+
+        {{ macros.empty(action=action, value="enable_mfa", label=enable) }}
     {% endif %}
     </div>
+        <p class="m-0"><a class="fs-5 text-decoration-none" href="{{ url_for('auth.mypage_qr') }}">{{ _('My QR') }}</a></p>
     {% if not user.confirmed %}
         <p class="m-0"><a class="fs-5 text-decoration-none" href="{{ url_for('auth.request_confirm_account') }}">{{ _('Confirm account') }}</a></p>
     {% endif %}
@@ -42,7 +48,7 @@
         <p class="m-0"><a class="fs-5 text-decoration-none" href="{{ url_for('auth.change_password') }}">{{ _('Change password') }}</a></p>
         <p><a class="fs-5 text-decoration-none" href="{{ url_for('auth.request_change_email') }}">{{ _('Change email') }}</a></p>
         <span class="d-block fs-3">{{ _('Delete Account') }}</span>
-        {% set action %}{{ url_for('main.del_account', id=user.id) }}{% endset %}
+        {% set action %}{{ url_for('main.del_account', username=user.username) }}{% endset %}
         {{ macros.del_account_modal(action=action) }}
         {{ macros.del_btn() }}
     </div>

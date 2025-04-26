@@ -30,7 +30,7 @@ def get_posts():
 
 @bp.route('/post/<int:id>')
 @token_auth.login_required
-def get_post(id):
+def post(id):
     post = Post.query.get_or_404(id)
     return jsonify(post.to_json())
 
@@ -43,7 +43,7 @@ def new_post():
     post.author = g.current_user
     db.session.add(post)
     db.session.commit()
-    return jsonify(post.to_json()), 201, {'Location': url_for('bp.get_post', id=post.id)}
+    return jsonify(post.to_json()), 201, {'Location': url_for('bp.post', id=post.id)}
 
 
 @bp.route('/post/<int:id>', methods=['PUT'])

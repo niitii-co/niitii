@@ -166,6 +166,20 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
             raise ValueError("failed utc_offset validation")
         return utc_offset
 
+    def can_view(self):
+        if UserViewer(self.viewer).name == 'PUBLIC':
+            return True
+        elif UserViewer(self.viewer).name != 'PUBLIC' and not current_user.is_authenticated:
+            return False
+        elif UserViewer(self.viewer).name == 'USER':
+            return True
+        elif UserViewer(self.viewer).name == 'FOLLOWER' and current_user.is_following(self.username):
+            return True
+        elif current_user.id == self.id or current_user.can('MODERATE'):
+            return True
+        else:
+            return False
+
     def is_moderator(self):
         return self.permission == AccountPermission.MODERATE.value
 
@@ -236,15 +250,15 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
         return jwt.encode({'reset_password': self.id, 'exp': time() + expiration}, current_app.config['SECRET_KEY'], algorithm='HS256')
 
     def follow(self, user):
-        if not self.is_following(user.id):
+        if not self.is_following(user.username):
             self.following.add(user)
 
     def unfollow(self, user):
-        if self.is_following(user.id):
+        if self.is_following(user.username):
             self.following.remove(user)
 
-    def is_following(self, user_id):
-        query = self.following.select().where(User.id == user_id)
+    def is_following(self, username):
+        query = self.following.select().where(User.username == username)
         return db.session.execute(query).scalar() is not None
 
     def get_followers(self):
@@ -280,6 +294,9 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
             .order_by(Post.timestamp.desc())
         )
 
+    def get_feed(self):
+        return self.following_posts().where(Post.author != current_user).order_by(Post.timestamp.desc(), Post.votes.desc(), Post.comments.desc())
+
     def new_message_count(self):
         last_read_time = self.last_message_read_time or datetime(1900, 1, 1)
         query = self.messages_received.select().where(Message.timestamp > last_read_time)
@@ -300,9 +317,19 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
 
     def add_notification(self, name, payload, item_id, item_type):
         db.session.add(Notification(user=self, name=name, payload_json=json.dumps(payload), item_id=item_id, item_type=item_type))
-        
+
     def update_notification(self, name, payload):
         db.session.execute(self.notifications.update().where(Notification.name == name).values(payload_json=json.dumps(payload), timestamp=datetime.now(timezone.utc)))
+
+    def update_ping_count(self):
+        ping_count = db.session.execute(self.notifications.select().where(Notification.name == 'ping_count')).scalar()
+
+        if ping_count:
+            ping_count.update_payload({"key": f"{self.ping_count()}"})
+            ping_count.timestamp = datetime.now(timezone.utc)
+        else:
+            payload = {"key": f"{self.ping_count()}"}
+            self.add_notification(name='ping_count', payload=payload, item_id=0, item_type='count')
 
 #    submits tasks to RQ queue and adds tasks to DB. name is function name as defined in app/tasks.py. Function prepends app.tasks to build full qualified function name when submitting to RQ.
 #     description is presented to user
@@ -381,35 +408,47 @@ class User(PaginatedAPIMixin, UserMixin, db.Model):
         self.token_expiration = datetime.now(timezone.utc) - timedelta(seconds=1)
 
     def del_photo(self):
-        if f"{Photo.SPACES_URL}/profile-pics/" in self.photo:
-            name = self.photo.removeprefix(f"{Photo.SPACES_URL}/profile-pics/")
-            Photo.del_object('profile-pics', name)
+        if self.photo and f"niitii-spaces" in self.photo:
+            Photo.del_object('profile-pics', self.photo.removeprefix(f"{Photo.SPACES_URL}/profile-pics/"))
             self.photo = None
 
-    def del_all_sent_messages(self):
-        db.session.execute(self.messages_sent.delete())
+    def del_posts(self):
+        posts = db.session.execute(self.posts.select()).scalars()
+        for p in posts:
+            p.del_post()
 
-    def del_all_comments(self):
-        db.session.execute(self.comments.delete())
+    def del_sent_messages(self):
+        messages = db.session.execute(self.messages_sent.select()).scalars()
+        for m in messages:
+            m.del_message()
 
-    def del_all_votes(self):
+    def del_follows():
+        db.session.execute(follows.delete().where((follows.c.follower_id == self.id) | (follows.c.followed_id == self.id)))
+
+    def del_comments(self):
+        comments = db.session.execute(self.comments.select()).scalars()
+        for c in comments:
+            c.del_comment()
+
+    def del_votes(self):
         db.session.execute(self.votes.delete())
 
-    def del_all_flags(self):
+    def del_flags(self):
         db.session.execute(self.flags.delete())
 
-    def del_all_notifications(self):
+    def del_notifications(self):
         db.session.execute(self.notifications.delete())
 
-    def del_all_posts(self):
-        db.session.execute(self.posts.delete())
-        
     def del_user(self):
+        self.del_photo()
+        self.del_posts()
+        self.del_sent_messages()
+        self.del_follows()
+        self.del_comments()
+        self.del_votes()
+        self.del_flags()
+        self.del_notifications()
         db.session.delete(self)
-
-    @staticmethod
-    def del_all_follow():
-        db.session.execute(follows.delete().where((follows.c.follower_id == user.id) | (follows.c.followed_id == user.id)))
 
     @staticmethod
     def confirm_token(token):
@@ -496,11 +535,11 @@ class Post(db.Model):
             return True
         elif PostViewer(self.viewer).name != 'PUBLIC' and not current_user.is_authenticated:
             return False
-        elif self.author == current_user or (current_user.is_authenticated and current_user.can('MODERATE')):
-            return True
         elif PostViewer(self.viewer).name == 'USER':
             return True
-        elif PostViewer(self.viewer).name == 'FOLLOWER' and self.author.is_following(current_user.id):
+        elif PostViewer(self.viewer).name == 'FOLLOWER' and current_user.is_following(self.author.username):
+            return True
+        elif current_user == self.author or current_user.can('MODERATE'):
             return True
         else:
             return False
@@ -537,7 +576,10 @@ class Post(db.Model):
         return count
 
     def get_comments(self):
-        return sa.select(Comment).where(Comment.post_id == self.id).order_by(Comment.pinned.desc(), Comment.votes.desc(), Comment.timestamp.desc())
+        if current_user != self.author:
+            return sa.select(Comment).where((Comment.post_id == self.id) & (Comment.direct == False)).order_by(Comment.pinned.desc(), Comment.votes.desc(), Comment.timestamp.desc())
+        else:
+            return sa.select(Comment).where(Comment.post_id == self.id).order_by(Comment.pinned.desc(), Comment.votes.desc(), Comment.timestamp.desc())
 
     def get_tags(self):
         post_tags = []
@@ -548,27 +590,45 @@ class Post(db.Model):
     def get_viewer(self):
         return PostViewer(self.viewer).name
 
-    def del_all_comments(self):
-        return db.session.execute(sa.delete(Comment).where(Comment.post_id == self.id))
+    def del_comments(self):
+        comments = db.session.execute(sa.select(Comment).where(Comment.post_id == self.id)).scalars()
+        for c in comments:
+            c.del_comment()
 
-    def del_all_flags(self):
+    def del_flags(self):
         return db.session.execute(sa.delete(Flag).where(Flag.post_id == self.id))
 
-    def del_all_votes(self):
+    def del_votes(self):
         return db.session.execute(sa.delete(Vote).where(Vote.post_id == self.id))
 
-    def del_all_tags(self):
+    def del_tags(self):
         if self.tags:
             for tag in self.tags:
+                self.tags.remove(tag)
                 db.session.execute(sa.delete(Tag).where(Tag.id == tag.id))
                 db.session.execute(tags.delete().where(tags.c.tag_id == tag.id))
 
-    def del_all_photos(self):
+    def del_photos(self):
         photos = json.loads(self.photos) if self.photos else None
         if photos:
             for p in photos['link']:
-                if f"{Photo.SPACES_URL}/post-pics/" in p:
+                if f"niitii-spaces" in p:
                     Photo.del_object('post-pics', p.removeprefix(f"{Photo.SPACES_URL}/post-pics/"))
+
+    def del_post(self):
+        self.del_comments()
+        self.del_flags()
+        self.del_votes()
+        self.del_tags()
+        self.del_photos()
+        db.session.delete(self)
+
+    @staticmethod
+    def get_index(lang):
+        if current_user.is_authenticated:
+            return sa.select(Post).where((Post.language == current_user.language) & (Post.utc_offset.between(current_user.utc_offset - 1, current_user.utc_offset + 1)) & (Post.nsfw == False)).order_by(Post.votes.desc(), Post.comments.desc(), Post.timestamp.desc()).limit(200)
+        else:
+            return sa.select(Post).where((Post.language == lang) & (Post.nsfw == False)).order_by(Post.votes.desc(), Post.comments.desc(), Post.timestamp.desc()).limit(200)
 
     @staticmethod
     def del_tag(tag_id):
@@ -644,6 +704,13 @@ class Comment(db.Model):
         self.votes = count
         return count
 
+    def del_votes(self):
+        return db.session.execute(sa.delete(Vote).where(Vote.comment_id == self.id))
+
+    def del_comment(self):
+        self.del_votes()
+        db.session.delete(self)
+    
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
         allowed_tags = [
@@ -674,6 +741,9 @@ class Vote(db.Model):
     utc_offset: so.Mapped[float] = so.mapped_column(default=0)    
     timestamp: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc))
 
+    def del_vote():
+        db.session.delete(self)
+
 
 #https://docs.sqlalchemy.org/en/20/core/selectable.html#sqlalchemy.sql.expression.TableClause.columns
 #https://docs.sqlalchemy.org/en/20/core/selectable.html#sqlalchemy.sql.expression.TableClause.delete
@@ -690,7 +760,7 @@ class Tag(db.Model):
 
 
 class FlagReason(Enum):
-    ADULT = 1
+    NSFW = 1
     SPAM = 2
     VIOLENT = 3
 
@@ -714,6 +784,9 @@ class Conversation(db.Model):
     sender_id: so.Mapped[int] = so.mapped_column(index=True)
     recipient_id: so.Mapped[int] = so.mapped_column(index=True)
 
+    def del_conversation(self):
+        db.session.delete(self)
+
 
 class Message(db.Model):
     __tablename__ = 'message'
@@ -724,8 +797,8 @@ class Message(db.Model):
     recipient: so.Mapped['User'] = so.relationship(foreign_keys='Message.recipient_id', back_populates='messages_received')
 #    Store as (BLOB or BYTEA) to work with Fernet encrypt-decrypt
     body: so.Mapped[str] = so.mapped_column(sa.LargeBinary)
-    language: so.Mapped[str] = so.mapped_column(sa.UnicodeText, default='en-US')    
-    photos: so.Mapped[str] = so.mapped_column(sa.UnicodeText, nullable=True)
+    language: so.Mapped[str] = so.mapped_column(sa.UnicodeText, default='en-US')
+    photos: so.Mapped[str] = so.mapped_column(sa.LargeBinary, nullable=True)
     utc_offset: so.Mapped[float] = so.mapped_column(default=0)
     timestamp: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc), index=True)
 
@@ -735,28 +808,36 @@ class Message(db.Model):
     )
 
     def get_url(self):
-        photos = json.loads(self.photos)['link']
-        return Photo.get_url(photos.removeprefix(f"{Photo.SPACES_URL}/message-pics/"))
+        if self.photos:
+            url = json.loads(Message.decrypt(self.photos))['link']
+            return Photo.get_url(url.removeprefix(f"{Photo.SPACES_URL}/message-pics/"))
 
     def get_photos(self):
         if self.photos:
-            return json.loads(self.photos)
+            return json.loads(Message.decrypt(self.photos))
 
-    def del_all_photos(self):
-        photos = json.loads(self.photos) if self.photos else None
+    def del_photos(self):
+        photos = json.loads(Message.decrypt(self.photos)) if self.photos else None
         if photos:
-            for p in photos['link']:
-                if f"{Photo.SPACES_URL}/post-pics/" in p:
-                    name = p.removeprefix(f"{Photo.SPACES_URL}/message-pics/")
-                    Photo.del_object('message-pics', name)
+            p = photos['link']
+            if f"niitii-spaces" in p:
+                name = p.removeprefix(f"{Photo.SPACES_URL}/message-pics/")
+                Photo.del_object('message-pics', name)
+
+    def del_message(self):
+        self.del_photos()
+        db.session.delete(self)
+
 # encode() converts str to bytes with b''. current_app.config['MESSAGE_KEY'].encode() gets an "app.context" error
     key = Config.MESSAGE_KEY.encode()
 
+    @staticmethod
     def encrypt(value):
         return Fernet(Message.key).encrypt(value.encode())
 
-    def decrypt(self):
-        return Fernet(Message.key).decrypt(self.body).decode()
+    @staticmethod
+    def decrypt(value):
+        return Fernet(Message.key).decrypt(value).decode()
 
 
 class Notification(db.Model):
@@ -817,7 +898,9 @@ class Photo():
 
     #https://docs.digitalocean.com/reference/api/spaces-api/
     #https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html
-    def upload_object(bucket, name, f, acl):
+    def upload_object(bucket, name, f, acl, ref_id=0):
+        author = f'{current_user.username}' if acl != 'private' else None
+
         if f.filename.split('.')[-1] in ['jpg', 'jpeg', 'png']:
             body = Photo.resize_compress(f)
         else:
@@ -832,7 +915,9 @@ class Photo():
                 Metadata={
 #                    Defines metadata tags
 #                    f' fixes error: int' object has no attribute 'encode'
-                    'x-amz-meta-author': f'{current_user.id}'
+                    'x-amz-meta-Author': f'{author}',
+                    'x-amz-meta-Timestamp': f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-%f')}",
+                    'x-amz-meta-ReferenceId': f'{ref_id}',
                 }
             )
             return True

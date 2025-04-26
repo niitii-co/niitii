@@ -30,24 +30,24 @@ def get_comments():
 
 @bp.route('/comments/<int:id>')
 @token_auth.login_required
-def get_comment(id):
+def comment(id):
     comment = db.get_or_404(Comment, id)
     return jsonify(comment.to_json())
 
 
 @bp.route('/posts/<int:id>/comments/')
 @token_auth.login_required
-def get_post_comments(id):
+def post_comments(id):
     post = db.get_or_404(Post, id)
     query = post.comments.select().order_by(Comment.timestamp.asc())
     pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['COMMENTS_PER_PAGE'], error_out=False)
     comments = pagination.items
     prev = None
     if pagination.has_prev:
-        prev = url_for('api.get_post_comments', id=id, page=page-1)
+        prev = url_for('api.post_comments', id=id, page=page-1)
     next = None
     if pagination.has_next:
-        next = url_for('api.get_post_comments', id=id, page=page+1)
+        next = url_for('api.post_comments', id=id, page=page+1)
     return jsonify({
         'comments': [comment.to_json() for comment in comments],
         'prev': prev,
@@ -67,4 +67,4 @@ def new_post_comment(id):
     db.session.add(comment)
     db.session.commit()
     return jsonify(comment.to_json()), 201, \
-        {'Location': url_for('api.get_comment', id=comment.id)}
+        {'Location': url_for('api.comment', id=comment.id)}

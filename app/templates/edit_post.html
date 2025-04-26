@@ -8,12 +8,12 @@
         <div class="mb-4">
         {% if current_user.is_authenticated %}
             {% if current_user == post.author %}
-                    {{ macros.edit_post(post=post, tags=tags, photos=post.get_photos()) }}    
+                    {{ macros.edit_post(post=post, tags=tags, photos=post.get_photos()) }}
             {% elif current_user.can("MODERATE") %}
                     {% set label = post.label if post.label else 'None' %}
                     {{ macros.edit_post(post=post, tags=tags, photos=post.get_photos(), mod=True) }}
             {% endif %}
-        {% endif %}            
+        {% endif %}
         </div>
         <div class="fs-5 mb-4"><a class="text-decoration-none" href="{{ url_for('main.post_comment', id=post.id) }}">{{ _('Edit Comment') }}</a>
         </div>

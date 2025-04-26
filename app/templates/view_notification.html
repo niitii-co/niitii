@@ -14,7 +14,7 @@
             {% else %}
             <p class="d-inline mt-1 pre-wrap">{{ n.get_payload()['key'].split('\n', 1)[1]}} <span class="d-block mt-1">{{ moment(n.timestamp).format('D/MM/YY H:mm:ss') }}</span></p>
             {% endif %}
-                
+
         </div>
         <div>
             {% if n.item_id %}<small class="d-inline"><a class="text-decoration-none" href="{{ url_for('main.post', id=n.item_id) }}">{{ _('View post') }}</a></small>{% endif %}
@@ -34,7 +34,6 @@
             let postForm = new FormData(target);
             postForm.append('submit', submitter.value);
 
-            const SCRIPT_ROOT = {{ request.script_root|tojson }};
             const input_id = target.input_id.value;
             const url = target.action;
 

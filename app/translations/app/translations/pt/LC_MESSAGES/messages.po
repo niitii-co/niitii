@@ -1,0 +1,677 @@
+# Portuguese translations for PROJECT.
+# Copyright (C) 2024 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-01-03 19:45-0500\n"
+"PO-Revision-Date: 2024-12-01 20:16-0500\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: pt\n"
+"Language-Team: pt <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.16.0\n"
+
+#: app/__init__.py:26
+msgid "login to access"
+msgstr "faça login para aceder"
+
+#: app/auth/email.py:8
+msgid "[niitii] Reset Your Password"
+msgstr "[niitii] faça login para aceder"
+
+#: app/auth/email.py:17
+msgid "[niitii] Confirm Account"
+msgstr "[niitii] Confirmar conta"
+
+#: app/auth/email.py:26
+msgid "[niitii] Confirm Email"
+msgstr "[niitii] Confirmar e-mail"
+
+#: app/auth/email.py:34
+msgid "[niitii] Admin Token"
+msgstr "[niitii] Token de administrador"
+
+#: app/auth/routes.py:29
+msgid "Account disabled"
+msgstr "Conta desativada"
+
+#: app/auth/routes.py:33
+msgid "Invalid token"
+msgstr "Token inválido"
+
+#: app/auth/routes.py:51 app/auth/routes.py:117
+msgid "Email sent"
+msgstr "E-mail enviado"
+
+#: app/auth/routes.py:53 app/templates/_macros.html:20
+#: app/templates/auth/login.html:7
+msgid "Sign In"
+msgstr "Entrar"
+
+#: app/auth/routes.py:69
+msgid "username exist"
+msgstr "nome de utilizador existe"
+
+#: app/auth/routes.py:71 app/templates/auth/register.html:9
+msgid "Passwords must match"
+msgstr "As palavras-passe devem corresponder"
+
+#: app/auth/routes.py:81 app/templates/_macros.html:49
+#: app/templates/auth/login.html:10 app/templates/auth/register.html:7
+msgid "Register"
+msgstr "Registar"
+
+#: app/auth/routes.py:131 app/auth/routes.py:177 app/auth/routes.py:191
+#: app/main/routes.py:567
+msgid "Invalid"
+msgstr "Inválido"
+
+#: app/auth/routes.py:146 app/templates/_macros.html:61
+#: app/templates/auth/request_password_reset.html:7
+msgid "Request Password Reset"
+msgstr "Solicitar redefinição de palavra-passe"
+
+#: app/auth/routes.py:162 app/templates/auth/login.html:14
+#: app/templates/auth/reset_password.html:7
+msgid "Reset Password"
+msgstr "Redefinir palavra-passe"
+
+#: app/auth/routes.py:178 app/templates/auth/change_password.html:7
+msgid "Change Password"
+msgstr "Alterar a palavra-passe"
+
+#: app/auth/routes.py:192
+msgid "Change Email"
+msgstr "Alterar e-mail"
+
+#: app/main/routes.py:35
+msgid "Index"
+msgstr "Índice"
+
+#: app/main/routes.py:46
+msgid "Feed"
+msgstr "Alimentar"
+
+#: app/main/routes.py:94 app/templates/new_post.html:9
+msgid "New Post"
+msgstr "Nova postagem"
+
+#: app/main/routes.py:199
+msgid "Post"
+msgstr "Publicar"
+
+#: app/main/routes.py:325 app/templates/edit_post.html:7
+msgid "Edit Post"
+msgstr "Editar postagem"
+
+#: app/main/routes.py:348
+msgid "Post Comments"
+msgstr "Postar comentários"
+
+#: app/main/routes.py:372
+msgid "User Comments"
+msgstr "Comentários do usuário"
+
+#: app/main/routes.py:385 app/templates/_macros.html:146
+#: app/templates/_macros.html:186
+msgid "Tags"
+msgstr "Etiquetas"
+
+#: app/main/routes.py:415
+msgid "User"
+msgstr "Usuário"
+
+#: app/main/routes.py:424
+msgid "Followers"
+msgstr "Seguidores"
+
+#: app/main/routes.py:433
+msgid "Following"
+msgstr "Seguindo"
+
+#: app/main/routes.py:472
+msgid "Setup MFA"
+msgstr "Configurar MFA"
+
+#: app/main/routes.py:487
+msgid "Edit account"
+msgstr "Editar conta"
+
+#: app/main/routes.py:527
+msgid "Edit account admin"
+msgstr "Editar conta de administrador"
+
+#: app/main/routes.py:583 app/templates/inbox.html:9
+msgid "Inbox"
+msgstr "Caixa de entrada"
+
+#: app/main/routes.py:620
+msgid "Messages"
+msgstr "Mensagens"
+
+#: app/main/routes.py:642
+msgid "Edit Messages"
+msgstr "Editar mensagens"
+
+#: app/main/routes.py:657
+msgid "View notifications"
+msgstr "Ver notificações"
+
+#: app/main/routes.py:687
+msgid "Search"
+msgstr "Procurar"
+
+#: app/main/routes.py:700 app/main/routes.py:703 app/main/routes.py:715
+msgid "Chatii"
+msgstr "Chatii"
+
+#: app/main/routes.py:700
+msgid "Enter name"
+msgstr "Digite o nome"
+
+#: app/main/routes.py:703
+msgid "Enter code"
+msgstr "Digite o código"
+
+#: app/main/routes.py:710 app/templates/errors/404.html:6
+msgid "Not found"
+msgstr "Não encontrado"
+
+#: app/main/routes.py:725
+msgid "Chat Room"
+msgstr "Sala de bate-papo"
+
+#: app/main/routes.py:779 app/templates/base.html:132
+msgid "About"
+msgstr "Sobre"
+
+#: app/main/routes.py:784 app/templates/base.html:134
+msgid "Contact"
+msgstr "Contato"
+
+#: app/main/routes.py:789 app/templates/base.html:135
+msgid "Promote"
+msgstr "Promover"
+
+#: app/templates/_comments.html:13 app/templates/_post.html:14
+#: app/templates/edit_messages.html:14 app/templates/inbox.html:25
+#: app/templates/post.html:18 app/templates/post_comments.html:16
+#: app/templates/user_comments.html:16
+#, python-format
+msgid "%(when)s"
+msgstr "%(when)s"
+
+#: app/templates/_comments.html:16 app/templates/_post.html:16
+#: app/templates/edit_messages.html:16 app/templates/followers.html:19
+#: app/templates/following.html:19 app/templates/message.html:17
+#: app/templates/post.html:16 app/templates/post_comments.html:19
+#: app/templates/user_comments.html:19
+#, python-format
+msgid "%(username)s"
+msgstr "%(username)s"
+
+#: app/templates/_comments.html:19 app/templates/_macros.html:304
+#: app/templates/post_comments.html:24 app/templates/post_comments.html:52
+#: app/templates/user_comments.html:24 app/templates/user_comments.html:53
+msgid "Disabled"
+msgstr "Desabilitado"
+
+#: app/templates/_comments.html:33
+msgid "Reply"
+msgstr "Responder"
+
+#: app/templates/_macros.html:5 app/templates/_macros.html:33
+msgid "Username"
+msgstr "Nome de utilizador"
+
+#: app/templates/_macros.html:9 app/templates/_macros.html:41
+#: app/templates/_macros.html:70 app/templates/_macros.html:122
+#: app/templates/_macros.html:424
+msgid "Password"
+msgstr "Palavra-passe"
+
+#: app/templates/_macros.html:13
+msgid "MFA Token"
+msgstr "Token MFA"
+
+#: app/templates/_macros.html:17
+msgid "Remember Me"
+msgstr "Lembre-se de mim"
+
+#: app/templates/_macros.html:22
+msgid "Lost Token?"
+msgstr "Símbolo perdido?"
+
+#: app/templates/_macros.html:23
+msgid "Request Admin Token"
+msgstr "Solicitar token de administrador"
+
+#: app/templates/_macros.html:37 app/templates/_macros.html:58
+#: app/templates/_macros.html:281
+msgid "Email"
+msgstr "Email"
+
+#: app/templates/_macros.html:46 app/templates/_macros.html:74
+#: app/templates/_macros.html:106
+msgid "Confirm Password"
+msgstr "Confirme a sua senha"
+
+#: app/templates/_macros.html:77 app/templates/_macros.html:109
+msgid "Update Password"
+msgstr "Atualizar palavra-passe"
+
+#: app/templates/_macros.html:86
+msgid "Enter token"
+msgstr "Insira o token"
+
+#: app/templates/_macros.html:89
+msgid "Check"
+msgstr "Verificar"
+
+#: app/templates/_macros.html:98
+msgid "Current Password"
+msgstr "Senha atual"
+
+#: app/templates/_macros.html:102
+msgid "New Password"
+msgstr "Nova Senha"
+
+#: app/templates/_macros.html:118
+msgid "New Email"
+msgstr "Novo e-mail"
+
+#: app/templates/_macros.html:125
+msgid "Update Email Address"
+msgstr "Atualizar endereço de e-mail"
+
+#: app/templates/_macros.html:134 app/templates/_macros.html:174
+msgid "Title"
+msgstr "Título"
+
+#: app/templates/_macros.html:138 app/templates/_macros.html:178
+msgid "Body"
+msgstr "Corpo"
+
+#: app/templates/_macros.html:142 app/templates/_macros.html:182
+msgid "Post NSFW"
+msgstr "Pós NSFW"
+
+#: app/templates/_macros.html:147 app/templates/_macros.html:187
+msgid "Max: 5"
+msgstr "Máx: 5"
+
+#: app/templates/_macros.html:150
+msgid "Link photo"
+msgstr "Link da foto"
+
+#: app/templates/_macros.html:154 app/templates/_macros.html:204
+msgid "Upload photo"
+msgstr "Carregar foto"
+
+#: app/templates/_macros.html:158 app/templates/_macros.html:208
+msgid "Photo NSFW"
+msgstr "Foto NSFW"
+
+#: app/templates/_macros.html:162 app/templates/_macros.html:212
+msgid "Disable comments"
+msgstr "Desativar comentários"
+
+#: app/templates/_macros.html:165 app/templates/_macros.html:219
+#: app/templates/_macros.html:264 app/templates/_macros.html:352
+#: app/templates/_macros.html:372 app/templates/_macros.html:416
+#: app/templates/_macros.html:483
+msgid "Submit"
+msgstr "Enviar"
+
+#: app/templates/_macros.html:190
+msgid "language - ISO 639"
+msgstr "linguagem - ISO 639"
+
+#: app/templates/_macros.html:195 app/templates/_macros.html:329
+msgid "Label"
+msgstr "Rótulo"
+
+#: app/templates/_macros.html:200
+msgid "Photo link"
+msgstr "Link da foto"
+
+#: app/templates/_macros.html:216
+msgid "Delete photos"
+msgstr "Apagar fotos"
+
+#: app/templates/_macros.html:228
+msgid "Upload picture"
+msgstr "Carregar imagem"
+
+#: app/templates/_macros.html:232
+msgid "Upload with link"
+msgstr "Carregar com link"
+
+#: app/templates/_macros.html:236
+msgid "Username - ID"
+msgstr "Nome de usuário - ID"
+
+#: app/templates/_macros.html:240 app/templates/_macros.html:333
+msgid "Song name"
+msgstr "Nome da música"
+
+#: app/templates/_macros.html:244 app/templates/_macros.html:337
+msgid "Song link"
+msgstr "Link da música"
+
+#: app/templates/_macros.html:248 app/templates/_macros.html:341
+msgid "Location"
+msgstr "Localização"
+
+#: app/templates/_macros.html:252
+msgid "Birth"
+msgstr "Aniversário"
+
+#: app/templates/_macros.html:256
+msgid "Phone: +country code-123-456-7890"
+msgstr "Telefone: +código do país"
+
+#: app/templates/_macros.html:260 app/templates/_macros.html:349
+msgid "About me"
+msgstr "Sobre mim"
+
+#: app/templates/_macros.html:276
+msgid "Upload with link or null"
+msgstr "Carregar com link ou nulo"
+
+#: app/templates/_macros.html:286
+msgid "Admin Token: "
+msgstr "Token de administrador: "
+
+#: app/templates/_macros.html:291
+msgid "MFA enabled: "
+msgstr "MFA habilitado: "
+
+#: app/templates/_macros.html:295
+msgid "Confirmed"
+msgstr "Confirmado"
+
+#: app/templates/_macros.html:299
+msgid "Verified"
+msgstr "Verificado"
+
+#: app/templates/_macros.html:310
+msgid "Permission"
+msgstr "Permissão"
+
+#: app/templates/_macros.html:345
+msgid "Birth: "
+msgstr "Aniversário: "
+
+#: app/templates/_macros.html:385
+msgid "Adult"
+msgstr "Adulto"
+
+#: app/templates/_macros.html:386
+msgid "Spam"
+msgstr "Spam"
+
+#: app/templates/_macros.html:387
+msgid "Violent"
+msgstr "Violento"
+
+#: app/templates/_macros.html:428 app/templates/_macros.html:439
+#: app/templates/user.html:44
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: app/templates/_macros.html:429 app/templates/_macros.html:440
+msgid "Delete"
+msgstr "Eliminar"
+
+#: app/templates/_macros.html:472 app/templates/chatii_room.html:22
+#: app/templates/user.html:45
+msgid "Send"
+msgstr "Enviar"
+
+#: app/templates/_post.html:35 app/templates/post.html:75
+msgid "Comments"
+msgstr "Comentários"
+
+#: app/templates/about.html:6
+msgid "niitii: community of integrity"
+msgstr "niitii: comunidade de integridade"
+
+#: app/templates/about.html:7
+msgid "Dedication"
+msgstr "Dedicação"
+
+#: app/templates/about.html:8
+msgid "Kotto Bass: spirit of joy"
+msgstr "Kotto Bass: espírito de alegria"
+
+#: app/templates/about.html:9
+msgid "Miriam Makeba: spirit of nurture"
+msgstr "Miriam Makeba: espírito de criação"
+
+#: app/templates/about.html:10
+msgid "Patrice Lumumba: spirit of unity"
+msgstr "Patrice Lumumba: espírito de unidade"
+
+#: app/templates/about.html:11
+msgid "Thomas Sankara: spirit of integrity"
+msgstr "Thomas Sankara: espírito de integridade"
+
+#: app/templates/about.html:12
+msgid "niitii green RGB(37, 137, 37) is in honor of Sankara"
+msgstr "niitii RGB verde(37, 137, 37) é em homenagem a Sankara"
+
+#: app/templates/about.html:13
+msgid "niitii's anthem is"
+msgstr "O hino do niitii é"
+
+#: app/templates/about.html:13
+msgid "by Kotto Bass"
+msgstr "por Kotto Bass"
+
+#: app/templates/about.html:14
+msgid ""
+"If today is like yesterday and yesterday was like day before, how will "
+"tomorrow be different?"
+msgstr ""
+"Se hoje é como ontem e ontem foi como anteontem, como será diferente "
+"amanhã?"
+
+#: app/templates/base.html:43
+msgid "Login"
+msgstr "Conecte-se"
+
+#: app/templates/base.html:90
+msgid "Logout"
+msgstr "Sair"
+
+#: app/templates/base.html:133
+msgid "Github"
+msgstr "Github"
+
+#: app/templates/chatii.html:14
+msgid "Name"
+msgstr "Nome"
+
+#: app/templates/chatii.html:18
+msgid "Room Code"
+msgstr "Código do quarto"
+
+#: app/templates/chatii.html:22
+msgid "Join Room"
+msgstr "Entrar na sala"
+
+#: app/templates/chatii.html:23
+msgid "Create Room"
+msgstr "Criar sala"
+
+#: app/templates/edit_account.html:7 app/templates/edit_account_admin.html:7
+#: app/templates/user.html:29
+msgid "Edit Account"
+msgstr "Editar conta"
+
+#: app/templates/edit_account.html:25
+msgid "Confirm account"
+msgstr "Confirmar conta"
+
+#: app/templates/edit_account.html:28
+msgid "Change password"
+msgstr "Alterar a palavra-passe"
+
+#: app/templates/edit_account.html:29
+msgid "Change email"
+msgstr "Alterar e-mail"
+
+#: app/templates/edit_account.html:30 app/templates/edit_account_admin.html:22
+msgid "Delete Account"
+msgstr "Apagar conta"
+
+#: app/templates/edit_post.html:18
+msgid "Edit Comments"
+msgstr "Editar comentários"
+
+#: app/templates/edit_post.html:19
+msgid "Delete Post"
+msgstr "Apagar postagem"
+
+#: app/templates/followers.html:20 app/templates/following.html:20
+#, python-format
+msgid "%(count)d followers"
+msgstr "%(count)d seguidores"
+
+#: app/templates/followers.html:20 app/templates/following.html:20
+#, python-format
+msgid "%(count)d following"
+msgstr "%(count)d seguinte"
+
+#: app/templates/inbox.html:10
+msgid "Delete Messages"
+msgstr "Apagar mensagens"
+
+#: app/templates/post.html:19
+#, python-format
+msgid "*%(when)s"
+msgstr "*%(when)s"
+
+#: app/templates/post.html:79
+msgid "View Comments"
+msgstr "Ver comentários"
+
+#: app/templates/post.html:81
+msgid "Edit"
+msgstr "Editar"
+
+#: app/templates/post.html:89
+msgid "Comment"
+msgstr "Comentar"
+
+#: app/templates/post_comments.html:36
+msgid "view post"
+msgstr "ver postagem"
+
+#: app/templates/user.html:24
+msgid "Joined"
+msgstr "Ingressou"
+
+#: app/templates/user.html:25
+msgid "Last seen"
+msgstr "Visto pela última vez"
+
+#: app/templates/user.html:40
+msgid "Note"
+msgstr "Nota"
+
+#: app/templates/user.html:52
+msgid "Edit Admin"
+msgstr "Editar administrador"
+
+#: app/templates/user.html:72 app/templates/user.html:91
+msgid "Posts"
+msgstr "Postagens"
+
+#: app/templates/user.html:76
+msgid "followers"
+msgstr "seguidores"
+
+#: app/templates/user.html:80
+msgid "following"
+msgstr "seguinte"
+
+#: app/templates/user.html:93
+msgid "View comments"
+msgstr "Ver comentários"
+
+#: app/templates/user_comments.html:36 app/templates/view_notifications.html:12
+msgid "View post"
+msgstr "Ver postagem"
+
+#: app/templates/auth/change_email.html:7
+msgid "Change Email: "
+msgstr "Alterar e-mail: "
+
+#: app/templates/auth/login.html:10
+msgid "New User?"
+msgstr "Novo utilizador?"
+
+#: app/templates/auth/login.html:13
+msgid "Forgot Password?"
+msgstr "Esqueceu-se da sua senha?"
+
+#: app/templates/auth/setup_mfa.html:7
+msgid "Scan QR"
+msgstr "Digitalizar QR"
+
+#: app/templates/email/admin_token.html:8
+#: app/templates/email/change_email.html:12
+#: app/templates/email/confirm_account.html:12
+#: app/templates/email/export_posts.html:6
+#: app/templates/email/reset_password.html:12
+msgid "Note: DO NOT REPLY"
+msgstr "Nota: NÃO RESPONDA"
+
+#: app/templates/email/change_email.html:7
+msgid "Confirm email link"
+msgstr "Confirmar link de e-mail"
+
+#: app/templates/email/change_email.html:10
+#: app/templates/email/confirm_account.html:10
+#: app/templates/email/reset_password.html:10
+msgid "Copy link:"
+msgstr "Copiar link:"
+
+#: app/templates/email/confirm_account.html:7
+msgid "Confirm account link"
+msgstr "Confirmar link da conta"
+
+#: app/templates/email/export_posts.html:5
+msgid "Posts archive is attached"
+msgstr "O arquivo de posts está anexado"
+
+#: app/templates/email/reset_password.html:7
+msgid "Reset password link"
+msgstr "Link para redefinir palavra-passe"
+
+#: app/templates/errors/403.html:6
+msgid "Forbidden"
+msgstr "Proibido"
+
+#: app/templates/errors/403.html:8 app/templates/errors/404.html:8
+#: app/templates/errors/500.html:9
+msgid "Back"
+msgstr "Volte"
+
+#: app/templates/errors/500.html:6
+msgid "Unexpected error has occurred"
+msgstr "Ocorreu um erro inesperado"
+
+#: app/templates/errors/500.html:7
+msgid "Administrator has been notified"
+msgstr "O administrador foi notificado"
+

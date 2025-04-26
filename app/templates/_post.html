@@ -13,9 +13,7 @@
             <div class="ps-0 pt-2 pb-2 post-link" >
                     <a class="text-decoration-none text-body h4" href="{{ url_for('main.post', id=post.id) }}">
                     {{ post.title }}
-<!--Get post photos as dictionary-->
                     {% set photos = post.get_photos() %}
-                    
                     {% if photos %}
                     <div class="{% if post.nsfw or photos['nsfw'] %}my-4{% else %}my-2{% endif %}">
                     {% for p in photos['link'] %}

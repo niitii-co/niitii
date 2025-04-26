@@ -16,7 +16,7 @@
             <time datetime="{{m.timestamp}}">{{ moment(m.timestamp).format('D/MM/YY H:mm:ss') }}</time>
             </span>
             <div class="my-1">
-                {{ m.decrypt() }}
+                {{ m.decrypt(m.body) }}
                 {%if m.photos %}
                       <img class="d-block img-fluid object-fit-scale mb-2" src="{{ m.get_url() }}" alt="message photo">
                 {% endif %}

@@ -11,29 +11,27 @@
             </div>
           <div class="card-body w-auto h-10 overflow-y-auto">
             <ul class="list-unstyled mb-0">
-            {% for message in messages %}
-            {% if message.sender == current_user %}
-                {% set username %}{{ message.recipient.username }}{% endset %}
+            {% for m in messages %}
+            {% if m.sender == current_user %}
+                {% set username %}{{ m.recipient.username }}{% endset %}
             {% else %}
-                {% set username %}{{ message.sender.username }}{% endset %}
-                {% set converser %}{{ message.sender.username }}{% endset %}
+                {% set username %}{{ m.sender.username }}{% endset %}
+                {% set converser %}{{ m.sender.username }}{% endset %}
             {% endif %}
               <li class="p-2 border-bottom">
                 <a class="text-decoration-none d-flex justify-content-between" href="{{ url_for('main.message', username=username) }}">
                   <div class="d-flex flex-row">
                     <div class="d-flex flex-column">
-                    <img class="rounded-circle d-flex align-self-center shadow-1-strong avatar-md" {% if converser and message.sender.photo %} src="{{ message.sender.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="avatar">
+                    <img class="rounded-circle d-flex align-self-center shadow-1-strong avatar-md" {% if converser and m.sender.photo %} src="{{ m.sender.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="avatar">
                     <p class="fs-5 fw-medium text-center text-body">
-                    {% if converser %}{{ message.sender.username }}{% else %}{{ message.recipient.username }}{% endif %}
+                    {% if converser %}{{ m.sender.username }}{% else %}{{ m.recipient.username }}{% endif %}
                     </p>
                     </div>
-                    <div class="ms-3">
-                        <p class="small text-muted">{{  message.decrypt() | truncate(40) }}</p>
+                    <div class="w-75 ms-3 my-auto">
+                        <p class="small text-muted">{{  m.decrypt(m.body) | truncate(128) }}</p>
                     </div>
+                    <time class="w-25 text-muted text-center" datetime="{{m.timestamp}}">{{ moment(m.timestamp).format('D MMM H:mm') }}</time>
                   </div>
-                    <p class="small text-muted ms-2"">
-                    <time datetime="{{message.timestamp}}">{{ moment(message.timestamp).format('D MMM H:mm') }}</time>
-                    </p>
                 </a>
               </li>
               {% endfor %}

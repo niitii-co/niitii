@@ -22,7 +22,7 @@
                     {% endif %}
                     <div class="d-flex flex-row justify-content-end mb-3">
                         <div>
-                            <p class="p-1 m-0 rounded-3 fs-5">{{ m.decrypt() }}</p>
+                            <p class="p-1 m-0 rounded-3 fs-5">{{ m.decrypt(m.body) }}</p>
                             <p class="me-1 rounded-3 text-body text-end message-time">
                             <time datetime="{{m.timestamp}}">{{ moment(m.timestamp).format('D MMM H:mm') }}</time>
                             </p>
@@ -36,7 +36,7 @@
                     {% endif %}
                     <div class="d-flex flex-row justify-content-start mb-3">
                       <div>
-                        <p class="p-1 m-0 rounded-3 fs-5">{{ m.decrypt() }}</p>
+                        <p class="p-1 m-0 rounded-3 fs-5">{{ m.decrypt(m.body) }}</p>
                         <p class="ms-1 rounded-3 text-body text-start message-time">
                         <time datetime="{{m.timestamp}}">{{ moment(m.timestamp).format('D MMM H:mm') }}</time>
                         </p>

@@ -28,7 +28,6 @@ def before_request():
         current_user.last_seen = datetime.now(timezone.utc)
 
         db.session.commit()
-
     if request.method == 'POST':
 # >>>type(request.accept_languages)... <class 'werkzeug.datastructures.accept.LanguageAccept'>
         g.language = str(request.accept_languages).split(',')[0] if request.accept_languages != '*' else 'en-US'
@@ -39,7 +38,8 @@ def before_request():
 @bp.route('/home')
 @bp.route('/index')
 def index():
-    query = sa.select(Post).order_by(Post.votes.desc(), Post.comments.desc(), Post.timestamp.desc()).limit(200)
+    lang = str(request.accept_languages).split(',')[0] if request.accept_languages != '*' else 'en-US'
+    query = Post.get_index(lang)
     pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
 
     for post in pagination.items:
@@ -53,7 +53,7 @@ def index():
 @login_required
 def feed():
     current_user.last_feed_read_time = datetime.now(timezone.utc)
-    query = current_user.following_posts().where(Post.author != current_user).order_by(Post.timestamp.desc())
+    query = current_user.get_feed()
     pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['POSTS_PER_PAGE'], error_out=False)
     
     db.session.commit()
@@ -67,9 +67,11 @@ def new_post():
     if request.method == 'POST':
         nsfw = True if request.form.get('nsfw') else False
         disable_comments = True if request.form.get('disable_comments') else False
+        viewer = int(request.form.get('viewer'))
         utc_offset = request.form.get('utc_offset')
-        post = Post(title=request.form.get('title'), body=request.form.get('body'), author=current_user, disable_comments=disable_comments, nsfw=nsfw, language=g.language, utc_offset=utc_offset)
+        post = Post(title=request.form.get('title'), body=request.form.get('body'), author=current_user, disable_comments=disable_comments, nsfw=nsfw, language=g.language, viewer=viewer, utc_offset=utc_offset)
         db.session.add(post)
+        db.session.flush()        
         form_link = request.form.getlist('add_photos')[0:5]
         photo_name = []
         photo_link = []
@@ -77,9 +79,9 @@ def new_post():
 
 # form_link will return ['', '', '', '', ''] if empty. len(form_link) = 5
         if form_link[0] != '':
-            for i, f in enumerate(form_link):
+            for i, f in enumerate(form_link, start=1):
                 if form_link[i]:
-                    photo_name.append(f"photo{i + 1}")
+                    photo_name.append(f"photo{i}")
                     photo_link.append(f)
                     p_count += 1
             post.photos = json.dumps({"name": photo_name, "link": photo_link, "nsfw": nsfw})
@@ -90,19 +92,18 @@ def new_post():
         if request.files['photo'].filename != '' and p_count < 5:
             photo_files = request.files.getlist('photo')[0:5]
             bucket = 'post-pics'
-            for f in photo_files:
+            for i, f in enumerate(photo_files, start=1):
                 if f.filename != '' and Photo.allowed_file(f.filename):
 # sanitize filename before setting name
-                    f.filename = secure_filename(f.filename)    
-                    name = f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-%f')}-{current_user.username}-{f.filename}"
-                    if Photo.upload_object(bucket, name, f, 'public-read'):
+                    f.filename = secure_filename(f.filename)
+                    name = f"{f.filename}"
+                    if Photo.upload_object(bucket, name, f, 'public-read', post.id):
                         photo_name.append(f.filename)
                         photo_link.append(f"{Photo.SPACES_URL}/{bucket}/{name}")
             post.photos = json.dumps({"name": photo_name, "link": photo_link, "nsfw": nsfw})
 
         if request.form.get('tags'):
             form_tags = request.form.get('tags').split()[0:5]
-# check for duplicate tags
             duplicate_tags = []
             for tag in form_tags:
                 if tag not in duplicate_tags:
@@ -126,10 +127,6 @@ def post(id):
         page = (post.comments_count() - 1) // current_app.config['COMMENTS_PER_PAGE'] + 1
     query = post.get_comments()
     pagination = db.paginate(query, page=page, per_page=current_app.config['COMMENTS_PER_PAGE'], error_out=False)
-
-    if current_user != post.author:
-        for c in pagination.items:
-            pagination.items.remove(c) if c.direct else None
 
     return render_template('post.html', title= f"{post.title} - {post.author.username}", post=post, comments=pagination.items, pagination=pagination)
 
@@ -185,10 +182,11 @@ def reply_comment(id):
         return redirect(request.referrer)
     if not post.disable_comments:
         comment = db.session.execute(sa.select(Comment).where(Comment.id == request.form.get('comment_id'))).scalar()
-        c_author = db.session.execute(sa.select(User).where(User.id == request.form.get('authorId'))).scalar()
+        c_author = db.session.execute(sa.select(User).where(User.username == request.form.get('authorName'))).scalar()
         if comment:
+            ghost = True if request.form.get('ghost_comment') else False
             utc_offset = request.form.get('utc_offset')
-            reply = Comment(author=current_user._get_current_object(), body=request.form.get('body'), post_id=id, user_id=current_user.id, parent_id=comment.id, language=g.language, utc_offset=utc_offset)
+            reply = Comment(author=current_user._get_current_object(), body=request.form.get('body'), post_id=id, user_id=current_user.id, parent_id=comment.id, ghost=ghost, language=g.language, utc_offset=utc_offset)
 
             db.session.add(reply)
             db.session.flush()
@@ -211,22 +209,21 @@ def vote_post(id):
 
     if post.locked:
         return {
-        "count": f"&#x21E7; {post.votes}",
+        "count": f"&#x21E7;&#xfe0e; {post.votes}",
         }
-    if vote is None:
+    if not vote:
         utc_offset = request.form.get('utc_offset')
         vote = Vote(user_id=current_user.id, post_id=id, utc_offset=utc_offset)
         db.session.add(vote)
-        db.session.flush()
-        count = post.vote_count()
     else:
-        db.session.delete(vote)
-        db.session.flush()
-        count = post.vote_count()
+        vote.del_vote()
 
+    db.session.flush()
+    count = post.vote_count()
     db.session.commit()
+
     return {
-        "count": f"&#x21E7; {count}",
+        "count": f"&#x21E7;&#xfe0e; {count}",
     }
 
 
@@ -241,22 +238,21 @@ def vote_comment(id):
 
     if post.locked:
         return {
-            "count": f"&#x21E7; {comment.votes}",
+            "count": f"&#x21E7;&#xfe0e; {comment.votes}",
         }
-    if vote is None:
+    if not vote:
         utc_offset = request.form.get('utc_offset')
         vote = Vote(user_id=current_user.id, post_id=id, comment_id=comment.id, utc_offset=utc_offset)
         db.session.add(vote)
-        db.session.flush()
-        count = comment.vote_count()
     else:
-        db.session.delete(vote)
-        db.session.flush()
-        count = comment.vote_count()
+        vote.del_vote()
 
+    db.session.flush()
+    count = comment.vote_count()
     db.session.commit()
+
     return {
-        "count": f"&#x21E7; {count}",
+        "count": f"&#x21E7;&#xfe0e; {count}",
     }
 
 
@@ -267,22 +263,21 @@ def flag(id):
     flag = db.session.execute(sa.select(Flag).where((Flag.user_id == current_user.id) & (Flag.post_id == id))).scalar()
     if post.locked:
         return {
-            "count": f"&#x1F6A9; {post.flags}",
+            "count": f"&#x1F6A9;&#xfe0e; {post.flags}",
         }
     if not flag:
         utc_offset = request.form.get('utc_offset')
         flag = Flag(reason=FlagReason[request.form.get('flag')].value, user_id=current_user.id, post_id=id, utc_offset=utc_offset)
         db.session.add(flag)
-        db.session.flush()
-        count = post.flags_count()
     else:
         db.session.delete(flag)
-        db.session.flush()
-        count = post.flags_count()
 
+    db.session.flush()
+    count = post.flags_count()
     db.session.commit()
+
     return {
-        "count": f"&#x1F6A9; {count}",
+        "count": f"&#x1F6A9;&#xfe0e; {count}",
     }
 
 
@@ -300,7 +295,7 @@ def edit_post(id):
         post.language = g.language
         utc_offset = request.form.get('utc_offset')
         utc_time = datetime.now(timezone.utc).strftime('%Y%m%d-%H:%M')
-        post.editor = f"{current_user.username}_{utc_time}_{utc_offset}"
+        post.editor = f"{current_user.username}_{utc_time}_utc_{utc_offset}"
         nsfw = True if request.form.get('nsfw') else False
         post.nsfw = nsfw
         post.viewer = int(request.form.get('viewer'))
@@ -313,7 +308,7 @@ def edit_post(id):
             post.label = request.form.get('label') if request.form.get('label') and request.form.get('label') != 'null' else None
 
         if not form_tags:
-            post.del_all_tags()
+            post.del_tags()
 
         if form_tags and post.tags:
             post_tags = post.get_tags()
@@ -338,32 +333,46 @@ def edit_post(id):
                     new_tag = Tag(name=tag.replace('#', ''), posts=[post])
                     db.session.add(new_tag)
 
-        photo_name = []
-        photo_link = []
-# p_max gets the count so photo_name = photo<number>. max uploads is 5
+        photo_name = p_photos['name'] if p_photos and p_photos['name'] else []
+        photo_link = p_photos['link'] if p_photos and p_photos['link'] else []
         p_max = 5 - len(p_photos['link']) if p_photos and p_photos['link'] else 5
+        form_photos = request.form.getlist('add_photos')[:5]
 
-        if p_photos and p_max > 0 and request.form.getlist('add_photos'):
-            i = len(p_photos['link']) if p_photos else 0
-            print(i)
+# add_photos always returns a list of length 5. Some items in the list will be ''
+# p is false if ''
+        if p_photos and p_max < 5 and form_photos:
+            i = len(p_photos['link'])
             for p in request.form.getlist('add_photos'):
-                p_photos['link'].append(f"photo{i + 1}")
-                p_photos['link'].append(p)
-                print(p_photos['link'])
-                print(p_photos['name'])
-                i += 1
+                if p:
+                    photo_name.append(f"photo{i + 1}")
+                    photo_link.append(p)
+                    i += 1
+            post.photos = json.dumps({"name": p_photos['name'], "link": p_photos['link'], "nsfw": nsfw})
+        elif form_photos:
+            for i, p in enumerate(form_photos, start=1):
+                if p:
+                    photo_name.append(f"photo{i}")
+                    photo_link.append(p)
             post.photos = json.dumps({"name": photo_name, "link": photo_link, "nsfw": nsfw})
-        elif request.form.getlist('add_photos'):
-            for i, l in enumerate(photo_link, start=1):
-                photo_name.append(f"photo{i}")
-                photo_link.append(l)
-                print(photo_name)
-                print(photo_link)
+
+
+        if request.files and request.files['photo'].filename != '':
+            photo_files = request.files.getlist('photo')[0:p_max]
+            for i, f in enumerate(photo_files, start=1):
+                if f.filename != '' and Photo.allowed_file(f.filename):
+                    f.filename = secure_filename(f.filename)
+                    name = f"{f.filename}"
+                    if Photo.upload_object(bucket, name, f, 'public-read', post.id):
+                        photo_name.append(f.filename)
+                        photo_link.append(f"{Photo.SPACES_URL}/{bucket}/{name}")
+
             post.photos = json.dumps({"name": photo_name, "link": photo_link, "nsfw": nsfw})
+
 
         if request.form.getlist('del_photos'):
-            for i in range(len(request.form.getlist('del_photos')) - 1, -1, -1):
-                p = p_photos['link'][i]
+#            for i in range(len(request.form.getlist('del_photos')) - 1, -1, -1):
+            for p in request.form.getlist('del_photos'):
+                i = p_photos['link'].index(p)
                 if "niitii-spaces" in p:
                     Photo.del_object('post-pics', p.removeprefix(f"{Photo.SPACES_URL}/post-pics/"))
 
@@ -372,19 +381,12 @@ def edit_post(id):
 
             photo_name = p_photos['name']
             photo_link = p_photos['link']
-            post.photos = json.dumps({"name": photo_name, "link": photo_link, "nsfw": nsfw})
 
-        if request.files['photo'].filename != '':
-            photo_files = request.files.getlist('photo')[0:p_max]
-            for f in photo_files:
-                if f.filename != '' and Photo.allowed_file(f.filename):
-                    f.filename = secure_filename(f.filename)
-                    name = f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-%f')}-{current_user.username}-{f.filename}"
-                    if Photo.upload_object(bucket, name, f, 'public-read'):
-                        photo_name.append(f.filename)
-                        photo_link.append(f"{Photo.SPACES_URL}/{bucket}/{name}")
+            if len(photo_name) > 0:
+                post.photos = json.dumps({"name": photo_name, "link": photo_link, "nsfw": nsfw})
+            else:
+                post.photos = None
 
-            post.photos = json.dumps({"name": photo_name, "link": photo_link, "nsfw": nsfw})
 
         db.session.commit()
         return redirect(url_for('main.post', id=post.id))
@@ -400,23 +402,12 @@ def del_post(id):
     post = db.first_or_404(sa.select(Post).where(Post.id == id))
 
     if post.user_id == current_user.id or current_user.can("MODERATE"):
-        if post.tags:
-            for tag in post.tags:
-# remove tag from post.tags list
-                post.tags.remove(tag)
-                db.session.execute(sa.delete(Tag).where(Tag.id == tag.id))
-
 # PRAGMA enables cascade in sqlite
 # db.session.execute(sa.text('PRAGMA foreign_keys = ON'))
-        post.del_all_votes()
-        post.del_all_flags()
-        post.del_all_comments()
-        post.del_all_photos()
-        post.del_all_tags()
-        db.session.delete(post)
-
+        post.del_post()
         db.session.commit()
-        return redirect(url_for('main.index'))
+
+    return redirect(url_for('main.index'))
 
 
 @bp.route('/post-comment/<int:id>')
@@ -428,10 +419,6 @@ def post_comment(id):
 
     query = post.get_comments()
     pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['COMMENTS_PER_PAGE'], error_out=False)
-
-    if current_user != post.author:
-        for c in pagination.items:
-            pagination.items.remove(c) if c.direct else None
 
     return render_template('post_comment.html', title=_('Post Comment') + f" - {post.author.username }", post=post, comments=pagination.items, pagination=pagination)
 
@@ -481,7 +468,7 @@ def del_comment(id):
 
         post.removed_comments += 1
 
-    db.session.delete(comment)
+    comment.del_comment()
     db.session.flush()
     post.comments_count()
 
@@ -513,31 +500,46 @@ def user(username):
     return render_template('user.html',  title=_('User') + f" - {user.username }", user=user, posts=pagination.items, pagination=pagination, age=age)
 
 
-@bp.route('/ping/<int:id>', methods=['POST'])
+@bp.route('/ping/<username>', methods=['POST'])
 @login_required
-def ping(id):
-    user = db.first_or_404(sa.select(User).where(User.id == id))
+def ping(username):
+    user = db.first_or_404(sa.select(User).where(User.username == username))
     sender = f"\n{current_user.username}" if request.form.get('pingCheck') else '\n...'
     payload = {"key": f"Ping \n{request.form.get('body')} {sender}"}
     user.add_notification(name='new_ping', payload=payload, item_id=0, item_type='ping')
 
     db.session.flush()
-    ping_count = db.session.execute(user.notifications.select().where(Notification.name == 'ping_count')).scalar()
-
-    if ping_count:
-        ping_count.update_payload({"key": f"{user.ping_count()}"})
-    else:
-        payload = {"key": f"{user.ping_count()}"}
-        user.add_notification(name='ping_count', payload=payload, item_id=0, item_type='count')
+    user.update_ping_count()
 
     db.session.commit()
     return redirect(request.referrer)
 
 
-@bp.route('/follow/<int:id>', methods=['POST'])
+@bp.route('/ping-follower', methods=['POST'])
 @login_required
-def follow(id):
-    user = db.first_or_404(sa.select(User).where(User.id == id))
+def ping_follower():
+    query = current_user.followers.select().where(User.last_seen > (datetime.now(timezone.utc) - timedelta(days=10)))
+    users = db.session.execute(query).scalars()
+    
+    for user in users:
+        sender = f"\n{current_user.username}"
+        payload = {"key": f"Ping \n{request.form.get('body')} {sender}"}
+        user.add_notification(name='new_ping', payload=payload, item_id=0, item_type='ping')
+
+        db.session.flush()
+        user.update_ping_count()
+
+        db.session.commit()
+
+    return redirect(request.referrer)
+
+
+@bp.route('/follow/<username>', methods=['POST'])
+@login_required
+def follow(username):
+    user = db.first_or_404(sa.select(User).where(User.username == username))
+    if not user.can_view():
+        return redirect(url_for('main.user', username=user.username))
 # Cannot follow yourself
     if user is None or user == current_user:
         return redirect(request.referrer)
@@ -547,14 +549,18 @@ def follow(id):
     return redirect(request.referrer)
 
 
-@bp.route('/unfollow/<int:id>', methods=['POST'])
+@bp.route('/unfollow/<username>', methods=['POST'])
 @login_required
-def unfollow(id):
-    user = db.first_or_404(sa.select(User).where(User.id == id))
+def unfollow(username):
+    user = db.first_or_404(sa.select(User).where(User.username == username))
 # Cannot unfollow yourself
     if user is None or user == current_user:
         return redirect(request.referrer)
-    current_user.unfollow(user)
+
+    if request.form.get('submit') == 'unfollow':
+        current_user.unfollow(user)
+    else:
+        user.unfollow(current_user)
 
     db.session.commit()
     return redirect(request.referrer)
@@ -563,25 +569,53 @@ def unfollow(id):
 @bp.route('/follower/<username>')
 def follower(username):
     user = db.first_or_404(sa.select(User).where(User.username == username))
+    if not user.can_view():
+        return redirect(url_for('main.user', username=user.username))
+
     query = user.followers.select().order_by(User.last_seen.desc())
     pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['FOLLOWS_PER_PAGE'], error_out=False)
-            
+
     return render_template('follower.html',  title=_('Follower') + f" - {user.username }", users=pagination.items, user=user, pagination=pagination)
-    
+
 
 @bp.route('/following/<username>')
 def following(username):
     user = db.first_or_404(sa.select(User).where(User.username == username))
+    if not user.can_view():
+        return redirect(url_for('main.user', username=user.username))
+
     query = user.following.select().order_by(User.last_seen.desc())
     pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['FOLLOWS_PER_PAGE'], error_out=False)
-        
-    return render_template('following.html',  title=_('Following') + f" - {user.username }", users=pagination.items, user=user, pagination=pagination)
+
+    return render_template('edit_following.html',  title=_('Following') + f" - {user.username }", users=pagination.items, user=user, pagination=pagination)
 
 
-@bp.route('/edit-account/<username>', methods=['GET', 'POST'])
+@bp.route('/edit-follower', methods=['GET', 'POST'])
 @login_required
-def edit_account(username):
-    if request.method == 'POST' and current_user.username == username:
+def edit_follower():
+    if request.method == 'POST':
+        pass
+    query = current_user.followers.select().order_by(User.last_seen.desc())
+    pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['FOLLOWS_PER_PAGE'], error_out=False)
+
+    return render_template('edit_follower.html',  title=_('Edit follower') + f" - {current_user.username }", users=pagination.items, user=user, pagination=pagination)
+
+
+@bp.route('/edit-following', methods=['GET', 'POST'])
+@login_required
+def edit_following():
+    if request.method == 'POST':
+        pass
+    query = current_user.following.select().order_by(User.last_seen.desc())
+    pagination = db.paginate(query, page=request.args.get('page', 1, type=int), per_page=current_app.config['FOLLOWS_PER_PAGE'], error_out=False)
+
+    return render_template('edit_following.html',  title=_('Edit follower') + f" - {current_user.username }", users=pagination.items, user=user, pagination=pagination)
+
+
+@bp.route('/edit-account', methods=['GET', 'POST'])
+@login_required
+def edit_account():
+    if request.method == 'POST':
         if request.form.get('submit') == 'edit_account':
             bucket = 'profile-pics'
             current_user.phone = request.form.get('phone')
@@ -595,21 +629,19 @@ def edit_account(username):
             current_user.song = json.dumps({'name':request.form.get('song_name'), 'link': request.form.get('song_link')}) if request.form.get('song_name') and request.form.get('song_link') else None
             current_user.birth = datetime.strptime(request.form.get('birth'), '%Y-%m-%d') if request.form.get('birth') else None
 
-            if request.form.get('photo_link'):
-                if current_user.photo:
-                    current_user.del_photo()
-                    current_user.photo = request.form.get('photo_link') if not request.form.get('del_photo') else None
-                else:
-                    current_user.photo = request.form.get('photo_link') if not request.form.get('del_photo') else None
+            if request.form.get('photo_link') and not request.form.get('del_photo'):
+                current_user.del_photo()
+                current_user.photo = request.form.get('photo_link')
+
+            if request.form.get('del_photo'):
+                current_user.del_photo()
 
             if request.files['photo'].filename != '':
                 f = request.files['photo']
                 if f.filename != '' and Photo.allowed_file(f.filename):
-                    if current_user.photo:
-                        current_user.del_photo()
-
+                    current_user.del_photo()
                     f.filename = secure_filename(f.filename)
-                    name = f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-%f')}-{current_user.username}-{f.filename}"
+                    name = f"{f.filename}"
                     if Photo.upload_object(bucket, name, f, 'public-read'):
                         current_user.photo = f"{Photo.SPACES_URL}/{bucket}/{name}"
 
@@ -630,7 +662,7 @@ def edit_account_admin(username):
     if request.method == 'POST':
         if request.form.get('submit') == 'edit_account':
             user.about_me = request.form.get('about_me')
-            user.photo = request.form.get('photo_link') if not request.form.get('del_photo') else None
+            user.photo = request.form.get('photo_link') if not request.form.get('del_photo') else user.del_photo()
             user.confirmed = True if request.form.get('confirmed') else False
             user.verified = True if request.form.get('verified') else False
             user.label = request.form.get('label')
@@ -639,11 +671,12 @@ def edit_account_admin(username):
 
             utc_offset = request.form.get('utc_offset')
             utc_time = datetime.now(timezone.utc).strftime('%Y%m%d-%H:%M')            
-            user.editor = f"{current_user.username}_{utc_time}_{utc_offset}"
+            user.editor = f"{current_user.username}_{utc_time}_utc_{utc_offset}"            
+                
 
 # Admin cannot set a permission above their own
             if current_user.can('ADMIN'):
-                user.disabled = request.form.get('disabled') if request.form.get('disabled') else False
+                user.disabled = True if request.form.get('disabled') else False
                 if int(request.form.get('permission')) <= current_user.permission:
                     user.set_permission(AccountPermission(int(request.form.get('permission'))).name)
 
@@ -653,44 +686,20 @@ def edit_account_admin(username):
     return render_template('edit_account_admin.html', title=_('Edit account admin') + f" - {user.username}", user=user)
 
 
-@bp.route('/del-account/<int:id>', methods=['POST'])
+@bp.route('/del-account/<username>', methods=['POST'])
 @login_required
-def del_account(id):
-    user = db.first_or_404(sa.select(User).where(User.id == id))
+def del_account(username):
+    user = db.first_or_404(sa.select(User).where(User.username == username))
     if user is None or current_user.id != user.id and not current_user.can('ADMIN'):
         return redirect(url_for('main.index'))
     elif user.check_password(request.form.get('password')) or current_user.check_password(request.form.get('password')):
-        if user.photo:
-            user.del_photo()
-# Delete post photos from storage Spaces
-        posts = db.session.execute(user.posts.select()).scalars()
-        for p in posts:
-            p.del_all_comments()
-            p.del_all_flags()
-            p.del_all_votes()
-            p.del_all_tags()
-            p.del_all_photos()
-
-        messages = db.session.execute(user.messages_sent.select()).scalars()
-
-        for m in messages:
-            if m.get_photos():
-                m.del_all_photos()
 
 # PRAGMA enables cascade in sqlite
         db.session.execute(sa.text('PRAGMA foreign_keys = ON'))
-        user.del_all_sent_messages()
-        user.del_all_comments()
-        user.del_all_votes()
-        user.del_all_flags()
-        user.del_all_notifications()
-        user.del_all_posts()
-        user.del_all_follows()
         user.del_user()
 
         db.session.commit()
         return redirect(url_for('main.index'))
-
     else:
         flash(_('Invalid'))
         return redirect(request.referrer)
@@ -735,7 +744,7 @@ def message(username):
 # query mailbox and message_id. message_id used in convo loop.
     convo = db.session.execute(sa.select(Conversation.mailbox, Conversation.message_id).where(((Conversation.sender_id == current_user.id) & (Conversation.recipient_id == user.id)) | ((Conversation.sender_id == user.id) & (Conversation.recipient_id == current_user.id))))
 
-# Create message ids to query    
+# Create message ids to query
     id_list = []
     for m in convo:
         id_list.append(m.message_id)
@@ -763,7 +772,8 @@ def send_message(username):
             f.filename = secure_filename(f.filename)
             name = f"{uuid.uuid4()}"
             if Photo.upload_object(bucket, name, f, 'private'):
-                msg.photos = json.dumps({"link": f"{Photo.SPACES_URL}/{bucket}/{name}"})
+                photo = json.dumps({"link": f"{Photo.SPACES_URL}/{bucket}/{name}"})
+                msg.photos = Message.encrypt(photo)
 
     convo = db.session.execute(sa.select(Conversation.mailbox).where(((Conversation.sender_id == current_user.id) & (Conversation.recipient_id == user.id)) | ((Conversation.sender_id == user.id) & (Conversation.recipient_id == current_user.id)))).scalar()
     if convo:
@@ -791,7 +801,7 @@ def send_message(username):
 
     db.session.commit()
     return {
-        "body": message.decrypt(),
+        "body": message.decrypt(message.body),
         "timestamp": message.timestamp,
         "photo": Photo.get_url(message.get_photos()['link'].removeprefix(f"{Photo.SPACES_URL}/message-pics/")) if message.get_photos() else None
     }
@@ -809,18 +819,14 @@ def edit_message():
 @bp.route('/del-message/<int:id>', methods=['POST'])
 @login_required
 def del_message(id):
-    message = db.session.execute(sa.select(Message).where(Message.id == id)).scalar()
+    message = db.first_or_404(sa.select(Message).where(Message.id == id))
     if current_user != message.sender:
         return redirect(request.referrer)
-    if message.photos:
-        bucket = 'message-pics'
-        name = message.get_photos()['link'].removeprefix(f"{Photo.SPACES_URL}/{bucket}/")
-        Photo.del_object(bucket, name)
 # delete from conversation table
-    convo = db.session.execute(sa.select(Conversation).where(Conversation.message_id == request.form.get('input_id'))).scalar()
+    convo = db.first_or_404(sa.select(Conversation).where(Conversation.message_id == request.form.get('input_id')))
 
-    db.session.delete(message)
-    db.session.delete(convo)
+    message.del_message()
+    convo.del_conversation()
     db.session.commit()
 
     return redirect(request.referrer)
@@ -864,7 +870,7 @@ def del_notification(id):
     db.session.flush()
 # delete notifications older than 30days
     for q in query:
-        if q.timestamp < (datetime.now() - timedelta(days=30)):
+        if q.timestamp < (datetime.now(timezone.utc) - timedelta(days=30)):
             db.session.delete(q)
 
     db.session.commit()
@@ -984,7 +990,7 @@ def disconnect():
     room = session.get('room')
     name = session.get('name')
     leave_room(room)
-    
+
     if room in Chatii.rooms:
         Chatii.rooms[room]["members"] -= 1
         if Chatii.rooms[room]["members"] < 1:
@@ -1007,6 +1013,16 @@ def contact():
 @bp.route('/promote')
 def promote():
     return render_template('promote.html', title=_('Promote'))
+
+
+@bp.route('/humans.txt')
+def humans_txt():
+    return render_template('humans.txt', title=_('Humans.txt'))
+
+
+@bp.route('/robots.txt')
+def robots_txt():
+    return render_template('robots.txt', title=_('Robots.txt'))
 
 
 # check if user has an exporting task in progress to prevent a user from running two export tasks
