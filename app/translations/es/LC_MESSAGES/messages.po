@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-01-03 19:45-0500\n"
+"POT-Creation-Date: 2025-04-26 19:23-0400\n"
 "PO-Revision-Date: 2024-12-01 20:16-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -18,465 +18,603 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
 
-#: app/__init__.py:26
+#: app/__init__.py:26 app/translations/__init__.py:26
+#: app/translations/app/__init__.py:26 app/translations/app/app/__init__.py:26
+#: app/translations/app/translations/__init__.py:26
 msgid "login to access"
 msgstr "Iniciar sesión para acceder"
 
-#: app/auth/email.py:8
+#: app/auth/email.py:8 app/translations/app/app/auth/email.py:8
+#: app/translations/app/auth/email.py:8
+#: app/translations/app/translations/auth/email.py:8
+#: app/translations/auth/email.py:8
 msgid "[niitii] Reset Your Password"
 msgstr "[niitii] Restablecer su contraseña"
 
-#: app/auth/email.py:17
+#: app/auth/email.py:17 app/translations/app/app/auth/email.py:17
+#: app/translations/app/auth/email.py:17
+#: app/translations/app/translations/auth/email.py:17
+#: app/translations/auth/email.py:17
 msgid "[niitii] Confirm Account"
 msgstr "[niitii] Confirmar cuenta"
 
-#: app/auth/email.py:26
+#: app/auth/email.py:26 app/translations/app/app/auth/email.py:26
+#: app/translations/app/auth/email.py:26
+#: app/translations/app/translations/auth/email.py:26
+#: app/translations/auth/email.py:26
 msgid "[niitii] Confirm Email"
 msgstr "[niitii] Confirmar correo electrónico"
 
-#: app/auth/email.py:34
+#: app/auth/email.py:35 app/translations/app/app/auth/email.py:34
+#: app/translations/app/auth/email.py:34
+#: app/translations/app/translations/auth/email.py:34
+#: app/translations/auth/email.py:34
 msgid "[niitii] Admin Token"
 msgstr "[niitii] Token de administrador"
 
-#: app/auth/routes.py:29
+#: app/auth/routes.py:28 app/translations/app/app/auth/routes.py:28
+#: app/translations/app/auth/routes.py:28
+#: app/translations/app/translations/auth/routes.py:28
+#: app/translations/auth/routes.py:28
 msgid "Account disabled"
 msgstr "Cuenta deshabilitada"
 
-#: app/auth/routes.py:33
+#: app/auth/routes.py:32 app/translations/app/app/auth/routes.py:32
+#: app/translations/app/auth/routes.py:32
+#: app/translations/app/translations/auth/routes.py:32
+#: app/translations/auth/routes.py:32
 msgid "Invalid token"
 msgstr "Token no válido"
 
-#: app/auth/routes.py:51 app/auth/routes.py:117
-msgid "Email sent"
-msgstr "Correo electrónico enviado"
-
-#: app/auth/routes.py:53 app/templates/_macros.html:20
-#: app/templates/auth/login.html:7
+#: app/auth/routes.py:45 app/templates/auth/auth_macros.html:47
+#: app/templates/auth/login.html:7 app/translations/app/app/auth/routes.py:45
+#: app/translations/app/auth/routes.py:45
+#: app/translations/app/translations/auth/routes.py:45
+#: app/translations/auth/routes.py:45
 msgid "Sign In"
 msgstr "Iniciar sesión"
 
-#: app/auth/routes.py:69
+#: app/auth/routes.py:61 app/translations/app/app/auth/routes.py:61
+#: app/translations/app/auth/routes.py:61
+#: app/translations/app/translations/auth/routes.py:61
+#: app/translations/auth/routes.py:61
 msgid "username exist"
 msgstr "El nombre de usuario existe"
 
-#: app/auth/routes.py:71 app/templates/auth/register.html:9
+#: app/auth/routes.py:63 app/templates/auth/register.html:9
+#: app/translations/app/app/auth/routes.py:63
+#: app/translations/app/auth/routes.py:63
+#: app/translations/app/translations/auth/routes.py:63
+#: app/translations/auth/routes.py:63
 msgid "Passwords must match"
 msgstr "Las contraseñas deben coincidir"
 
-#: app/auth/routes.py:81 app/templates/_macros.html:49
+#: app/auth/routes.py:73 app/templates/auth/auth_macros.html:21
 #: app/templates/auth/login.html:10 app/templates/auth/register.html:7
+#: app/translations/app/app/auth/routes.py:73
+#: app/translations/app/auth/routes.py:73
+#: app/translations/app/translations/auth/routes.py:73
+#: app/translations/auth/routes.py:73
 msgid "Register"
 msgstr "Registro"
 
-#: app/auth/routes.py:131 app/auth/routes.py:177 app/auth/routes.py:191
-#: app/main/routes.py:567
-msgid "Invalid"
-msgstr "Inválido"
+#: app/auth/routes.py:133
+msgid "My Page"
+msgstr "Mi página"
 
-#: app/auth/routes.py:146 app/templates/_macros.html:61
-#: app/templates/auth/request_password_reset.html:7
-msgid "Request Password Reset"
-msgstr "Solicitar restablecimiento de contraseña"
-
-#: app/auth/routes.py:162 app/templates/auth/login.html:14
-#: app/templates/auth/reset_password.html:7
-msgid "Reset Password"
-msgstr "Restablecer contraseña"
-
-#: app/auth/routes.py:178 app/templates/auth/change_password.html:7
-msgid "Change Password"
-msgstr "Cambiar la contraseña"
-
-#: app/auth/routes.py:192
-msgid "Change Email"
-msgstr "Cambiar correo electrónico"
-
-#: app/main/routes.py:35
-msgid "Index"
-msgstr "Índice"
-
-#: app/main/routes.py:46
-msgid "Feed"
-msgstr "Alimentar"
-
-#: app/main/routes.py:94 app/templates/new_post.html:9
-msgid "New Post"
-msgstr "Nueva publicación"
-
-#: app/main/routes.py:199
-msgid "Post"
-msgstr "Correo"
-
-#: app/main/routes.py:325 app/templates/edit_post.html:7
-msgid "Edit Post"
-msgstr "Editar publicación"
-
-#: app/main/routes.py:348
-msgid "Post Comments"
-msgstr "Publicar comentarios"
-
-#: app/main/routes.py:372
-msgid "User Comments"
-msgstr "Comentarios de usuario"
-
-#: app/main/routes.py:385 app/templates/_macros.html:146
-#: app/templates/_macros.html:186
-msgid "Tags"
-msgstr "Etiquetas"
-
-#: app/main/routes.py:415
-msgid "User"
-msgstr "Usuario"
-
-#: app/main/routes.py:424
-msgid "Followers"
-msgstr "Seguidores"
-
-#: app/main/routes.py:433
-msgid "Following"
-msgstr "Siguiente"
-
-#: app/main/routes.py:472
+#: app/auth/routes.py:151 app/translations/app/app/auth/routes.py:115
+#: app/translations/app/auth/routes.py:115
+#: app/translations/app/translations/auth/routes.py:115
+#: app/translations/auth/routes.py:115
 msgid "Setup MFA"
 msgstr "Configurar MFA"
 
-#: app/main/routes.py:487
-msgid "Edit account"
-msgstr "Editar cuenta"
+#: app/auth/routes.py:185 app/auth/routes.py:213
+#: app/translations/app/app/auth/routes.py:149
+#: app/translations/app/app/auth/routes.py:177
+#: app/translations/app/auth/routes.py:149
+#: app/translations/app/auth/routes.py:177
+#: app/translations/app/translations/auth/routes.py:149
+#: app/translations/app/translations/auth/routes.py:177
+#: app/translations/auth/routes.py:149 app/translations/auth/routes.py:177
+msgid "Email sent"
+msgstr "Correo electrónico enviado"
 
-#: app/main/routes.py:527
-msgid "Edit account admin"
-msgstr "Editar conta de administrador"
+#: app/auth/routes.py:198 app/auth/routes.py:242 app/auth/routes.py:255
+#: app/main/routes.py:704 app/translations/app/app/auth/routes.py:162
+#: app/translations/app/app/auth/routes.py:206
+#: app/translations/app/app/auth/routes.py:219
+#: app/translations/app/app/main/routes.py:695
+#: app/translations/app/auth/routes.py:162
+#: app/translations/app/auth/routes.py:206
+#: app/translations/app/auth/routes.py:219
+#: app/translations/app/main/routes.py:733
+#: app/translations/app/translations/auth/routes.py:162
+#: app/translations/app/translations/auth/routes.py:206
+#: app/translations/app/translations/auth/routes.py:219
+#: app/translations/app/translations/main/routes.py:667
+#: app/translations/auth/routes.py:162 app/translations/auth/routes.py:206
+#: app/translations/auth/routes.py:219 app/translations/main/routes.py:733
+msgid "Invalid"
+msgstr "Inválido"
 
-#: app/main/routes.py:583 app/templates/inbox.html:9
-msgid "Inbox"
-msgstr "Bandeja de entrada"
-
-#: app/main/routes.py:620
-msgid "Messages"
-msgstr "Mensajes"
-
-#: app/main/routes.py:642
-msgid "Edit Messages"
-msgstr "Editar mensajes"
-
-#: app/main/routes.py:657
-msgid "View notifications"
-msgstr "Ver notificaciones"
-
-#: app/main/routes.py:687
-msgid "Search"
-msgstr "Buscar"
-
-#: app/main/routes.py:700 app/main/routes.py:703 app/main/routes.py:715
-msgid "Chatii"
-msgstr "Chatii"
-
-#: app/main/routes.py:700
-msgid "Enter name"
-msgstr "Introducir nombre"
-
-#: app/main/routes.py:703
-msgid "Enter code"
-msgstr "Introducir código"
-
-#: app/main/routes.py:710 app/templates/errors/404.html:6
-msgid "Not found"
-msgstr "Extraviado"
-
-#: app/main/routes.py:725
-msgid "Chat Room"
-msgstr "Sala de chat"
-
-#: app/main/routes.py:779 app/templates/base.html:132
-msgid "About"
-msgstr "Acerca de"
-
-#: app/main/routes.py:784 app/templates/base.html:134
-msgid "Contact"
-msgstr "Contacto"
-
-#: app/main/routes.py:789 app/templates/base.html:135
-msgid "Promote"
-msgstr "Promover"
-
-#: app/templates/_comments.html:13 app/templates/_post.html:14
-#: app/templates/edit_messages.html:14 app/templates/inbox.html:25
-#: app/templates/post.html:18 app/templates/post_comments.html:16
-#: app/templates/user_comments.html:16
-#, python-format
-msgid "%(when)s"
-msgstr "%(when)s"
-
-#: app/templates/_comments.html:16 app/templates/_post.html:16
-#: app/templates/edit_messages.html:16 app/templates/followers.html:19
-#: app/templates/following.html:19 app/templates/message.html:17
-#: app/templates/post.html:16 app/templates/post_comments.html:19
-#: app/templates/user_comments.html:19
-#, python-format
-msgid "%(username)s"
-msgstr "%(username)s"
-
-#: app/templates/_comments.html:19 app/templates/_macros.html:304
-#: app/templates/post_comments.html:24 app/templates/post_comments.html:52
-#: app/templates/user_comments.html:24 app/templates/user_comments.html:53
-msgid "Disabled"
-msgstr "Desactivado"
-
-#: app/templates/_comments.html:33
-msgid "Reply"
-msgstr "Responder"
-
-#: app/templates/_macros.html:5 app/templates/_macros.html:33
-msgid "Username"
-msgstr "Nombre de usuario"
-
-#: app/templates/_macros.html:9 app/templates/_macros.html:41
-#: app/templates/_macros.html:70 app/templates/_macros.html:122
-#: app/templates/_macros.html:424
-msgid "Password"
-msgstr "Contraseña"
-
-#: app/templates/_macros.html:13
-msgid "MFA Token"
-msgstr "Token MFA"
-
-#: app/templates/_macros.html:17
-msgid "Remember Me"
-msgstr "Acuérdate de mí"
-
-#: app/templates/_macros.html:22
-msgid "Lost Token?"
-msgstr "¿Token perdido?"
-
-#: app/templates/_macros.html:23
+#: app/auth/routes.py:215 app/templates/auth/auth_macros.html:59
+#: app/templates/auth/request_admin_token.html:7
+#: app/translations/app/app/auth/routes.py:179
+#: app/translations/app/auth/routes.py:179
+#: app/translations/app/translations/auth/routes.py:179
+#: app/translations/auth/routes.py:179
 msgid "Request Admin Token"
 msgstr "Solicitar token de administrador"
 
-#: app/templates/_macros.html:37 app/templates/_macros.html:58
-#: app/templates/_macros.html:281
-msgid "Email"
-msgstr "Correo electrónico"
+#: app/auth/routes.py:229 app/templates/auth/auth_macros.html:72
+#: app/templates/auth/request_password_reset.html:7
+#: app/translations/app/app/auth/routes.py:193
+#: app/translations/app/auth/routes.py:193
+#: app/translations/app/translations/auth/routes.py:193
+#: app/translations/auth/routes.py:193
+msgid "Request Password Reset"
+msgstr "Solicitar restablecimiento de contraseña"
 
-#: app/templates/_macros.html:46 app/templates/_macros.html:74
-#: app/templates/_macros.html:106
-msgid "Confirm Password"
-msgstr "Confirmar Contraseña"
+#: app/auth/routes.py:243 app/translations/app/app/auth/routes.py:207
+#: app/translations/app/auth/routes.py:207
+#: app/translations/app/translations/auth/routes.py:207
+#: app/translations/auth/routes.py:207
+msgid "Change Email"
+msgstr "Cambiar correo electrónico"
 
-#: app/templates/_macros.html:77 app/templates/_macros.html:109
-msgid "Update Password"
-msgstr "Actualizar contraseña"
+#: app/auth/routes.py:256 app/templates/auth/change_password.html:7
+#: app/translations/app/app/auth/routes.py:220
+#: app/translations/app/auth/routes.py:220
+#: app/translations/app/translations/auth/routes.py:220
+#: app/translations/auth/routes.py:220
+msgid "Change Password"
+msgstr "Cambiar la contraseña"
 
-#: app/templates/_macros.html:86
-msgid "Enter token"
-msgstr "Ingresar token"
+#: app/auth/routes.py:271 app/templates/auth/login.html:14
+#: app/templates/auth/reset_password.html:7
+#: app/translations/app/app/auth/routes.py:235
+#: app/translations/app/auth/routes.py:235
+#: app/translations/app/translations/auth/routes.py:235
+#: app/translations/auth/routes.py:235
+msgid "Reset Password"
+msgstr "Restablecer contraseña"
 
-#: app/templates/_macros.html:89
-msgid "Check"
-msgstr "Controlar"
+#: app/main/routes.py:49 app/translations/app/app/main/routes.py:49
+#: app/translations/app/main/routes.py:49
+#: app/translations/app/translations/main/routes.py:45
+#: app/translations/main/routes.py:49
+msgid "Index"
+msgstr "Índice"
 
-#: app/templates/_macros.html:98
-msgid "Current Password"
-msgstr "Contraseña actual"
+#: app/main/routes.py:60 app/translations/app/app/main/routes.py:60
+#: app/translations/app/main/routes.py:60
+#: app/translations/app/translations/main/routes.py:56
+#: app/translations/main/routes.py:60
+msgid "Feed"
+msgstr "Alimentar"
 
-#: app/templates/_macros.html:102
-msgid "New Password"
-msgstr "Nueva contraseña"
+#: app/main/routes.py:117 app/templates/new_post.html:8
+#: app/translations/app/app/main/routes.py:116
+#: app/translations/app/main/routes.py:117
+#: app/translations/app/translations/main/routes.py:112
+#: app/translations/main/routes.py:117
+msgid "New Post"
+msgstr "Nueva publicación"
 
-#: app/templates/_macros.html:118
-msgid "New Email"
-msgstr "Nuevo correo electrónico"
+#: app/main/routes.py:396 app/templates/edit_post.html:7
+#: app/translations/app/app/main/routes.py:394
+#: app/translations/app/main/routes.py:389
+#: app/translations/app/translations/main/routes.py:379
+#: app/translations/main/routes.py:389
+msgid "Edit Post"
+msgstr "Editar publicación"
 
-#: app/templates/_macros.html:125
-msgid "Update Email Address"
-msgstr "Actualizar dirección de correo electrónico"
+#: app/main/routes.py:423 app/translations/app/app/main/routes.py:436
+#: app/translations/app/main/routes.py:427
+#: app/translations/app/translations/main/routes.py:417
+#: app/translations/main/routes.py:427
+#, fuzzy
+msgid "Post Comment"
+msgstr "Publicar comentarios"
 
-#: app/templates/_macros.html:134 app/templates/_macros.html:174
+#: app/main/routes.py:436 app/translations/app/app/main/routes.py:449
+#: app/translations/app/main/routes.py:440
+#: app/translations/app/translations/main/routes.py:430
+#: app/translations/main/routes.py:440
+#, fuzzy
+msgid "User Comment"
+msgstr "Comentarios de usuario"
+
+#: app/main/routes.py:486 app/translations/app/app/main/routes.py:499
+#: app/translations/app/main/routes.py:490
+#: app/translations/app/translations/main/routes.py:477
+#: app/translations/main/routes.py:490
+#, fuzzy
+msgid "Tag"
+msgstr "Etiquetas"
+
+#: app/main/routes.py:500 app/translations/app/app/main/routes.py:513
+#: app/translations/app/main/routes.py:504
+#: app/translations/app/translations/main/routes.py:487
+#: app/translations/main/routes.py:504
+msgid "User"
+msgstr "Usuario"
+
+#: app/main/routes.py:578 app/translations/app/app/main/routes.py:569
+#: app/translations/app/main/routes.py:582
+#: app/translations/app/translations/main/routes.py:543
+#: app/translations/main/routes.py:582
+#, fuzzy
+msgid "Follower"
+msgstr "seguidores"
+
+#: app/main/routes.py:590 app/translations/app/app/main/routes.py:578
+#: app/translations/app/main/routes.py:594
+#: app/translations/app/translations/main/routes.py:552
+#: app/translations/main/routes.py:594
+msgid "Following"
+msgstr "Siguiente"
+
+#: app/main/routes.py:601 app/main/routes.py:612
+#: app/translations/app/main/routes.py:605
+#: app/translations/app/main/routes.py:616 app/translations/main/routes.py:605
+#: app/translations/main/routes.py:616
+#, fuzzy
+msgid "Edit follower"
+msgstr "seguidores"
+
+#: app/main/routes.py:654 app/translations/app/app/main/routes.py:622
+#: app/translations/app/main/routes.py:660
+#: app/translations/app/translations/main/routes.py:594
+#: app/translations/main/routes.py:660
+msgid "Edit account"
+msgstr "Editar cuenta"
+
+#: app/main/routes.py:686 app/translations/app/app/main/routes.py:653
+#: app/translations/app/main/routes.py:691
+#: app/translations/app/translations/main/routes.py:625
+#: app/translations/main/routes.py:691
+msgid "Edit account admin"
+msgstr "Editar conta de administrador"
+
+#: app/main/routes.py:732 app/templates/inbox.html:9
+#: app/translations/app/app/main/routes.py:723
+#: app/translations/app/main/routes.py:761
+#: app/translations/app/translations/main/routes.py:695
+#: app/translations/main/routes.py:761
+msgid "Inbox"
+msgstr "Bandeja de entrada"
+
+#: app/main/routes.py:756 app/translations/app/app/main/routes.py:747
+#: app/translations/app/main/routes.py:785
+#: app/translations/app/translations/main/routes.py:719
+#: app/translations/main/routes.py:785
+#, fuzzy
+msgid "Message"
+msgstr "Mensajes"
+
+#: app/main/routes.py:816 app/translations/app/app/main/routes.py:806
+#: app/translations/app/main/routes.py:844
+#: app/translations/app/translations/main/routes.py:778
+#: app/translations/main/routes.py:844
+#, fuzzy
+msgid "Edit Message"
+msgstr "Editar mensajes"
+
+#: app/main/routes.py:844 app/translations/app/app/main/routes.py:838
+#: app/translations/app/main/routes.py:876
+#: app/translations/app/translations/main/routes.py:810
+#: app/translations/main/routes.py:876
+#, fuzzy
+msgid "View notification"
+msgstr "Ver notificaciones"
+
+#: app/main/routes.py:892 app/templates/base.html:33
+#: app/translations/app/app/main/routes.py:886
+#: app/translations/app/main/routes.py:924
+#: app/translations/app/translations/main/routes.py:858
+#: app/translations/main/routes.py:924
+msgid "Search"
+msgstr "Buscar"
+
+#: app/main/routes.py:918 app/main/routes.py:921 app/main/routes.py:934
+#: app/translations/app/app/main/routes.py:912
+#: app/translations/app/app/main/routes.py:915
+#: app/translations/app/app/main/routes.py:928
+#: app/translations/app/main/routes.py:950
+#: app/translations/app/main/routes.py:953
+#: app/translations/app/main/routes.py:966
+#: app/translations/app/translations/main/routes.py:884
+#: app/translations/app/translations/main/routes.py:887
+#: app/translations/app/translations/main/routes.py:900
+#: app/translations/main/routes.py:950 app/translations/main/routes.py:953
+#: app/translations/main/routes.py:966
+msgid "Chatii"
+msgstr "Chatii"
+
+#: app/main/routes.py:918 app/translations/app/app/main/routes.py:912
+#: app/translations/app/main/routes.py:950
+#: app/translations/app/translations/main/routes.py:884
+#: app/translations/main/routes.py:950
+msgid "Enter name"
+msgstr "Introducir nombre"
+
+#: app/main/routes.py:921 app/translations/app/app/main/routes.py:915
+#: app/translations/app/main/routes.py:953
+#: app/translations/app/translations/main/routes.py:887
+#: app/translations/main/routes.py:953
+msgid "Enter code"
+msgstr "Introducir código"
+
+#: app/main/routes.py:928 app/templates/errors/404.html:6
+#: app/translations/app/app/main/routes.py:922
+#: app/translations/app/main/routes.py:960
+#: app/translations/app/translations/main/routes.py:894
+#: app/translations/main/routes.py:960
+msgid "Not found"
+msgstr "Extraviado"
+
+#: app/main/routes.py:947 app/translations/app/app/main/routes.py:941
+#: app/translations/app/main/routes.py:979
+#: app/translations/app/translations/main/routes.py:913
+#: app/translations/main/routes.py:979
+msgid "Chat Room"
+msgstr "Sala de chat"
+
+#: app/main/routes.py:1005 app/templates/base.html:136
+#: app/translations/app/app/main/routes.py:999
+#: app/translations/app/main/routes.py:1037
+#: app/translations/app/translations/main/routes.py:971
+#: app/translations/main/routes.py:1037
+msgid "About"
+msgstr "Acerca de"
+
+#: app/main/routes.py:1010 app/templates/base.html:142
+#: app/translations/app/app/main/routes.py:1004
+#: app/translations/app/main/routes.py:1042
+#: app/translations/app/translations/main/routes.py:976
+#: app/translations/main/routes.py:1042
+msgid "Contact"
+msgstr "Contacto"
+
+#: app/main/routes.py:1015 app/templates/base.html:145
+#: app/translations/app/app/main/routes.py:1009
+#: app/translations/app/main/routes.py:1047
+#: app/translations/app/translations/main/routes.py:981
+#: app/translations/main/routes.py:1047
+msgid "Promote"
+msgstr "Promover"
+
+#: app/main/routes.py:1020
+msgid "Humans.txt"
+msgstr "Humanos.txt"
+
+#: app/main/routes.py:1025
+msgid "Robots.txt"
+msgstr "Robots.txt"
+
+#: app/templates/_comment.html:22 app/templates/_macros.html:270
+#: app/templates/post_comment.html:27 app/templates/post_comment.html:67
+#: app/templates/user_comment.html:27 app/templates/user_comment.html:67
+msgid "Disabled"
+msgstr "Desactivado"
+
+#: app/templates/_comment.html:37
+msgid "Reply"
+msgstr "Responder"
+
+#: app/templates/_macros.html:6 app/templates/_macros.html:53
 msgid "Title"
 msgstr "Título"
 
-#: app/templates/_macros.html:138 app/templates/_macros.html:178
+#: app/templates/_macros.html:10 app/templates/_macros.html:57
 msgid "Body"
 msgstr "Cuerpo"
 
-#: app/templates/_macros.html:142 app/templates/_macros.html:182
-msgid "Post NSFW"
-msgstr "Publicación NSFW"
+#: app/templates/_macros.html:14 app/templates/_macros.html:61
+msgid "Tags"
+msgstr "Etiquetas"
 
-#: app/templates/_macros.html:147 app/templates/_macros.html:187
+#: app/templates/_macros.html:15 app/templates/_macros.html:62
 msgid "Max: 5"
 msgstr "Máximo: 5"
 
-#: app/templates/_macros.html:150
-msgid "Link photo"
+#: app/templates/_macros.html:18 app/templates/_macros.html:94
+#, fuzzy
+msgid "Link photos"
 msgstr "Foto del enlace"
 
-#: app/templates/_macros.html:154 app/templates/_macros.html:204
+#: app/templates/_macros.html:20 app/templates/_macros.html:96
+#, fuzzy
+msgid "add 1 photo link"
+msgstr "Enlace de la foto"
+
+#: app/templates/_macros.html:24 app/templates/_macros.html:100
+#: app/templates/_macros.html:136
 msgid "Upload photo"
 msgstr "Subir foto"
 
-#: app/templates/_macros.html:158 app/templates/_macros.html:208
-msgid "Photo NSFW"
-msgstr "Foto NSFW"
+#: app/templates/_macros.html:28 app/templates/_macros.html:105
+#: app/templates/_macros.html:167
+msgid "Viewer"
+msgstr "Visionador"
 
-#: app/templates/_macros.html:162 app/templates/_macros.html:212
+#: app/templates/_macros.html:36 app/templates/_macros.html:113
+#: app/templates/_macros.html:341
+#, fuzzy
+msgid "NSFW"
+msgstr "Publicación NSFW"
+
+#: app/templates/_macros.html:40 app/templates/_macros.html:117
 msgid "Disable comments"
 msgstr "Desactivar comentarios"
 
-#: app/templates/_macros.html:165 app/templates/_macros.html:219
-#: app/templates/_macros.html:264 app/templates/_macros.html:352
-#: app/templates/_macros.html:372 app/templates/_macros.html:416
-#: app/templates/_macros.html:483
+#: app/templates/_macros.html:43 app/templates/_macros.html:126
+#: app/templates/_macros.html:190 app/templates/_macros.html:282
+#: app/templates/_macros.html:315
 msgid "Submit"
 msgstr "Entregar"
 
-#: app/templates/_macros.html:190
-msgid "language - ISO 639"
-msgstr "idioma - ISO 639"
-
-#: app/templates/_macros.html:195 app/templates/_macros.html:329
+#: app/templates/_macros.html:66 app/templates/_macros.html:211
 msgid "Label"
 msgstr "Etiqueta"
 
-#: app/templates/_macros.html:200
+#: app/templates/_macros.html:73
+msgid "Check to delete"
+msgstr "Marcar para eliminar"
+
+#: app/templates/_macros.html:122
+msgid "Lock"
+msgstr "Bloquear"
+
+#: app/templates/_macros.html:140 app/templates/_macros.html:200
 msgid "Photo link"
 msgstr "Enlace de la foto"
 
-#: app/templates/_macros.html:216
-msgid "Delete photos"
+#: app/templates/_macros.html:145 app/templates/_macros.html:205
+#, fuzzy
+msgid "Delete photo"
 msgstr "Eliminar fotos"
 
-#: app/templates/_macros.html:228
-msgid "Upload picture"
-msgstr "Subir imagen"
-
-#: app/templates/_macros.html:232
-msgid "Upload with link"
-msgstr "Subir con enlace"
-
-#: app/templates/_macros.html:236
-msgid "Username - ID"
-msgstr "Nombre de usuario - ID"
-
-#: app/templates/_macros.html:240 app/templates/_macros.html:333
+#: app/templates/_macros.html:151 app/templates/_macros.html:223
 msgid "Song name"
 msgstr "Nombre de la canción"
 
-#: app/templates/_macros.html:244 app/templates/_macros.html:337
+#: app/templates/_macros.html:155 app/templates/_macros.html:227
 msgid "Song link"
 msgstr "Enlace de la canción"
 
-#: app/templates/_macros.html:248 app/templates/_macros.html:341
+#: app/templates/_macros.html:159
+msgid "Banner flag"
+msgstr "Bandera de pancarta"
+
+#: app/templates/_macros.html:163 app/templates/_macros.html:231
 msgid "Location"
 msgstr "Ubicación"
 
-#: app/templates/_macros.html:252
+#: app/templates/_macros.html:175
 msgid "Birth"
 msgstr "Nacimiento"
 
-#: app/templates/_macros.html:256
+#: app/templates/_macros.html:179
 msgid "Phone: +country code-123-456-7890"
 msgstr "Teléfono: +código del país"
 
-#: app/templates/_macros.html:260 app/templates/_macros.html:349
+#: app/templates/_macros.html:183
+#, fuzzy
+msgid "Contact email"
+msgstr "Contacto"
+
+#: app/templates/_macros.html:187 app/templates/_macros.html:245
 msgid "About me"
 msgstr "Acerca de mí"
 
-#: app/templates/_macros.html:276
-msgid "Upload with link or null"
-msgstr "Subir con enlace o null"
-
-#: app/templates/_macros.html:286
-msgid "Admin Token: "
-msgstr "Token de administrador: "
-
-#: app/templates/_macros.html:291
-msgid "MFA enabled: "
-msgstr "MFA habilitado: "
-
-#: app/templates/_macros.html:295
-msgid "Confirmed"
-msgstr "Confirmado"
-
-#: app/templates/_macros.html:299
-msgid "Verified"
-msgstr "Verificado"
-
-#: app/templates/_macros.html:310
-msgid "Permission"
-msgstr "Permiso"
-
-#: app/templates/_macros.html:345
+#: app/templates/_macros.html:236
 msgid "Birth: "
 msgstr "Nacimiento: "
 
-#: app/templates/_macros.html:385
-msgid "Adult"
-msgstr "Correo basura"
+#: app/templates/_macros.html:241
+#, fuzzy
+msgid "Contact email: "
+msgstr "Contacto: "
 
-#: app/templates/_macros.html:386
+#: app/templates/_macros.html:251
+msgid "Permission"
+msgstr "Permiso"
+
+#: app/templates/_macros.html:275
+msgid "Confirmed"
+msgstr "Confirmado"
+
+#: app/templates/_macros.html:279
+msgid "Verified"
+msgstr "Verificado"
+
+#: app/templates/_macros.html:342
 msgid "Spam"
 msgstr "Correo basura"
 
-#: app/templates/_macros.html:387
+#: app/templates/_macros.html:343
 msgid "Violent"
 msgstr "Violento"
 
-#: app/templates/_macros.html:428 app/templates/_macros.html:439
-#: app/templates/user.html:44
+#: app/templates/_macros.html:382
+msgid "Note"
+msgstr "Nota"
+
+#: app/templates/_macros.html:384
+#, fuzzy
+msgid "To active followers"
+msgstr "seguidores"
+
+#: app/templates/_macros.html:399 app/templates/_macros.html:420
+#: app/templates/_macros.html:453 app/templates/_macros.html:466
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: app/templates/_macros.html:429 app/templates/_macros.html:440
-msgid "Delete"
-msgstr "Borrar"
-
-#: app/templates/_macros.html:472 app/templates/chatii_room.html:22
-#: app/templates/user.html:45
+#: app/templates/_macros.html:400 app/templates/_macros.html:421
+#: app/templates/_macros.html:439 app/templates/chatii_room.html:25
 msgid "Send"
 msgstr "Enviar"
 
-#: app/templates/_post.html:35 app/templates/post.html:75
+#: app/templates/_macros.html:416
+#, fuzzy
+msgid "Invite"
+msgstr "Token no válido"
+
+#: app/templates/_macros.html:449 app/templates/auth/auth_macros.html:13
+#: app/templates/auth/auth_macros.html:36
+#: app/templates/auth/auth_macros.html:81
+#: app/templates/auth/auth_macros.html:133
+msgid "Password"
+msgstr "Contraseña"
+
+#: app/templates/_macros.html:454 app/templates/_macros.html:467
+msgid "Delete"
+msgstr "Borrar"
+
+#: app/templates/_post.html:44 app/templates/post.html:85
 msgid "Comments"
 msgstr "Comentarios"
 
-#: app/templates/about.html:6
+#: app/templates/about.html:5
 msgid "niitii: community of integrity"
 msgstr "niitii: comunidad de integridad"
 
-#: app/templates/about.html:7
+#: app/templates/about.html:6
 msgid "Dedication"
 msgstr "Dedicación"
 
-#: app/templates/about.html:8
+#: app/templates/about.html:7
 msgid "Kotto Bass: spirit of joy"
 msgstr "Kotto Bass: espíritu de alegría"
 
-#: app/templates/about.html:9
+#: app/templates/about.html:8
 msgid "Miriam Makeba: spirit of nurture"
 msgstr "Miriam Makeba: espíritu de crianza"
 
-#: app/templates/about.html:10
+#: app/templates/about.html:9
 msgid "Patrice Lumumba: spirit of unity"
 msgstr "Patrice Lumumba: espíritu de unidad"
 
-#: app/templates/about.html:11
+#: app/templates/about.html:10
 msgid "Thomas Sankara: spirit of integrity"
 msgstr "Thomas Sankara: espíritu de integridad"
+
+#: app/templates/about.html:11
+msgid "niitii's anthem is"
+msgstr "El himno de niitii es"
+
+#: app/templates/about.html:11
+msgid "by Kotto Bass"
+msgstr "por Kotto Bass"
 
 #: app/templates/about.html:12
 msgid "niitii green RGB(37, 137, 37) is in honor of Sankara"
 msgstr "niitii RGB verde(37, 137, 37) es en honor a Sankara"
 
 #: app/templates/about.html:13
-msgid "niitii's anthem is"
-msgstr "El himno de niitii es"
-
-#: app/templates/about.html:13
-msgid "by Kotto Bass"
-msgstr "por Kotto Bass"
-
-#: app/templates/about.html:14
 msgid ""
 "If today is like yesterday and yesterday was like day before, how will "
 "tomorrow be different?"
@@ -484,133 +622,228 @@ msgstr ""
 "Si hoy es como ayer y ayer fue como anteayer, ¿en qué será diferente el "
 "mañana?"
 
-#: app/templates/base.html:43
+#: app/templates/base.html:42
 msgid "Login"
 msgstr "Acceso"
 
-#: app/templates/base.html:90
+#: app/templates/base.html:89
 msgid "Logout"
 msgstr "Cerrar sesión"
 
-#: app/templates/base.html:133
-msgid "Github"
-msgstr "Github"
+#: app/templates/base.html:139
+#, fuzzy
+msgid "Code"
+msgstr "Código de la habitación"
 
-#: app/templates/chatii.html:14
+#: app/templates/chatii.html:11
 msgid "Name"
 msgstr "Nombre"
 
-#: app/templates/chatii.html:18
+#: app/templates/chatii.html:15
 msgid "Room Code"
 msgstr "Código de la habitación"
 
-#: app/templates/chatii.html:22
+#: app/templates/chatii.html:19
 msgid "Join Room"
 msgstr "Unirse a la sala"
 
-#: app/templates/chatii.html:23
+#: app/templates/chatii.html:20
 msgid "Create Room"
 msgstr "Crear habitación"
 
 #: app/templates/edit_account.html:7 app/templates/edit_account_admin.html:7
-#: app/templates/user.html:29
+#: app/templates/user.html:66 app/templates/user.html:71
 msgid "Edit Account"
 msgstr "Editar cuenta"
 
-#: app/templates/edit_account.html:25
+#: app/templates/edit_account.html:26 app/templates/edit_account_admin.html:26
+msgid "Joined"
+msgstr "Unido"
+
+#: app/templates/edit_account.html:33
+#, fuzzy
+msgid "disable MFA"
+msgstr "Desactivado"
+
+#: app/templates/edit_account.html:38
+msgid "enable MFA"
+msgstr "habilitar MFA"
+
+#: app/templates/edit_account.html:43
+msgid "My QR"
+msgstr "Mi QR"
+
+#: app/templates/edit_account.html:45
 msgid "Confirm account"
 msgstr "Confirmar cuenta"
 
-#: app/templates/edit_account.html:28
+#: app/templates/edit_account.html:48
 msgid "Change password"
 msgstr "Cambiar la contraseña"
 
-#: app/templates/edit_account.html:29
+#: app/templates/edit_account.html:49
 msgid "Change email"
 msgstr "Cambiar correo electrónico"
 
-#: app/templates/edit_account.html:30 app/templates/edit_account_admin.html:22
+#: app/templates/edit_account.html:50 app/templates/edit_account_admin.html:36
 msgid "Delete Account"
 msgstr "Eliminar cuenta"
 
-#: app/templates/edit_post.html:18
-msgid "Edit Comments"
-msgstr "Editar comentarios"
+#: app/templates/edit_account_admin.html:27
+msgid "Last seen"
+msgstr "Visto por última vez"
 
-#: app/templates/edit_post.html:19
-msgid "Delete Post"
-msgstr "Eliminar publicación"
-
-#: app/templates/followers.html:20 app/templates/following.html:20
+#: app/templates/edit_follower.html:13 app/templates/edit_following.html:13
+#: app/templates/follower.html:13 app/templates/following.html:13
 #, python-format
 msgid "%(count)d followers"
 msgstr "%(count)d seguidores"
 
-#: app/templates/followers.html:20 app/templates/following.html:20
+#: app/templates/edit_follower.html:13 app/templates/edit_following.html:13
+#: app/templates/follower.html:13 app/templates/following.html:13
 #, python-format
 msgid "%(count)d following"
 msgstr "%(count)d siguiente"
 
-#: app/templates/inbox.html:10
-msgid "Delete Messages"
-msgstr "Eliminar mensajes"
+#: app/templates/edit_follower.html:19
+#, fuzzy
+msgid "remove"
+msgstr "Promover"
 
-#: app/templates/post.html:19
+#: app/templates/edit_following.html:19 app/templates/user.html:53
+#, fuzzy
+msgid "unfollow"
+msgstr "siguiente"
+
+#: app/templates/edit_message.html:14
 #, python-format
-msgid "*%(when)s"
-msgstr "*%(when)s"
+msgid "%(username)s"
+msgstr "%(username)s"
 
-#: app/templates/post.html:79
-msgid "View Comments"
-msgstr "Ver comentarios"
+#: app/templates/edit_post.html:18
+#, fuzzy
+msgid "Edit Comment"
+msgstr "Editar comentarios"
 
-#: app/templates/post.html:81
+#: app/templates/edit_post.html:20
+msgid "Delete Post"
+msgstr "Eliminar publicación"
+
+#: app/templates/inbox.html:10
+msgid "Edit Messages"
+msgstr "Editar mensajes"
+
+#: app/templates/post.html:96
 msgid "Edit"
 msgstr "Editar"
 
-#: app/templates/post.html:89
+#: app/templates/post.html:104
 msgid "Comment"
 msgstr "Comentario"
 
-#: app/templates/post_comments.html:36
+#: app/templates/post_comment.html:39 app/templates/user_comment.html:39
 msgid "view post"
 msgstr "ver publicación"
 
-#: app/templates/user.html:24
-msgid "Joined"
-msgstr "Unido"
+#: app/templates/post_comment.html:47 app/templates/user_comment.html:47
+#: app/templates/user_comment.html:65
+#, fuzzy
+msgid "enable"
+msgstr "MFA habilitado: "
 
-#: app/templates/user.html:25
-msgid "Last seen"
-msgstr "Visto por última vez"
+#: app/templates/post_comment.html:50 app/templates/user_comment.html:50
+#: app/templates/user_comment.html:66
+#, fuzzy
+msgid "disable"
+msgstr "Desactivado"
 
-#: app/templates/user.html:40
-msgid "Note"
-msgstr "Nota"
+#: app/templates/post_comment.html:65
+#, fuzzy
+msgid "Enable"
+msgstr "MFA habilitado: "
 
-#: app/templates/user.html:52
-msgid "Edit Admin"
-msgstr "Editar administrador"
+#: app/templates/post_comment.html:66
+#, fuzzy
+msgid "Disable"
+msgstr "Desactivado"
 
-#: app/templates/user.html:72 app/templates/user.html:91
+#: app/templates/user.html:46
+#, fuzzy
+msgid "follow"
+msgstr "siguiente"
+
+#: app/templates/user.html:85 app/templates/user.html:98
+#: app/templates/user.html:151
 msgid "Posts"
 msgstr "Publicaciones"
 
-#: app/templates/user.html:76
+#: app/templates/user.html:89 app/templates/user.html:155
 msgid "followers"
 msgstr "seguidores"
 
-#: app/templates/user.html:80
+#: app/templates/user.html:93 app/templates/user.html:159
 msgid "following"
 msgstr "siguiente"
 
-#: app/templates/user.html:93
+#: app/templates/user.html:100
 msgid "View comments"
 msgstr "Ver comentarios"
 
-#: app/templates/user_comments.html:36 app/templates/view_notifications.html:12
+#: app/templates/view_notification.html:20
 msgid "View post"
 msgstr "Ver publicación"
+
+#: app/templates/auth/auth_macros.html:5 app/templates/auth/auth_macros.html:32
+#: app/templates/auth/auth_macros.html:56
+msgid "Username"
+msgstr "Nombre de usuario"
+
+#: app/templates/auth/auth_macros.html:9 app/templates/auth/auth_macros.html:69
+msgid "Email"
+msgstr "Correo electrónico"
+
+#: app/templates/auth/auth_macros.html:18
+#: app/templates/auth/auth_macros.html:85
+#: app/templates/auth/auth_macros.html:117
+msgid "Confirm Password"
+msgstr "Confirmar Contraseña"
+
+#: app/templates/auth/auth_macros.html:40
+msgid "MFA Token"
+msgstr "Token MFA"
+
+#: app/templates/auth/auth_macros.html:44
+msgid "Remember Me"
+msgstr "Acuérdate de mí"
+
+#: app/templates/auth/auth_macros.html:88
+#: app/templates/auth/auth_macros.html:120
+msgid "Update Password"
+msgstr "Actualizar contraseña"
+
+#: app/templates/auth/auth_macros.html:97
+msgid "Enter token"
+msgstr "Ingresar token"
+
+#: app/templates/auth/auth_macros.html:100
+msgid "Check"
+msgstr "Controlar"
+
+#: app/templates/auth/auth_macros.html:109
+msgid "Current Password"
+msgstr "Contraseña actual"
+
+#: app/templates/auth/auth_macros.html:113
+msgid "New Password"
+msgstr "Nueva contraseña"
+
+#: app/templates/auth/auth_macros.html:129
+msgid "New Email"
+msgstr "Nuevo correo electrónico"
+
+#: app/templates/auth/auth_macros.html:136
+msgid "Update Email Address"
+msgstr "Actualizar dirección de correo electrónico"
 
 #: app/templates/auth/change_email.html:7
 msgid "Change Email: "
@@ -623,6 +856,15 @@ msgstr "¿Nuevo usuario?"
 #: app/templates/auth/login.html:13
 msgid "Forgot Password?"
 msgstr "¿Has olvidado tu contraseña?"
+
+#: app/templates/auth/login.html:17
+msgid "Lost Token?"
+msgstr "¿Token perdido?"
+
+#: app/templates/auth/login.html:18
+#, fuzzy
+msgid "Reset Admin Token"
+msgstr "Solicitar token de administrador"
 
 #: app/templates/auth/setup_mfa.html:7
 msgid "Scan QR"
@@ -664,8 +906,8 @@ msgstr "Prohibido"
 
 #: app/templates/errors/403.html:8 app/templates/errors/404.html:8
 #: app/templates/errors/500.html:9
-msgid "Back"
-msgstr "Volver"
+msgid "Home"
+msgstr "Página principal"
 
 #: app/templates/errors/500.html:6
 msgid "Unexpected error has occurred"
@@ -674,4 +916,5 @@ msgstr "Se ha producido un error inesperado"
 #: app/templates/errors/500.html:7
 msgid "Administrator has been notified"
 msgstr "El administrador ha sido notificado"
+
 

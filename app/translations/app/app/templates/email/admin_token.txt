@@ -1,7 +1,0 @@
-{{ user.username }},
-
-{{ token }}
-
-{{ _('Note: DO NOT REPLY') }}
-
-niitii
