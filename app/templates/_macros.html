@@ -1,0 +1,546 @@
+{% macro new_post() %}
+        <form class="d-inline" id="newPost" action="" method="post" enctype="multipart/form-data">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <input name="utc_offset" type="hidden" value="">
+                <div class="mb-2">
+                    <label class="form-label" for="title">{{ _('Title') }}</label>
+                    <input autofocus class="form-control" id="title" maxlength="300" minlength="1" name="title" type="text" autocomplete="off" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="body">{{ _('Body') }}</label>
+                    <textarea class="form-control" maxlength="20000" minlength="1" id="body" name="body" rows="10" required></textarea>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="tags">{{ _('Tags') }}</label>
+                    <input class="form-control" id="tags" maxlength="100" minlength="0" name="tags" type="text" autocomplete="off" placeholder="{{ _('Max: 5') }}">
+                </div>
+                <div class="mb-2">
+                    <p class="mb-1">{{ _('Link photos') }}</p>
+                    {% for i in range(5) %}
+                    <input class="form-control mb-2" id="photo{{ loop.index }}" maxlength="300" name="add_photos" type="text" name="label" placeholder="{{ _('add 1 photo link') }}">
+                    {% endfor %}
+                </div>
+                <div class="mb-2">
+                    <label for="fileInput" class="form-label">{{ _('Upload photo') }}</label>
+                    <input class="form-control" id="fileInput" type="file" name="photo" accept="image/*, .jpg, .jpeg, .png, .gif" multiple>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="viewer">{{ _('Viewer') }}</label>
+                    <select class="form-select" id="viewer" name="viewer" aria-label="Default select example">
+                        <option selected value="1">PUBLIC</option>
+                        <option value="2">USER</option>
+                        <option value="4">FOLLOWER</option>
+                    </select>
+                </div>
+                <div class="form-check mb-2">
+                    <label class="form-check-label" for="nsfw">{{ _('NSFW') }}</label>
+                    <input class="form-check-input" id="nsfw" name="nsfw" type="checkbox">
+                </div>
+                <div class="form-check mb-2">
+                    <label class="form-check-label" for="disable_comments">{{ _('Disable comments') }}</label>
+                    <input class="form-check-input" id="disable_comments" name="disable_comments" type="checkbox">
+                </div>
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="new_post">{{ _('Submit') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro edit_post(post="", tags="", photos="", mod="") %}
+        <form class="d-inline" action="" method="post" enctype="multipart/form-data">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <input name="utc_offset" type="hidden" value="">
+                <div class="mb-2">
+                    <label class="form-label" for="title">{{ _('Title') }}</label>
+                    <input class="form-control" id="title" maxlength="300" minlength="1" name="" type="text" autocomplete="off" value="{{ post.title }}" disabled>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="body">{{ _('Body') }}</label>
+                    <textarea autofocus class="form-control" maxlength="20000" minlength="1" id="body" name="body" rows="10" required {% if mod %}disabled{% endif %}>{{ post.body }}</textarea>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="tags">{{ _('Tags') }}</label>
+                    <input class="form-control" id="tags" maxlength="100" minlength="0" name="tags" type="text" autocomplete="off" value="{{tags}}" placeholder="{{ _('Max: 5') }}">
+                </div>
+                {% if mod %}
+                <div class="mb-2">
+                    <label class="form-label" for="label">{{ _('Label') }}</label>
+                    <input class="form-control" id="label" type="text" name="label" value="{% if post.label %}{{ post.label }}{% endif %}">
+                </div>
+                {% endif %}
+                {% if photos['link'] %}
+                <div class="mb-2">
+                    <fieldset>
+                    <legend>{{ _('Check to delete') }}</legend>
+                    <ul class="list-group">
+                    {% for p in photos['link'] %}
+                      <li class="list-group-item">
+                        <input class="form-check-input me-1" type="checkbox" name="del_photos" value="{{ p }}" id="del_photo{{ loop.index }}">
+                        <label class="form-check-label d-inline text-break" for="del_photo{{ loop.index }}">{{ p }}</label>
+                      </li>
+                      {% endfor %}
+                    </ul>
+                    </fieldset>
+                </div>
+                {% endif %}
+
+                {% if photos %}
+                    {% set max %}{{ 5 - (photos['link'] | length) }}{% endset %}
+                {% else %}
+                    {% set max %}{{ 5 }}{% endset %}
+                {% endif %}
+
+                {% if (max | int()) > 0 %}
+                <div class="mb-2">
+                    <p class="mb-1">{{ _('Link photos') }}</p>
+                    {% for i in range(max | int) %}
+                    <input class="form-control mb-2" id="photo{{ loop.index }}" name="add_photos" type="text" name="label" placeholder="{{ _('add 1 photo link') }}">
+                    {% endfor %}
+                </div>
+                <div class="mb-2">
+                    <label for="fileInput" class="form-label">{{ _('Upload photo') }}</label>
+                    <input class="form-control" type="file" id="fileInput" name="photo" accept="image/*, .jpg, .jpeg, .png, .gif" multiple>
+                </div>
+                {% endif %}
+                <div class="mb-2">
+                    <label class="form-label" for="viewer">{{ _('Viewer') }}</label>
+                    <select class="form-select" id="viewer" name="viewer" aria-label="Default select example">
+                        <option {% if post.get_viewer() == 'PUBLIC' %} selected {% endif %} value="1">PUBLIC</option>
+                        <option {% if post.get_viewer() == 'USER' %} selected {% endif %} value="2">USER</option>
+                        <option {% if post.get_viewer() == 'FOLLOWER' %} selected {% endif %} value="4">FOLLOWER</option>
+                    </select>
+                </div>
+                <div class="form-check mb-2">
+                    <label class="form-check-label" for="nsfw">{{ _('NSFW') }}</label>
+                    <input class="form-check-input" type="checkbox" id="nsfw" name="nsfw" type="checkbox" {% if post.nsfw or photos['nsfw'] %} checked {% endif %}>
+                </div>                
+                <div class="form-check mb-2">
+                    <label class="form-check-label" for="disable_comments">{{ _('Disable comments') }}</label>
+                    <input class="form-check-input" id="disable_comments" name="disable_comments" type="checkbox" {% if post.disable_comments %} checked {% endif %}>
+                </div>
+                {% if mod %}
+                <div class="form-check mb-2">
+                    <label class="form-check-label" for="lock_post">{{ _('Lock') }}</label>
+                    <input class="form-check-input" id="lock_post" name="lock_post" type="checkbox" {% if post.locked %} checked {% endif %}>
+                </div>
+                {% endif %}
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="edit_post">{{ _('Submit') }}</button>
+        </form>                    
+{% endmacro %}
+
+
+{% macro edit_account(action="", user="") %}
+        <form class="d-inline" action="{{ action }}" method="post" enctype="multipart/form-data">
+                <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <input name="utc_offset" type="hidden" value="">
+                <div class="mb-2">
+                    <label for="formFileMultiple" class="form-label">{{ _('Upload photo') }}</label>
+                    <input class="form-control" type="file" id="formFileMultiple" name="photo" accept="image/*, .jpg, .jpeg, .png, .gif" multiple>
+                </div>
+                <div class="mb-1">
+                    <label class="form-label" for="photo_link">{{ _('Photo link') }}</label>
+                    <input class="form-control" id="photo_link" maxlength="200" minlength="1" name="photo_link" type="text" autocomplete="off" value="{% if user.photo %}{{ user.photo }}{% endif %}">
+                </div>
+                {% if user.photo %}
+                <div class="form-check mb-2">
+                    <label class="form-check-label" for="del_photo">{{ _('Delete photo') }}</label>
+                    <input class="form-check-input" id="del_photo" name="del_photo" type="checkbox">
+                </div>
+                {% endif %}
+                {% set song = user.get_song() %}                
+                <div class="mb-2">
+                    <label class="form-label" for="song_name">{{ _('Song name') }}</label>
+                    <input class="form-control" id="song_name" maxlength="100" minlength="0" name="song_name" type="text" autocomplete="off" value="{% if song %}{{ song.get('name') }}{% endif %}">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="song_link">{{ _('Song link') }}</label>
+                    <input class="form-control" id="song_link" maxlength="200" minlength="0" name="song_link" type="text" autocomplete="off" value="{% if song %}{{ song.get('link') }}{% endif %}">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="banner_flag">{{ _('Banner flag') }}</label>
+<!--                    console.log('🇺🇸'.length); 4-->
+<!--                    console.log('🏴󠁧󠁢󠁥󠁮󠁧󠁿'.length); 14-->
+                    <input class="form-control w-25" id="banner_flag" maxlength="28" minlength="0" name="banner_flag" type="text" autocomplete="off" value="{% if user.banner_flag %}{{ user.banner_flag }}{% endif %}">
+                </div>                
+                <div class="mb-2">
+                    <label class="form-label" for="location">{{ _('Location') }}</label>
+                    <input class="form-control" id="location" maxlength="200" minlength="0" name="location" type="text" autocomplete="off" value="{% if user.location %}{{ user.location }}{% endif %}">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="viewer">{{ _('Viewer') }}</label>
+                    <select class="form-select" id="viewer" name="viewer" aria-label="Default select example">
+                        <option {% if user.get_viewer() == 'PUBLIC' %} selected {% endif %} value="1">PUBLIC</option>
+                        <option {% if user.get_viewer() == 'USER' %} selected {% endif %} value="2">USER</option>
+                        <option {% if user.get_viewer() == 'FOLLOWER' %} selected {% endif %} value="4">FOLLOWER</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="birth">{{ _('Birth') }}</label>
+                    <input class="form-control" id="birth" name="birth" type="date" value="{% if user.birth %}{{ user.birth.strftime('%Y-%m-%d') }}{% endif %}">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="phone">{{ _('Phone: +country code-123-456-7890') }}</label>
+                    <input class="form-control" id="phone" name="phone" type="tel" autocomplete="on" pattern="\+\d{1,4}-(?!0)\d{3}-\d{3}-\d{4}" value="{% if user.phone %}{{ user.phone }}{% endif %}">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="contact_email">{{ _('Contact email') }}</label>
+                    <input class="form-control" id="contact_email" maxlength="320" minlength="0" name="contact_email" type="email" autocomplete="off" value="{% if user.contact_email %}{{ user.contact_email }}{% endif %}">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="about_me">{{ _('About me') }}</label>
+                    <textarea class="form-control" id="about_me" name="about_me" maxlength="500" rows="5" cols="" autocomplete="off">{% if user.about_me %}{{ user.about_me }}{% endif %}</textarea>
+                </div>
+                <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="edit_account">{{ _('Submit') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro edit_account_admin(action="", user="", admin="") %}
+        <form class="d-inline" action="{{ action }}" method="post" enctype="multipart/form-data">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <input name="utc_offset" type="hidden" value="">
+            {% if user.photo %}
+            <div class="mb-1">
+                <label class="form-label" for="photo_link">{{ _("Photo link") }}</label>
+                <input class="form-control" id="photo_link" maxlength="200" minlength="1" name="photo_link" type="text" autocomplete="off" value="{% if user.photo %}{{ user.photo }}{% endif %}" disabled>
+            </div>
+            <div class="form-check mb-2">
+                <label class="form-check-label" for="del_photo">{{ _('Delete photo') }}</label>
+                <input class="form-check-input" id="del_photo" name="del_photo" type="checkbox">
+            </div>
+            {% endif %}
+            {% if admin %}
+            <div class="mb-2">
+                <label class="form-label" for="label">{{ _('Label') }}</label>
+                <input class="form-control" id="label" maxlength="30" type="text" name="label" value="{% if user.label %}{{ user.label }}{% endif %}">
+            </div>
+            {% if user.phone %}
+            <div class="mb-2">
+                <label class="form-label">Phone: {{ user.phone }}</label>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            {% set song = user.get_song() %}
+            {% if song %}
+            <div class="mb-2">
+                <label class="form-label" for="song_name">{{ _('Song name') }}</label>
+                <input class="form-control" id="song_name" maxlength="100" minlength="0" name="song_name" type="text" autocomplete="off" value="{% if song %}{{ song.get('name') }}{% endif %}" >
+            </div>
+            <div class="mb-2">
+                <label class="form-label" for="song_link">{{ _('Song link') }}</label>
+                <input class="form-control" id="song_link" maxlength="200" minlength="0" name="song_link" type="text" autocomplete="off" value="{% if song %}{{ song.get('link') }}{% endif %}" >
+            </div>
+            {% endif %}
+            <div class="mb-2">
+                <label class="form-label" for="location">{{ _('Location') }}</label>
+                <input class="form-control" id="location" maxlength="200" minlength="0" name="location" type="text" autocomplete="off" value="{% if user.location %}{{ user.location }}{% endif %}">
+            </div>
+            {% if user.birth %}
+            <div class="mb-2">
+                <label class="form-label">{{ _('Birth: ') }}{{ user.birth.strftime('%Y-%m-%d') }}</label>
+            </div>
+            {% endif %}
+            {% if user.contact_email %}
+            <div class="mb-2">
+                <label class="form-label">{{ _('Contact email: ') }}{{ user.contact_email }}</label>
+            </div>
+            {% endif %}                
+            <div class="mb-2">
+                <label class="form-label" for="about_me">{{ _('About me') }}</label>
+                <textarea class="form-control" id="about_me" name="about_me" maxlength="500" rows="5" cols="" autocomplete="off">{% if user.about_me %}{{ user.about_me }}{% endif %}</textarea>
+            </div>
+
+            {% if admin %}
+            <div class="mb-2">
+                <label class="form-label" for="permission">{{ _('Permission') }}</label>
+                <select class="form-select" id="permission" name="permission" aria-label="Default select example">
+                    <option {% if user.get_account_permission() == 'READ' %} selected {% endif %} value="1">READ</option>
+                    <option {% if user.get_account_permission() == 'COMMENT' %} selected {% endif %} value="2">COMMENT</option>
+                    <option {% if user.get_account_permission() == 'MESSAGE' %} selected {% endif %} value="4">MESSAGE</option>
+                    <option {% if user.get_account_permission() == 'WRITE' %} selected {% endif %} value="8">WRITE</option>
+
+                    {% if user.confirmed %}
+                    <option {% if user.get_account_permission() == 'MODERATE' %} selected {% endif %} value="16">MODERATE</option>
+                    {% endif %}
+                    {% if user.confirmed and user.verified %}
+                    <option {% if user.get_account_permission() == 'ADMIN' %} selected {% endif %} value="32">ADMIN</option>
+                    {% endif %}
+                    {% if user.verified and user.mfa_enabled %}
+                    <option {% if user.get_account_permission() == 'ROOT_ADMIN' %} selected {% endif %} value="64">ROOT_ADMIN</option>
+                    {% endif %}
+                </select>
+            </div>
+            <div>
+                <label class="form-check-label" for="disabled">{{ _('Disabled') }}</label>
+                <input class="form-check-input" type="checkbox" id="disabled" name="disabled" {% if user.disabled %} checked {% endif %}>
+            </div>
+            {% endif %}
+            <div>
+                <label class="form-check-label" for="confirmed">{{ _('Confirmed') }}</label>
+                <input class="form-check-input me-2" type="checkbox" id="confirmed" name="confirmed" {% if user.confirmed %} checked {% endif %}>
+            </div>
+            <div class="mb-2">
+                <label class="form-check-label" for="verified">{{ _('Verified') }}</label>
+                <input class="form-check-input me-2" type="checkbox" id="verified" name="verified" {% if user.verified %} checked {% endif %}>
+            </div>            
+            <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="edit_account">{{ _('Submit') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro comment(action="", author="", value="", pin="", direct="", comment_id="") %}
+        <form action="{{ action }}" id="comment" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <input name="utc_offset" type="hidden" value="">
+            <input name="comment_id" type="hidden" value="{{ comment_id }}">
+            <input name="authorName" type="hidden" value="{{ author.username }}">
+            <textarea autofocus class="form-control" maxlength="5000" minlength="1" name="body" rows="5" autocomplete="off" required>{% if author %}@{{ author.username }} {% endif %}</textarea>
+            <div class="d-flex justify-content-between mt-2">
+            <div class="d-flex justify-content-between">
+            <span class="form-check px-2 me-2 mb-0 ghostComment">
+                <input class="form-check-input ghost" id="ghost{{comment_id}}" name="ghost_comment" type="checkbox">
+                <label class="form-check-label" for="ghost{{comment_id}}"></label>
+            </span>
+            {% if direct %}
+            <span class="form-check px-2 me-2 mb-0 d-flex justify-content-start directComment">
+                <input class="form-check-input direct" id="direct{{comment_id}}" name="direct_comment" type="checkbox">
+                <label class="form-check-label" for="direct{{comment_id}}"></label>
+            </span>
+            {% endif %}
+            {% if pin %}
+            <span class="form-check px-2 me-2 mb-0 d-flex justify-content-start pinComment">
+<!-- "input" before "label" for stylesheet to select #pin + label-->
+                <input class="form-check-input pin" id="pin{{comment_id}}" name="pin_comment" type="checkbox">
+                <label class="form-check-label" for="pin{{comment_id}}"></label>
+            </span>
+            {% endif %}
+            </div>
+            <div>
+            <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="{{ value }}">{{ _('Submit') }}</button>
+            </div>
+            </div>
+        </form>
+{% endmacro %}
+
+
+{% macro vote(value="", input_id="", action="", count="") %}
+        <form class="d-inline vote-form" id="{{value}}" action="{{ action }}" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <input name="utc_offset" type="hidden" value="">
+            <input name="input_id" type="hidden" value="{{ input_id }}">
+            <button class="btn btn-outline-dark btn-sm border border-dark-subtle px-1 py-0"  type="submit" name="submit" value="{{ value }}">&#x21E7;&#xfe0e; {{ count }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro flag(action="", count="") %}
+        <fieldset class="d-inline">
+                <div class="dropdown-center">
+                    <form class="d-inline" id="flag_post" action="{{ action }}" method="post">
+                    <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                    <input name="utc_offset" type="hidden" value="">
+                    <span class="px-1 py-0 btn btn-outline-secondary btn-sm  border border-dark-subtle dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">&#x1F6A9;&#xfe0e;  {{ count }}</span>
+                    <ul class="dropdown-menu">
+                        <li><button class="py-0 btn btn-outline-secondary btn-sm dropdown-item" type="submit" name="flag" value="NSFW">{{ _('NSFW') }}</button></li>
+                        <li><button class="py-0 btn btn-outline-secondary btn-sm dropdown-item" type="submit" name="flag" value="SPAM">{{ _('Spam') }}</button></li>
+                        <li><button class="py-0 btn btn-outline-secondary btn-sm dropdown-item" type="submit" name="flag" value="VIOLENT">{{ _('Violent') }}</button></li>
+                    </ul>
+                    </form>
+                </div>
+        </fieldset>
+{% endmacro %}
+
+
+{% macro avatar(user=user) %}
+                <img class="rounded-circle avatar" {% if user.photo %} src="{{ user.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">
+{% endmacro %}
+
+
+{% macro user_link(user="") %}
+<!-- d-inline-block remove trailing space from <a> tag -->
+                <a class="text-decoration-none d-inline-block fs-6 text-body" href="{{ url_for('main.user', username=user.username) }}" target="_blank" rel="noopener noreferrer">
+                    {{ user.username }}
+                    {% if user.verified %}
+                    &#x2713;&#xfe0e;
+                    {% elif user.confirmed %}
+                    &#xB7;&#xfe0e;
+                    {% endif %}
+                    {% if user.banner_flag %}
+                    <span>{{ user.banner_flag }}</span>
+                    {% endif %}
+                    {% if user.label %}
+                    <span class="badge rounded-pill text-bg-secondary py-0 px-1">{{ user.label }}</span>
+                    {% endif %}
+                </a>
+{% endmacro %}
+
+
+{% macro ping_user_modal(action="", follower="") %}
+            <dialog class="border rounded px-2 py-1" id="pingDialog">
+                <form action="{{ action }}" id="ping" method="post">
+                    <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                    <input name="utc_offset" type="hidden" value="">
+                    <div class="mb-2 text-center">
+                        {% if not follower %}
+                        <label class="form-label" for="body">{{ _('Note') }}</label>
+                        {% else %}
+                        <label class="form-label" for="body">{{ _('To active followers') }}</label>
+                        {% endif %}
+                        <textarea autofocus class="form-control" maxlength="300" minlength="1" id="body" name="body" rows="2" required></textarea>                                    
+                    </div>
+                    {% if not follower %}
+                    <div class="mb-2 d-flex justify-content-end">
+                        <input class="form-check-input" id="pingCheck" name="pingCheck" type="checkbox">
+                        <label class="form-check-label" for="pingCheck"></label>
+                    </div>
+                    {% else %}
+                    <div class="mb-2 d-flex justify-content-end">
+                        <span class="bg-primary rounded-4 py-0 px-1">&#x2713;&#xfe0e;</span>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex justify-content-between">
+                        <button id="close" class="btn btn-secondary me-auto" type="button" value="cancel" formmethod="dialog">{{ _('Cancel') }}</button>
+                        <button id="confirm" class="btn btn-primary ms-auto" type="submit" name="submit" value="ping">{{ _('Submit') }}</button>
+                    </div>
+                </form>
+            </dialog>
+<!-- button has no "type" or "name"-->            
+            <button id="showDialog" class="btn btn-sm border border-0">&#x1F4DF;&#xfe0e;</button>
+{% endmacro %}
+
+
+{% macro invite_modal(action="", roomCode="") %}
+            <dialog class="border rounded px-2 py-1" id="inviteChatDialog">
+                <form action="{{ action }}" id="inviteChat" method="post">
+                    <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                    <input name="utc_offset" type="hidden" value="">
+                    <input name="roomCode" type="hidden" value="{{ roomCode }}">
+                    <div class="mb-2 text-center">
+                        <label class="form-label" for="body">{{ _('Invite') }}</label>
+                        <input autofocus type="text" id="body" class="form-control" maxlength="32" minlength="1" name="body" size="32" required></input>
+                    </div>
+                    <div class="d-flex justify-content-evenly">
+                        <button id="close" class="btn btn-secondary me-auto" type="button" value="cancel" formmethod="dialog">{{ _('Cancel') }}</button>
+                        <button id="confirm" class="btn btn-primary ms-auto" type="submit" name="submit" value="inviteChat">{{ _('Submit') }}</button>
+                    </div>
+                </form>
+            </dialog>
+<!-- button has no "type" or "name"-->            
+            <button id="showDialog" class="btn btn-sm border border-0 fs-3 pb-2 py-0">&#x1F465;&#xfe0e;</button>
+{% endmacro %}
+
+
+{% macro message(action="") %}
+        <form class="card-footer text-muted d-flex justify-content-start align-items-center p-0 px-3" enctype="multipart/form-data" action="{{ action }}" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <input name="utc_offset" type="hidden" value="">
+            <div class="me-3">
+                <label for="formFileMultiple" class="form-label">&#x1F4CE;&#xfe0e;</label>
+                <input class="form-control d-none" type="file" id="formFileMultiple" name="photo" accept="image/*, .jpg, .jpeg, .png, .gif" multiple>
+            </div>
+            <textarea autofocus class="form-control me-3" id="body" maxlength="5000" minlength="1" name="body" rows="" required></textarea>
+            <button class="btn btn-outline-primary btn-sm d-block" type="submit" name="submit" value="message">{{ _('Send') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro del_account_modal(action="", admin=False) %}
+        <dialog class="border rounded px-2 py-1" id="delDialog">
+        <form action="{{ action }}" method="post">
+            <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            {% if admin %}
+            <div class="mb-2 text-center">
+            <label class="form-label" for="confirmBtn">{{ _('MFA token') }}</label>
+            <input autofocus class="form-control" id="confirmBtn" maxlength="6" minlength="6" name="mfa_token" type="text" autocomplete="off" pattern="\d{6,6}" required>
+            </div>
+            {% else %}
+            <div class="mb-2 text-center">
+            <label class="form-label" for="confirmBtn">{{ _('Password') }}</label>
+            <input autofocus class="form-control" id="confirmBtn" maxlength="32" minlength="10" name="password" type="password" autocomplete="off" required>
+            </div>
+            {% endif %}
+            <div class="d-flex justify-content-between">
+                <button id="close" class="btn btn-secondary me-auto" type="button" value="cancel" formmethod="dialog">{{ _('Cancel') }}</button>
+                <button id="confirm" class="btn btn-danger ms-auto" type="submit" name="submit" value="">{{ _('Delete') }}</button>
+            </div>
+        </form>
+        </dialog>
+{% endmacro %}
+
+
+{% macro del_post_modal(value="", action="") %}
+        <dialog class="border rounded px-2 py-1" id="delDialog">
+        <form action="{{ action }}" method="post">
+            <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <div class="d-flex justify-content-between">
+                <button id="close" class="btn btn-secondary me-5" type="button" value="cancel" formmethod="dialog">{{ _('Cancel') }}</button>
+                <button id="confirm" class="btn btn-danger ms-5" type="submit" name="submit" value="{{ value }}">{{ _('Delete') }}</button>
+            </div>
+        </form>
+        </dialog>
+{% endmacro %}
+
+
+{% macro del_btn(value="") %}
+            <button id="showDialog" class="btn btn-outline-danger btn-sm border border-0 text-danger" type="" name="" value="">&#x1F5D1;&#xfe0e;</button>
+{% endmacro %}
+
+
+{% macro empty(action="", btn="primary", value="", label="", input_id="") %}
+        <form class="d-inline" action="{{ action }}" method="post">
+            <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <input name="utc_offset" type="hidden" value="">            
+            {% if input_id %}
+            <input id="" name="input_id" type="hidden" value="{{ input_id }}">
+            {% endif %}
+            {% if value == "delete" %}
+            <button id="showDialog" class="btn btn-outline-danger btn-sm border border-0 text-danger" type="submit" name="submit" value="{{ value }}">&#x1F5D1;&#xfe0e;</button>            
+            {% else %}
+            <button class="btn btn-outline-{{ btn }} btn-sm px-1 py-0" type="submit" name="submit" value="{{ value }}">{{ _('%(label)s', label=label) }}</button>
+            {% endif %}
+        </form>
+{% endmacro %}
+
+
+<!--https://en.wikipedia.org/wiki/URI_fragment#Examples-->
+{% macro pagination(pagination='', endpoint='', fragment='') %}
+<nav aria-label="navigation">
+    {% if pagination.pages > 1 %}
+    <div class="d-flex justify-content-center">
+    <ul class="pagination mt-3 mb-0">
+        <li class="page-item{% if not pagination.has_prev %} disabled{% endif %}">
+            <a class="page-link px-2 py-1" href="{% if pagination.has_prev %}{{ url_for(endpoint, page=pagination.prev_num, **kwargs) }}{{ fragment }}{% else %}#{% endif %}">
+                &laquo;
+            </a>
+        </li>
+        {% for p in pagination.iter_pages() %}
+            {% if p %}
+                {% if p == pagination.page %}
+                <li>
+                    <a class="page-link text-muted px-2 py-1" href="{{ url_for(endpoint, page = p, **kwargs) }}{{ fragment }}">{{ p }}</a>
+                </li>
+                {% else %}
+                <li>
+                    <a class="page-link px-2 py-1" href="{{ url_for(endpoint, page = p, **kwargs) }}{{ fragment }}">{{ p }}</a>
+                </li>
+                {% endif %}
+            {% else %}
+            <li>
+                <a class="page-link px-2 py-1" href="#">&hellip;</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+        
+        <li class="page-item{% if not pagination.has_next %} disabled{% endif %}">
+            <a class="page-link px-2 py-1" href="{% if pagination.has_next %}{{ url_for(endpoint, page=pagination.next_num, **kwargs) }}{{ fragment }}{% else %}#{% endif %}">
+                &raquo;
+            </a>
+        </li>     
+    </ul>
+    </div>
+    {% endif %}        
+    <small class="d-flex justify-content-center text-muted mt-1">
+        {{ pagination.first }} - {{ pagination.last }} of {{ pagination.total }}
+    </small>    
+</nav>
+{% endmacro %}
