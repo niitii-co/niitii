@@ -1,0 +1,9 @@
+{{ user.username }},
+
+{{ _('Confirm account link') }}
+
+{{ url_for('auth.confirm_account', token=token, _external=True) }}
+
+{{ _('Note: DO NOT REPLY') }}
+
+niitii
