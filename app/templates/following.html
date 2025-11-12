@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    <div class="row justify-content-center align-items-center mt-2">
+    <div class="col-sm-12 col-md-10 col-lg-8 col-xl-8 col-xxl-8">
+    {% for user in users %}
+    <div class="card-body py-0 mx-auto card-width">
+        <div>     
+            {{ macros.avatar(user) }}
+            <span>{{ macros.user_link(user=user) }}</span>
+            <p class="m-0">
+            {{ _('%(count)s followers', count=user.followers_count()) }}, {{ _('%(count)s following', count=user.following_count()) }}
+            </p>
+        </div>
+        <hr class="my-2">
+    </div>
+    {% endfor %}
+    </div>
+    </div>
+
+    {{ macros.pagination(pagination, 'main.following', username=user.username) }}
+{% endblock %}
