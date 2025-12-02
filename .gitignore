@@ -1,0 +1,39 @@
+*.py[cod]
+
+# C extensions
+*.so
+
+# Packages
+dist
+build
+parts
+bin
+var
+sdist
+.installed.cfg
+lib
+lib64
+__pycache__
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+
+# Translations
+#*.mo
+
+# ignore hidden files except !files
+.*
+!.gitignore
+!.flaskenv
+
+venv
+*.log*
+#app.db
+*.db
+niitii.log*
+tmp

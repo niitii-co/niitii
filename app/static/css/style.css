@@ -1,0 +1,389 @@
+/* VARIABLES */
+:root {
+    /* TEXT VARIABLES*/
+    
+    /* SPACING VARIABLES */
+
+    /* COLOR VARIABLES */        
+    --niitii-green: rgb(37,137,37);     /*hex: #258925*/
+    --navbar-gray: #D3D3D3;
+    --checkbox-outline: .125em solid #0d6efd;
+    --checkbox-background: #0d6efd;
+    --checkbox-border-radius: .2rem;
+
+}
+
+/*DO NOT SET GLOBAL STYLE FOR TAGS*/
+/** > p {*/
+/*    margin: 0;*/
+/*    padding: 0;*/
+/*}*/
+
+
+/* GENERAL ELEMENT STYLES */
+.avatar {
+    height: 1.5rem;
+    width: 1.5rem;
+}
+
+.avatar-md {
+    height: 3rem;
+    width: 3rem;
+}
+
+.avatar-lg {
+    height: 6rem;
+    width: 6rem;
+}
+
+.blur {
+    filter: blur(.8rem);
+}
+
+
+/*_comments, edit_messages*/
+.card-body span {
+    font-size: .65rem;    
+}
+
+.comment-height {
+    max-height: 90%;
+}
+
+/* truncate long text*/
+.comment-body {
+    max-height: 10lh;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    overflow: hidden;
+    transition: max-height 0.5s;
+}
+
+input[name="read-more"]:checked + .comment-body {
+    -webkit-line-clamp: unset;
+    max-height: max-content;
+}
+
+input[name="read-more"]:not(:checked) ~ label::before {
+    content: ".....\25BC";
+}
+
+input[name="read-more"]:checked ~ label::after {
+    content: ".....\25B2";
+}
+
+.comment-body + label {
+    margin-top: .5lh;
+    margin-bottom: .5lh;
+    display: inline-block;
+}
+
+[popover]:popover-open::backdrop {
+  /* Styles for the backdrop */
+  background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black */
+  opacity: 1;
+  /* Add transitions for smooth appearance/disappearance */
+  transition: opacity 0.3s ease;\
+}
+
+@starting-style {
+  [popover]:popover-open::backdrop {
+    opacity: 0;
+  }
+}
+
+/*[popover] {*/
+/*    /* other popover styles */*/
+/*    padding: 0.5rem 0.5rem;*/
+/*    border-radius: 0.5rem;*/
+/*    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);*/
+/*}*/
+
+/*[popover]:popover-open {*/
+/*    display: grid;*/
+/*    gap: 0.2rem;*/
+/*}*/
+
+/*inbox*/
+
+/*message*/
+.card-header span {
+    font-size: .65rem;
+}
+
+/*post*/
+.carousel-height {
+    height: 30rem;
+    width: 100%;
+}
+
+.carousel-item > img {
+    max-height: 100%;
+    max-width: 100%;
+    cursor: pointer;
+}
+
+.carousel-item > img:hover {
+    transition: transform .2s;
+    transform: scale(1.5);
+}
+
+#lightbox {
+    position: fixed;
+    z-index: 10; /* displays over carousel-indicators */
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, .98);
+    display: none;
+}
+
+#lightbox.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#lightbox img {
+    /* width,height prevents img from being larger than browser screen size */
+    max-width: 95vw;
+    max-height: 95vh;
+}
+
+form .form-check {
+    font-size: .80rem;
+}
+
+
+/*chatti*/
+#roomCode {
+/*form will still be submitted in lowercase. Must change to uppercase on server. */
+    text-transform: uppercase;
+}
+
+/*chatii_room*/
+#messages {
+    height: 50vh;
+}
+
+/*base*/
+.navbar {
+    background-color: var(--navbar-gray);
+}
+
+.navbar-brand {
+    color: var(--niitii-green);
+}
+
+.niitii-green {
+    color: var(--niitii-green);    
+}
+
+.referral-badge {
+    width: 4.525rem;
+}
+
+.notice-badge {
+    font-size: .4125rem;
+}
+
+.search {
+    width: 15em;
+    transition: width .25s;
+    font-size: .875em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .search {
+        transition: none;
+    }
+}
+
+.search::placeholder {
+    color: var(--navbar-gray);
+}
+
+/*widen input when focused or when there's input text*/
+.search:focus,
+.search:not(:placeholder-shown) {
+    width: 20em;
+}
+
+.search-wrap {
+    position: relative;
+    display: inline-block;
+}
+
+.search-wrap button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    border: none;
+}
+
+/*followers, following, view_notifications*/
+.pre-wrap {
+    white-space: pre-wrap;
+}
+
+/*post*/
+/*.post-div:hover > .carousel-img:not(:hover) {*/
+/*    filter: blur(.5rem);    */
+/*}*/
+
+.post-div a {
+    font-size: .75rem;
+}
+
+.pinComment input[type = checkbox] {
+    display: none;
+}
+
+/*#pinComment input[type = checkbox]:checked + label:after{*/
+.pin:checked + label:after{
+    content: "\1F4CC";
+    outline: var(--checkbox-outline);
+    background: var(--checkbox-background);
+    border-radius: var(--checkbox-border-radius);
+}
+
+.pinComment label:after {
+    content: "\1F4CC";
+}
+
+.directComment input[type = checkbox] {
+    display: none;
+}
+
+.direct:checked + label:after{
+    content: "\1F576";
+    outline: var(--checkbox-outline);
+    background: var(--checkbox-background);
+    border-radius: var(--checkbox-border-radius);
+}
+
+.directComment label:after {
+    content: "\1F576";
+}
+
+.ghostComment input[type = checkbox] {
+    display: none;
+}
+
+.ghost:checked + label:after{
+    content: "\1F47B";
+    outline: var(--checkbox-outline);
+    background: var(--checkbox-background);
+    border-radius: var(--checkbox-border-radius);
+}
+
+.ghostComment label:after {
+    content: "\1F47B";
+}
+
+/*user*/
+.song {
+    font-size: 1.125rem;
+}
+
+#pingCheck {
+    display: none;
+}
+
+#pingCheck:not(:checked) + label:after {
+    content: "\2713";
+}
+
+#pingCheck:checked + label:after {
+    content: "\2713";
+    outline: var(--checkbox-outline);
+    background: var(--checkbox-background);
+    border-radius: var(--checkbox-border-radius);
+}
+
+/*_post*/
+.post-link p {
+    margin: 0;
+}
+
+.thumbnail-img {
+    max-width: 25%;
+    max-height: 15rem;
+}
+
+/*register*/
+.validate_reg {
+    display: none;
+}
+
+/* comments vote button*/
+.vote-form button {
+    font-size: .575rem;
+}
+
+/* MOBILE SIZE. Extra SMALL*/
+@media only screen and (min-width:21rem) {
+    .nav-item {
+        margin: .275rem 0 0 0;
+    }
+    .nav-link {
+        display: inline;
+        padding: 0;
+    }
+    .dropdown-item {
+        display: inline;
+    }
+}
+
+
+/* MOBILE SIZE. BOOTSTRAP SMALL*/
+@media only screen and (min-width:36rem) {
+    .nav-item {
+        margin: .275rem 0 0 0;
+    }
+    .nav-link {
+        display: inline;
+        padding: 0;
+    }
+    .dropdown-item {
+        display: inline;
+    }
+
+}
+
+/* TABLET SIZE. BOOTSTRAP MEDIUM */
+@media only screen and (min-width:47rem) {
+    .card-width {
+        width: 80%;
+    }
+    .post-div {
+        width: 90%;
+    }
+    .nav-link {
+        display: inline;
+        padding: 0;
+    }
+    .dropdown-item {
+        display: inline;
+    }
+}
+
+
+/* CUSTOM SIZE. BOOTSTRAP LARGE */
+@media only screen and (min-width:62rem) {
+    .card-width {
+        width: 60%;
+    }
+    .post-div {
+        width: 80%;
+    }
+}
+
+
+/* CUSTOM SIZE. BOOTSTRAP EXTRA LARGE */
+@media only screen and (min-width:75rem) {
+
+}
+
+

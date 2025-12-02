@@ -1,0 +1,49 @@
+{% import "_macros.html" as macros %}
+    {% set user = post.author %}
+    <div id="post{{post.id}}" class="card-body mx-auto p-0 {% if not user_page %}card-width{% endif %}">
+        <div>
+            {{ macros.avatar(user) }}
+            <span>{{ macros.user_link(user=user) }}</span>
+            <span>
+            <time datetime="{{post.timestamp}}">{{ moment(post.timestamp).format('D/MM/YY H:mm') }}</time>
+            </span>
+
+        </div>
+        <div>
+            <div class="ps-0 pt-2 pb-2 post-link" >
+                    <a class="text-decoration-none text-body h4" href="{{ url_for('main.post', id=post.id) }}">
+                    {{ post.title }}
+                    {% set photos = post.get_photos() %}
+
+                    {% if (photos['link'] | length) > 0 %}
+                    <div class="{% if post.nsfw or photos['nsfw'] %}my-4{% else %}my-2{% endif %}">
+                    {% for p in photos['link'] %}
+                        <img class="rounded thumbnail-img mb-2 {% if post.nsfw or photos['nsfw'] %}blur{% endif %}" title="{{ photos['name'][loop.index0] }}" alt="post photo {{ loop.index }}" src="{{ photos['link'][loop.index0]}}" loading="lazy">
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    </a>
+            </div>
+            <div>
+                <div class="p-0 m-0">
+                    {% for tag in post.tags %}
+                        <a class="btn btn-tag btn-rounded px-1 py-0 " href="{{ url_for('main.view_tag', name=tag.name) }}"><i>#{{ tag.name }}</i>
+                        </a>
+                    {% endfor %}
+                </div>
+                {% if post.nsfw or photos['nsfw'] %}
+                    <span class="badge rounded-pill text-bg-danger text-body px-1 py-0">NSFW</span>
+                {% endif %}
+                {% if post.label %}
+                    <span class="badge rounded-pill text-bg-secondary text-body px-1 py-0">{{ post.label }}</span>
+                {% endif %}
+            </div>
+            <div>
+                <span class="btn btn-outline-dark btn-sm border border-dark-subtle disabled px-1 py-0">
+                    &#x21E7; {{ post.votes }}
+                </span>
+                <span class="px-2 small">{{ post.comments }} {{ _('Comments') }}</span>
+            </div>
+            <hr class="my-2">
+        </div>
+    </div>

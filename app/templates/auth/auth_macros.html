@@ -1,0 +1,152 @@
+{% macro register(start_time="") %}
+        <form action="" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+<!--            for time based validation-->
+            <input name="start_time" type="hidden" value="{{ start_time }}">
+<!--                human validation check-->
+                <div class="validate_reg">
+                    <label class="form-label" for="display_name">Name</label>
+                    <input class="form-control" id="display_name" maxlength="64" minlength="1" name="name" type="text" autocomplete="off">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="username">{{ _('Username') }}</label>
+                    <input autofocus class="form-control" id="username" maxlength="64" minlength="1" name="username" type="text" autocomplete="off" pattern="^(?!.*niitii)[a-zA-Z0-9_.]*$" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="email">{{ _('Email') }}</label>
+                    <input class="form-control" id="email" maxlength="320" minlength="1" name="email" type="email" autocomplete="off" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="password">{{ _('Password') }}</label>
+<!--https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Regex_invalid_char_in_class                    -->
+                    <input class="form-control" id="password" maxlength="32" minlength="10" name="password" type="password" autocomplete="off" pattern="^(?!.* )(?=.*[a-z])(?=.*[0-9])(?=.*[`~!@#$%^&*_=+;:'?,.]).{10,32}$" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="password2">{{ _('Confirm password') }}</label>
+                    <input class="form-control" id="password2" maxlength="32" minlength="10" name="password2" type="password" autocomplete="off" required>
+                </div>
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="register">{{ _('Submit') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro login(start_time="") %}
+        <form action="" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <input name="utc_offset" type="hidden" value="">
+            <input name="language" type="hidden" value="">
+<!--            for time based validation-->
+            <input name="start_time" type="hidden" value="{{ start_time }}">
+<!--                human validation check-->
+                <div class="validate_reg">
+                    <label class="form-label" for="display_name">Name</label>
+                    <input class="form-control" id="display_name" maxlength="64" minlength="1" name="name" type="text" autocomplete="off">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="username">{{ _('Username') }}</label>
+                    <input autofocus class="form-control" id="username" name="username" type="text" autocomplete="username" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="password">{{ _('Password') }}</label>
+                    <input class="form-control" id="password" maxlength="32" minlength="10" name="password" type="password" autocomplete="off" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="mfa_token">{{ _('MFA token') }}</label>
+                    <input autofocus class="form-control" id="mfa_token" maxlength="6" minlength="6" name="mfa_token" type="text" autocomplete="off" pattern="\d{6,6}">
+                </div>
+                <div class="form-check mb-2">
+                    <label class="form-check-label" for="remember_me">{{ _('Remember me') }}</label>
+                    <input class="form-check-input" id="remember_me" name="remember_me" type="checkbox">
+                </div>
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="login">{{ _('Submit') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro request_admin_token() %}
+        <form action="" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="mb-2">
+                    <label class="form-label" for="username">{{ _('Username') }}</label>
+                    <input autofocus class="form-control" id="username" maxlength="64" minlength="1" name="username" type="text" required>
+                </div>                
+                <button class="btn btn-outline-primary btn-sm d-block" type="submit" name="submit" value="request_admin_token">{{ _('Submit') }}</button>
+                </div>
+        </form>
+{% endmacro %}
+
+
+{% macro request_password_reset() %}
+        <form action="" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="mb-2">
+                    <label class="form-label" for="email">{{ _('Email') }}</label>
+                    <input autofocus class="form-control" id="email" maxlength="320" minlength="1" name="email" type="email" autocomplete="email" required>
+                </div>
+                <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="reset_password_request">{{ _('Submit') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro reset_password() %}
+        <form action="" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="mb-2">
+                    <label class="form-label" for="password">{{ _('Password') }}</label>
+                    <input autofocus class="form-control" id="password" maxlength="32" minlength="10" name="password" type="password" autocomplete="off" pattern="^(?!.* )(?=.*[a-z])(?=.*[0-9])(?=.*[`~!@#$%^&*_=+;:'?,.]).{10,32}$" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="password2">{{ _('Confirm password') }}</label>
+                    <input class="form-control" id="password2" maxlength="32" minlength="10" name="password2" type="password" autocomplete="off" required>
+                </div>
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="reset_password">{{ _('Submit') }}</button>
+        </form>
+{% endmacro %}        
+
+
+{% macro check_token(action="") %}
+        <form action="{{ action }}" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="mb-2">
+                    <label class="form-label" for="mfa_token">{{ _('Enter token') }}</label>
+                    <input autofocus class="form-control w-50" id="mfa_token" maxlength="6" minlength="6" name="mfa_token" type="text" autocomplete="off" pattern="\d{6,6}" required>
+                </div>
+                    <button class="btn btn-outline-primary btn-md" type="submit" name="submit" value="check_token">{{ _('Submit') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro change_password() %}
+        <form action="" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="mb-2">
+                    <label class="form-label" for="old_password">{{ _('Current password') }}</label>
+                    <input autofocus class="form-control" id="old_password" maxlength="32" minlength="10" name="old_password" type="password" autocomplete="off" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="password">{{ _('New password') }}</label>
+                    <input class="form-control" id="password" maxlength="32" minlength="10" name="password" type="password" autocomplete="off" pattern="^(?!.* )(?=.*[a-z])(?=.*[0-9])(?=.*[`~!@#$%^&*_=+;:'?,.]).{10,32}$" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="password2">{{ _('Confirm password') }}</label>
+                    <input class="form-control" id="password2" maxlength="32" minlength="10" name="password2" type="password"  autocomplete="off" required>
+                </div>
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="change_password">{{ _('Submit') }}</button>
+        </form>
+{% endmacro %}
+
+
+{% macro change_email() %}
+        <form action="" method="post">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="mt-2 mb-2">
+                    <label class="form-label" for="email">{{ _('New email') }}</label>
+                    <input autofocus class="form-control" id="email" maxlength="320" minlength="1" name="email" type="email" autocomplete="email" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="password">{{ _('Password') }}</label>
+                    <input class="form-control" id="password" maxlength="32" minlength="10" name="password" type="password" autocomplete="off" required>
+                </div>
+                    <button class="btn btn-outline-primary btn-sm" type="submit" name="submit" value="change_email">{{ _('Submit') }}</button>
+        </form>                    
+{% endmacro %}
