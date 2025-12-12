@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    {% set user = sender %}
+    <div class="row justify-content-center align-items-center mt-2">
+      <div class="col-sm-12 col-md-10 col-lg-8 col-xl-6 col-xxl-6">
+        <div class="card">
+          <div class="card-header d-flex justify-content-center align-items-center p-0">
+            <img class="rounded-circle img-fluid avatar-md me-1 my-1" {% if user.photo %} src="{{ user.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">
+            <span>{{ macros.user_link(user=user) }}</span>
+          </div>
+
+          <div id="messages" class="card-body w-auto overflow-y-auto">
+            {% for m in messages %}
+                {% set m_photos = m.get_photos()['link'] %}
+                {% if m.sender == current_user %}
+                    {% if m_photos %}
+                    <div class="d-flex flex-row justify-content-end">
+                      <img class="img-fluid object-fit-scale" src="{{ m.get_url() }}" alt="message photo">
+                    </div>
+                    {% endif %}
+                    <div class="d-flex flex-row justify-content-end mb-3">
+                        <div>
+                            <p class="mt-2 mb-0">{{ m.decrypt(m.body) }}</p>
+                            <span class="d-block rounded-3 text-body text-end">
+                            <time datetime="{{m.timestamp}}">{{ moment(m.timestamp).format('D MMM H:mm') }}</time>
+                            </span>
+                        </div>
+                    </div>
+                {% else %}
+                    {% if m_photos %}
+                    <div class="d-flex flex-row justify-content-start">
+                      <img class="img-fluid object-fit-scale mb-2" src="{{ m.get_url() }}" alt="message photo" loading="lazy">
+                    </div>
+                    {% endif %}
+                    <div class="d-flex flex-row justify-content-start mb-3">
+                      <div>
+                        <p class="mt-2 mb-0">{{ m.decrypt(m.body) }}</p>
+                        <span class="d-block rounded-3 text-body text-start">
+                        <time datetime="{{m.timestamp}}">{{ moment(m.timestamp).format('D MMM H:mm') }}</time>
+                        </span>
+                      </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+         </div>
+                {% set action %}{{ url_for('main.send_message', username=user.username) }}{% endset %}
+                {{ macros.message(action=action) }}
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript" charset="utf-8">
+/*
+    Earlier version added the div after document.addEventListener('DOMContentLoaded'.
+    This didn't work when the page refreshed
+    Error: Uncaught ReferenceError: lightbox is not defined
+*/
+        const lightbox = document.createElement('div');
+        lightbox.id = 'lightbox';
+        document.body.appendChild(lightbox);
+    </script>
+
+    <script type="text/javascript">
+        let messages = document.querySelector('#messages');
+        let lastChild = messages.lastElementChild;
+        messages.scrollTop = messages.scrollHeight;
+//        lastChild.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+        function showMessage(target, submitter) {
+            let postForm = new FormData(target);
+            postForm.append('submit', submitter.value);
+            postForm.append('photo', target.photo.files[0]);
+            const url = target.action;
+
+            fetch(url, {
+                method: 'POST',
+                body: postForm,
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                let timestamp = moment(data.timestamp).format('D MMM H:mm');
+                const content = `\
+                        <div>\
+                          <p class="mt-2 mb-0">${data.body}</p>\
+                          <span class="d-block rounded-3 text-body text-start">\
+                          <time datetime="${timestamp}"><span class data-timestamp="${timestamp}" data-function="format" data-format="D MMM H:mm" data-refresh="0" style>${timestamp}</span></time>\
+                          </span>\
+                        </div>\
+                `;
+
+                if (data.photo) {
+                    let imgDiv = document.createElement('div');
+                    imgDiv.className = "d-flex flex-row justify-content-end";
+                    const img = `\
+                          <img class="img-fluid object-fit-scale" src="${data.photo}" alt="message photo">\
+                    `;
+                    imgDiv.innerHTML = img;
+
+                    let bodyDiv = document.createElement('div');
+                    bodyDiv.className = "d-flex flex-row justify-content-end mb-3";
+                    bodyDiv.innerHTML = content;
+                    messages.append(imgDiv);
+                    messages.append(bodyDiv);
+                }
+                else {
+                    let bodyDiv = document.createElement('div');
+                    bodyDiv.className = "d-flex flex-row justify-content-end mb-3";
+                    bodyDiv.innerHTML = content;
+                    messages.append(bodyDiv);
+                }
+            })
+            .catch(console.error);
+        }
+        document.addEventListener('submit', (e) => {
+            if (e.target.id != 'search') {
+                // Create DataTransfer to check files over 10MB
+                let dt = new DataTransfer();
+                let files = e.target.photo.files
+
+                if (files.length > 0) {
+                    for (let i = 0; i < files.length; i++) {
+                        if (files[i].size > (1024 * 1024 * 10)) {
+                            continue; // Skip. Do not add to dt
+                        }
+                        // add files to dt object
+                        dt.items.add(files[i]);
+                    }
+                }
+                // update event files before submitting
+                e.target.photo.files = dt.files;
+                e.preventDefault();
+                showMessage(e.target, e.submitter);
+                e.target.reset();
+           }
+       });
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+            Array.from(document.querySelectorAll('img')).forEach((ele, index) => {
+                ele.addEventListener('dblclick', function(e) {
+// class 'active' will display lightbox. Styles applied in style.css
+                    lightbox.classList.add('active')
+                    const box_img = document.createElement('img')
+                    box_img.src = ele.src
+                    while (lightbox.firstChild) {
+// Remove all child elements so there are no images for lightbox.appendChild(box_img)
+                        lightbox.removeChild(lightbox.firstChild)
+                    }
+                    lightbox.appendChild(box_img)
+                });
+            });
+
+            lightbox.addEventListener('click', e => {
+// Exit if anything besides the lightbox is clicked. e.target any item that's clicked. e.currentTarget is lightbox.
+                if (e.target !== e.currentTarget) return
+                lightbox.classList.remove('active')
+            });
+
+
+        });
+    </script>
+{% endblock %}

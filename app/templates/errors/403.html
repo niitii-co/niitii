@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="row justify-content-center align-items-center mt-5">
+    <div class="col-sm-12 col-md-10 col-lg-8 col-xl-8 col-xxl-8">
+        <h1>{{ _('Forbidden') }}</h1>
+            {% set link %}{{ url_for('main.index') }}{% endset %}
+        <p><a href="{{ link }}">{{ _('Homepage') }}</a></p>
+    </div>
+    </div>
+{% endblock %}

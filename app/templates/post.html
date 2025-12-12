@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    {% set user = post.author %}
+    <div class="mx-auto post-div">
+        <div id="post{{post.id}}" class="card-body">
+            <div>
+                {{ macros.avatar(user) }}
+                <span>{{ macros.user_link(user=user) }}</span>
+                {% if post.locked %}
+                <span class="fs-6">&#x1F512;</span>
+                {% endif %}
+                <span>
+                <time datetime="{{post.timestamp}}">{{ moment(post.timestamp).format('D/MM/YY H:mm') }}</time>
+                </span>
+                {% if post.edit_timestamp %}
+                <span> -
+                *<time datetime="{{post.timestamp}}">{{ moment(post.edit_timestamp).format('D/MM/YY H:mm') }}</time>
+                </span>
+                {% endif %}
+            </div>
+
+            <div class="pt-2">
+                <p class="m-0 h3">
+                    {{ post.title }}
+                </p>
+                {% set photos = post.get_photos() %}
+                {% if photos and photos['link'] %}
+                <div id="carousel" class="carousel slide mt-3" data-bs-theme="dark">
+                  <div class="carousel-inner">
+                       {% for p in photos['link'] %}
+<!-- mb-4 will create space on top of the carousel-indicators buttons                       -->
+                        <div class="carousel-item {% if loop.first %}active{% endif %} carousel-height mb-4">
+                            <img class="object-fit-scale position-absolute top-50 start-50 translate-middle carousel-img" src="{{ photos['link'][loop.index0] }}" title="{{ photos['name'][loop.index0] }}" alt="post photo {{ loop.index }}" loading="lazy">
+                                <span class="small position-absolute top-0 end-0">{{loop.index}}/{{loop.length}}</span>
+                        </div>
+                        {% endfor %}
+                  </div>
+                  <div class="carousel-indicators m-0">
+                        {% for p in photos['link'] %}
+                        <!--hide slider is there's only 1 item-->
+                        {% if loop.length > 1 %}
+                        <button type="button" data-bs-target="#carousel" data-bs-slide-to="{{ loop.index0 }}" class="{% if loop.first %}active{% endif %}" aria-label="Slide {{ loop.index }}"></button>
+                        {% endif %}
+                        {% endfor %}
+                  </div>
+                </div>
+                {% endif %}
+                
+                <div class="mt-3">
+                    {% if post.body_html %}
+                        {{ post.body_html | safe }}
+                    {% else %}
+                        {{ post.body }}
+                    {% endif %}
+                </div>
+                
+                {% if post.tags or post.nsfw or photos or post.label %}
+                    <div>
+                        <div class="p-0 m-0">
+                            {% for tag in post.tags %}                
+                            <a class="btn btn-tag btn-rounded px-1" href="{{ url_for('main.view_tag', name=tag.name) }}"><i>#{{ tag.name }}</i></a>
+                            {% endfor %}
+                        </div>
+                        {% if post.nsfw or photos['nsfw'] %}
+                            <span class="badge rounded-pill text-bg-danger text-body px-1 py-0 small">NSFW</span>
+                        {% endif %}
+                        {% if post.label %}
+                            <span class="badge rounded-pill text-bg-secondary text-body px-1 py-0 small">{{ post.label }}</span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+<!-- vote-->
+                {% if current_user.is_authenticated %}
+                    {% set action %}{{ url_for('main.vote_post', id=post.id) }}{% endset %}
+                    {{ macros.vote(value="vote_post", input_id=post.id, action=action, count=post.votes) }}                    
+                {% else %}
+                    <span class="btn btn-outline-dark btn-sm border border-dark-subtle px-1 py-0">
+                        &#x21E7;&#xfe0e; {{ post.votes }}
+                    </span>
+                {% endif %}             
+                    <span class="px-1 small">
+                    {{ post.comments }} {{ _('Comments') }} ({{ post.removed_comments }})
+                    </span>
+                {% if current_user == post.author %}
+                    <span class="btn btn-outline-dark btn-sm border border-dark-subtle py-0 px-1" id="showDirect">
+                    &#x1F576;&#xfe0e; {{ post.direct_comments }}
+                    </span>
+                {% endif %}
+                {% if current_user.is_authenticated %}
+                    {% set action %}{{ url_for('main.flag_post', id=post.id) }}{% endset %}
+                    {{ macros.flag(action=action, count=post.flags) }}
+                    {% if current_user == user or current_user.can("MODERATE") %}
+                    <a class="text-decoration-none focus-ring focus-ring-dark py-1 ms-3" href="{{ url_for('main.edit_post', id=post.id) }}">{{ _('Edit') }}</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <hr class="my-2">
+
+        {% if not post.disable_comments and current_user.is_authenticated and current_user.can("COMMENT") %}
+        <button class="btn btn-md dropdown-toggle mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#Comment" aria-expanded="False" aria-controls="Comment">
+            {{_('Comment')}}
+        </button>
+        <div class="collapse mb-3" id="Comment">
+        {% if current_user.is_authenticated %}
+            {% if post.pin_comments < 2 and (current_user == user or current_user.can("MODERATE")) %}
+                {% set pin = True %}
+            {% endif %}
+            {% if current_user != post.author %}
+                {% set direct = True %}
+            {% endif %}
+            {% set action %}{{ url_for('main.comment', id=post.id) }}{% endset %}
+
+            {{ macros.comment(action=action, pin=pin, direct=direct, value="comment") }}
+        {% endif %}
+        </div>
+        {% endif %}
+
+    {% include '_comment.html' %}
+    </div>
+
+    {{ macros.pagination(pagination, 'main.post', id=post.id) }}
+
+    <script type="text/javascript" charset="utf-8">
+// create div at the end of <body>
+        const lightbox = document.createElement('div');
+        lightbox.id = 'lightbox';
+        document.body.appendChild(lightbox);
+    </script>
+
+    <script type="text/javascript">
+        function sendForm(target, submitter) {
+            let postForm = new FormData(target);
+            // FormData only sends the <input>. <button> is appended to the form for submission
+            if (target.id !== 'flag_post') {
+                postForm.append('submit', submitter.value);
+                postForm.append('input_id', target.input_id.value);
+            }
+            else {
+                postForm.append('flag', submitter.value);
+            };
+
+            const url = target.action;
+            
+            fetch(url, {
+                method: 'POST',
+                // Set the FormData instance as the request body
+                body: postForm,
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (submitter.name === 'flag') {
+                    target.querySelector('span').innerHTML = data.count;
+                }
+                else {
+                    submitter.innerHTML = data.count;
+                };
+            })
+            .catch(console.error);
+        }
+
+        document.addEventListener('submit', (e) => {
+            try {
+                if (e.target.id != 'search' && e.target.id != 'comment') {
+                    e.preventDefault();
+                    sendForm(e.target, e.submitter);
+                }
+            }
+            catch (error) {
+                console.error(error);
+            }
+       });
+
+        document.addEventListener('DOMContentLoaded', function() {
+// select all images except avatar class then add event listener on each img
+            Array.from(document.querySelectorAll('img:not(.avatar)')).forEach((ele, index) => {
+                ele.addEventListener('dblclick', function(e) {
+// class 'active' will display lightbox. Styles applied in style.css
+                    lightbox.classList.add('active')
+                    const box_img = document.createElement('img')
+                    box_img.src = ele.src
+                    while (lightbox.firstChild) {
+// Remove all child elements so there are no images for lightbox.appendChild(box_img)
+                        lightbox.removeChild(lightbox.firstChild)
+                    }
+                    lightbox.appendChild(box_img)
+                });
+            });
+
+            lightbox.addEventListener('click', e => {
+// Exit if anything besides the lightbox is clicked. e.target any item that's clicked. e.currentTarget is lightbox.
+                if (e.target !== e.currentTarget) return
+                lightbox.classList.remove('active')
+            });
+
+            // *DOES NOT WORK* - hide lightbox with 'Esc' key
+            lightbox.addEventListener('keydown', function(event) {
+                // active element is body
+                const lightbox = document.activeElement.querySelector('#lightbox')
+
+                if (lightbox.className == 'active' && event.key === 'Escape') {
+                    lightbox.classList.remove('active')
+                }
+            });
+            
+            {% if post.locked %}
+            Array.from(document.querySelectorAll('button')).forEach((ele, index) => {
+                ele.disabled = true;
+                ele.style.border = 'none';
+                ele.classList.remove('border');
+            });            
+            {% endif %}
+            
+            const directComment = document.querySelector('#showDirect')
+            
+            if (directComment) {
+                directComment.addEventListener('click', e => {
+                    Array.from(document.querySelectorAll('.comment')).forEach((ele, index) => {
+                        console.log(directComment);
+                        if (ele.style.display === "none") {
+                            ele.style.display = "block";
+                            directComment.classList.remove('bg-secondary');
+                        } else {
+                            ele.style.display = "none";
+                            directComment.classList.add('bg-secondary');
+                        }
+                    });
+                });
+            };
+
+        });
+
+    </script>
+{% endblock %}
