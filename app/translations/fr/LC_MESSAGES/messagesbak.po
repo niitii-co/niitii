@@ -1,0 +1,743 @@
+# French translations for PROJECT.
+# Copyright (C) 2024 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-12-01 23:28-0500\n"
+"PO-Revision-Date: 2024-12-01 20:16-0500\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: fr\n"
+"Language-Team: fr <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.16.0\n"
+
+#: app/__init__.py:27
+msgid "login to access"
+msgstr "connectez-vous pour accéder"
+
+#: app/auth/email.py:8
+msgid "[niitii] Reset Your Password"
+msgstr "[niitii] Réinitialiser votre mot de passe"
+
+#: app/auth/email.py:17
+msgid "[niitii] Confirm Account"
+msgstr "[niitii] Confirmer le compte"
+
+#: app/auth/email.py:26
+msgid "[niitii] Confirm Email"
+msgstr "[niitii] Confirmez votre email"
+
+#: app/auth/email.py:35
+msgid "[niitii] Admin Token"
+msgstr "[niitii] Jeton d'administrateur"
+
+#: app/auth/routes.py:37
+msgid "Account disabled"
+msgstr "Compte désactivé"
+
+#: app/auth/routes.py:41
+msgid "Invalid token"
+msgstr "Jeton invalide"
+
+#: app/auth/routes.py:56
+msgid "Sign In"
+msgstr "Se connecter"
+
+#: app/auth/routes.py:82
+msgid "username exist"
+msgstr "le nom d'utilisateur existe"
+
+#: app/auth/routes.py:86 app/auth/routes.py:270
+msgid "email exist"
+msgstr "l'e-mail existe"
+
+#: app/auth/routes.py:89 app/templates/auth/register.html:9
+msgid "Passwords must match"
+msgstr "Les mots de passe doivent correspondre"
+
+#: app/auth/routes.py:100 app/templates/auth/login.html:10
+#: app/templates/auth/register.html:7
+msgid "Register"
+msgstr "Registre"
+
+#: app/auth/routes.py:160
+msgid "My Page"
+msgstr "Ma page"
+
+#: app/auth/routes.py:178
+msgid "Setup MFA"
+msgstr "Configurer MFA"
+
+#: app/auth/routes.py:216 app/auth/routes.py:245
+msgid "Email sent"
+msgstr "E-mail envoyé"
+
+#: app/auth/routes.py:228 app/templates/_macros.html:279
+msgid "Confirmed"
+msgstr "Confirmé"
+
+#: app/auth/routes.py:230 app/auth/routes.py:278 app/auth/routes.py:292
+#: app/main/routes.py:785
+msgid "Invalid"
+msgstr "Invalide"
+
+#: app/auth/routes.py:247
+msgid "Request Admin Token"
+msgstr "Demande de jeton d'administrateur"
+
+#: app/auth/routes.py:261
+msgid "Request Password Reset"
+msgstr "Demande de réinitialisation du mot de passe"
+
+#: app/auth/routes.py:279
+msgid "Change Email"
+msgstr "Changer d'e-mail"
+
+#: app/auth/routes.py:289 app/auth/routes.py:306
+#: app/templates/auth/auth_macros.html:127
+msgid "New password"
+msgstr "Nouveau mot de passe"
+
+#: app/auth/routes.py:293
+msgid "Change Password"
+msgstr "Changer le mot de passe"
+
+#: app/auth/routes.py:309
+msgid "Reset Password"
+msgstr "Réinitialiser le mot de passe"
+
+#: app/auth/routes.py:319 app/templates/auth/auth_macros.html:143
+msgid "New email"
+msgstr "Nouvel e-mail"
+
+#: app/main/routes.py:45
+msgid "Index"
+msgstr "Indice"
+
+#: app/main/routes.py:59 app/templates/base.html:33
+msgid "Search"
+msgstr "Recherche"
+
+#: app/main/routes.py:70 app/main/routes.py:515
+msgid "Feed"
+msgstr "Alimentation"
+
+#: app/main/routes.py:127 app/templates/new_post.html:8
+msgid "New Post"
+msgstr "Nouvelle publication"
+
+#: app/main/routes.py:412 app/templates/edit_post.html:7
+msgid "Edit Post"
+msgstr "Modifier le message"
+
+#: app/main/routes.py:437
+msgid "Post Comment"
+msgstr "Publier des commentaires"
+
+#: app/main/routes.py:450
+msgid "User Comment"
+msgstr "Commentaires des utilisateurs"
+
+#: app/main/routes.py:503
+msgid "Tag"
+msgstr "Étiqueter"
+
+#: app/main/routes.py:522
+msgid "Moderate"
+msgstr "Modéré"
+
+#: app/main/routes.py:536
+msgid "User"
+msgstr "Utilisateur"
+
+#: app/main/routes.py:613
+msgid "Follower"
+msgstr "Suiveur"
+
+#: app/main/routes.py:625
+msgid "Following"
+msgstr "Suivant"
+
+#: app/main/routes.py:636 app/main/routes.py:647
+msgid "Edit follower"
+msgstr "Modifier l'abonné"
+
+#: app/main/routes.py:677
+msgid "View notification"
+msgstr "Afficher la notification"
+
+#: app/main/routes.py:738
+msgid "Edit account"
+msgstr "Modifier le compte"
+
+#: app/main/routes.py:771
+msgid "Edit account admin"
+msgstr "Modifier le compte administrateur"
+
+#: app/main/routes.py:805 app/templates/inbox.html:9
+msgid "Inbox"
+msgstr "Boîte de réception"
+
+#: app/main/routes.py:826
+msgid "Message"
+msgstr "Message"
+
+#: app/main/routes.py:882
+msgid "Edit Message"
+msgstr "Modifier le message"
+
+#: app/main/routes.py:914
+#, python-format
+msgid "%(username)s not found"
+msgstr "%(username)s non trouvé"
+
+#: app/main/routes.py:936 app/main/routes.py:939 app/main/routes.py:952
+msgid "Chatii"
+msgstr "Chatii"
+
+#: app/main/routes.py:936
+msgid "Enter name"
+msgstr "Entrez le nom"
+
+#: app/main/routes.py:939
+msgid "Enter code"
+msgstr "Entrer le code"
+
+#: app/main/routes.py:946 app/templates/errors/404.html:6
+msgid "Not found"
+msgstr "Non trouvé"
+
+#: app/main/routes.py:965
+msgid "Chat Room"
+msgstr "Salle de discussion"
+
+#: app/main/routes.py:1023 app/templates/base.html:137
+msgid "About"
+msgstr "À propos"
+
+#: app/main/routes.py:1028 app/templates/base.html:143
+msgid "Contact"
+msgstr "Contact"
+
+#: app/main/routes.py:1033 app/templates/base.html:146
+msgid "Promote"
+msgstr "Promouvoir"
+
+#: app/main/routes.py:1038
+msgid "Humans.txt"
+msgstr "Humains.txt"
+
+#: app/main/routes.py:1043
+msgid "Robots.txt"
+msgstr "Robots.txt"
+
+#: app/templates/_comment.html:42 app/templates/_macros.html:274
+#: app/templates/post_comment.html:27 app/templates/post_comment.html:70
+#: app/templates/user_comment.html:27 app/templates/user_comment.html:70
+msgid "Disabled"
+msgstr "Désactivé"
+
+#: app/templates/_comment.html:73
+msgid "Reply"
+msgstr "Répondre"
+
+#: app/templates/_macros.html:6 app/templates/_macros.html:53
+msgid "Title"
+msgstr "Titre"
+
+#: app/templates/_macros.html:10 app/templates/_macros.html:57
+msgid "Body"
+msgstr "Corps"
+
+#: app/templates/_macros.html:14 app/templates/_macros.html:61
+msgid "Tags"
+msgstr "Balises"
+
+#: app/templates/_macros.html:15 app/templates/_macros.html:62
+msgid "Max: 5"
+msgstr "Max: 5"
+
+#: app/templates/_macros.html:18 app/templates/_macros.html:94
+msgid "Link photos"
+msgstr "Lien photos"
+
+#: app/templates/_macros.html:20 app/templates/_macros.html:96
+msgid "add 1 photo link"
+msgstr "ajouter 1 lien photo"
+
+#: app/templates/_macros.html:24 app/templates/_macros.html:100
+#: app/templates/_macros.html:136
+msgid "Upload photo"
+msgstr "Télécharger une photo"
+
+#: app/templates/_macros.html:28 app/templates/_macros.html:105
+#: app/templates/_macros.html:169
+msgid "Viewer"
+msgstr "Viseur"
+
+#: app/templates/_macros.html:36 app/templates/_macros.html:113
+#: app/templates/_macros.html:344
+msgid "NSFW"
+msgstr "NSFW"
+
+#: app/templates/_macros.html:40 app/templates/_macros.html:117
+msgid "Disable comments"
+msgstr "Désactiver les commentaires"
+
+#: app/templates/_macros.html:43 app/templates/_macros.html:126
+#: app/templates/_macros.html:192 app/templates/_macros.html:286
+#: app/templates/_macros.html:319 app/templates/_macros.html:403
+#: app/templates/_macros.html:424 app/templates/auth/auth_macros.html:28
+#: app/templates/auth/auth_macros.html:61
+#: app/templates/auth/auth_macros.html:73
+#: app/templates/auth/auth_macros.html:86
+#: app/templates/auth/auth_macros.html:102
+#: app/templates/auth/auth_macros.html:114
+#: app/templates/auth/auth_macros.html:134
+#: app/templates/auth/auth_macros.html:150
+msgid "Submit"
+msgstr "Soumettre"
+
+#: app/templates/_macros.html:66 app/templates/_macros.html:213
+msgid "Label"
+msgstr "Étiquette"
+
+#: app/templates/_macros.html:73
+msgid "Check to delete"
+msgstr "Cochez pour supprimer"
+
+#: app/templates/_macros.html:122
+msgid "Lock"
+msgstr "Verrouiller"
+
+#: app/templates/_macros.html:140 app/templates/_macros.html:203
+msgid "Photo link"
+msgstr "Lien photo"
+
+#: app/templates/_macros.html:145 app/templates/_macros.html:207
+msgid "Delete photo"
+msgstr "Supprimer la photo"
+
+#: app/templates/_macros.html:151 app/templates/_macros.html:226
+msgid "Song name"
+msgstr "Nom de la chanson"
+
+#: app/templates/_macros.html:155 app/templates/_macros.html:230
+msgid "Song link"
+msgstr "Lien de la chanson"
+
+#: app/templates/_macros.html:159
+msgid "Banner flag"
+msgstr "Drapeau bannière"
+
+#: app/templates/_macros.html:165 app/templates/_macros.html:235
+msgid "Location"
+msgstr "Emplacement"
+
+#: app/templates/_macros.html:177
+msgid "Birth"
+msgstr "Naissance"
+
+#: app/templates/_macros.html:181
+msgid "Phone: +country code-123-456-7890"
+msgstr "Téléphone : +code du pays"
+
+#: app/templates/_macros.html:185
+msgid "Contact email"
+msgstr "Courriel de contact"
+
+#: app/templates/_macros.html:189 app/templates/_macros.html:249
+msgid "About me"
+msgstr "Sur moi"
+
+#: app/templates/_macros.html:240
+msgid "Birth: "
+msgstr "Naissance: "
+
+#: app/templates/_macros.html:245
+msgid "Contact email: "
+msgstr "Courriel de contact: "
+
+#: app/templates/_macros.html:255
+msgid "Permission"
+msgstr "Autorisation"
+
+#: app/templates/_macros.html:283
+msgid "Verified"
+msgstr "Vérifié"
+
+#: app/templates/_macros.html:345
+msgid "Spam"
+msgstr "Courrier indésirable"
+
+#: app/templates/_macros.html:346
+msgid "Violent"
+msgstr "Violent"
+
+#: app/templates/_macros.html:385
+msgid "Note"
+msgstr "Note"
+
+#: app/templates/_macros.html:387
+msgid "To active followers"
+msgstr "Aux abonnés actifs"
+
+#: app/templates/_macros.html:402 app/templates/_macros.html:423
+#: app/templates/_macros.html:463 app/templates/_macros.html:476
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: app/templates/_macros.html:419
+msgid "Invite"
+msgstr "Inviter"
+
+#: app/templates/_macros.html:442 app/templates/chatii_room.html:25
+msgid "Send"
+msgstr "Envoyer"
+
+#: app/templates/_macros.html:453 app/templates/auth/auth_macros.html:54
+msgid "MFA token"
+msgstr "Jeton MFA"
+
+#: app/templates/_macros.html:458 app/templates/auth/auth_macros.html:20
+#: app/templates/auth/auth_macros.html:50
+#: app/templates/auth/auth_macros.html:95
+#: app/templates/auth/auth_macros.html:147
+msgid "Password"
+msgstr "Mot de passe"
+
+#: app/templates/_macros.html:464 app/templates/_macros.html:477
+msgid "Delete"
+msgstr "Supprimer"
+
+#: app/templates/_macros.html:499
+#, python-format
+msgid "%(label)s"
+msgstr "%(label)s"
+
+#: app/templates/_post.html:45 app/templates/post.html:85
+#: app/templates/user.html:98
+msgid "Comments"
+msgstr "Commentaires"
+
+#: app/templates/about.html:5
+msgid "niitii: community of integrity"
+msgstr "niitii: communauté d’intégrité"
+
+#: app/templates/about.html:6
+msgid "Dedication"
+msgstr "Dévouement"
+
+#: app/templates/about.html:7
+msgid "Kotto Bass: spirit of joy"
+msgstr "Kotto Bass: esprit de joie"
+
+#: app/templates/about.html:8
+msgid "Miriam Makeba: spirit of nurture"
+msgstr "Miriam Makeba: esprit de culture"
+
+#: app/templates/about.html:9
+msgid "Patrice Lumumba: spirit of unity"
+msgstr "Patrice Lumumba: esprit d'unité"
+
+#: app/templates/about.html:10
+msgid "Thomas Sankara: spirit of integrity"
+msgstr "Thomas Sankara: esprit d'intégrité"
+
+#: app/templates/about.html:11
+msgid "niitii's anthem is"
+msgstr "L'hymne de niitii est"
+
+#: app/templates/about.html:11
+msgid "by Kotto Bass"
+msgstr "par Kotto Bass"
+
+#: app/templates/about.html:12
+msgid "niitii green RGB(37, 137, 37) is in honor of Sankara"
+msgstr "niitii vert RVB(37, 137, 37) est en l'honneur de Sankara"
+
+#: app/templates/about.html:13
+msgid ""
+"How it is today is how it was yesterday, so the wisdom of yesterday "
+"stands today."
+msgstr "Ce qui est aujourd'hui est ce qui était hier, donc la sagesse d'hier reste valable aujourd'hui."
+
+#: app/templates/auth/login.html:7 app/templates/base.html:42
+msgid "Login"
+msgstr "Se connecter"
+
+#: app/templates/base.html:90
+msgid "Logout"
+msgstr "Déconnexion"
+
+#: app/templates/base.html:140
+msgid "Code"
+msgstr "Code"
+
+#: app/templates/chatii.html:11
+msgid "Name"
+msgstr "Nom"
+
+#: app/templates/chatii.html:15
+msgid "Room Code"
+msgstr "Code de la chambre"
+
+#: app/templates/chatii.html:19
+msgid "Join Room"
+msgstr "Rejoignez la salle"
+
+#: app/templates/chatii.html:20
+msgid "Create Room"
+msgstr "Créer une salle"
+
+#: app/templates/edit_account.html:7 app/templates/edit_account_admin.html:7
+#: app/templates/user.html:66 app/templates/user.html:71
+msgid "Edit Account"
+msgstr "Modifier le compte"
+
+#: app/templates/edit_account.html:25 app/templates/edit_account_admin.html:25
+msgid "Joined"
+msgstr "Inscrit"
+
+#: app/templates/edit_account.html:33
+msgid "Disable MFA"
+msgstr "Désactiver MFA"
+
+#: app/templates/edit_account.html:38
+msgid "Enable MFA"
+msgstr "Activer MFA"
+
+#: app/templates/edit_account.html:43
+msgid "My QR"
+msgstr "Mon QR"
+
+#: app/templates/edit_account.html:45
+msgid "Confirm account"
+msgstr "Confirmer le compte"
+
+#: app/templates/auth/change_password.html:7 app/templates/edit_account.html:48
+msgid "Change password"
+msgstr "Changer le mot de passe"
+
+#: app/templates/edit_account.html:49
+msgid "Change email"
+msgstr "Changer d'email"
+
+#: app/templates/edit_account.html:50 app/templates/edit_account_admin.html:46
+msgid "Delete Account"
+msgstr "Supprimer le compte"
+
+#: app/templates/edit_account_admin.html:26
+msgid "Last seen"
+msgstr "Vu pour la dernière fois"
+
+#: app/templates/edit_follower.html:13 app/templates/edit_following.html:13
+#: app/templates/follower.html:13 app/templates/following.html:13
+#, python-format
+msgid "%(count)s followers"
+msgstr "%(count)s suiveurs"
+
+#: app/templates/edit_follower.html:13 app/templates/edit_following.html:13
+#: app/templates/follower.html:13 app/templates/following.html:13
+#, python-format
+msgid "%(count)s following"
+msgstr "%(count)s suivant"
+
+#: app/templates/edit_follower.html:19
+msgid "remove"
+msgstr "retirer"
+
+#: app/templates/edit_following.html:19 app/templates/user.html:53
+msgid "unfollow"
+msgstr "se désabonner"
+
+#: app/templates/edit_message.html:14
+#, python-format
+msgid "%(username)s"
+msgstr "%(username)s"
+
+#: app/templates/edit_post.html:18
+msgid "Edit Comment"
+msgstr "Modifier le commentaire"
+
+#: app/templates/edit_post.html:20
+msgid "Delete Post"
+msgstr "Supprimer la publication"
+
+#: app/templates/inbox.html:10
+msgid "Edit Messages"
+msgstr "Modifier les messages"
+
+#: app/templates/moderate.html:6
+msgid "Flagged Post"
+msgstr "Message signalé"
+
+#: app/templates/post.html:96
+msgid "Edit"
+msgstr "Editar"
+
+#: app/templates/post.html:104
+msgid "Comment"
+msgstr "Commentaire"
+
+#: app/templates/post_comment.html:41 app/templates/user_comment.html:41
+msgid "view post"
+msgstr "voir le message"
+
+#: app/templates/post_comment.html:49 app/templates/post_comment.html:68
+#: app/templates/user_comment.html:49 app/templates/user_comment.html:68
+msgid "enable"
+msgstr "activer"
+
+#: app/templates/post_comment.html:52 app/templates/post_comment.html:69
+#: app/templates/user_comment.html:52 app/templates/user_comment.html:69
+msgid "disable"
+msgstr "désactiver"
+
+#: app/templates/user.html:46
+msgid "follow"
+msgstr "suivre"
+
+#: app/templates/user.html:85 app/templates/user.html:160
+msgid "followers"
+msgstr "suiveurs"
+
+#: app/templates/user.html:89 app/templates/user.html:164
+msgid "following"
+msgstr "suivant"
+
+#: app/templates/user.html:94 app/templates/user.html:156
+msgid "Posts"
+msgstr "Articles"
+
+#: app/templates/user.html:96
+msgid "View comments"
+msgstr "Voir les commentaires"
+
+#: app/templates/view_notification.html:21
+msgid "Join Chatii"
+msgstr "Rejoignez Chatii"
+
+#: app/templates/view_notification.html:31
+msgid "View post"
+msgstr "Voir l'article"
+
+#: app/templates/auth/auth_macros.html:12
+#: app/templates/auth/auth_macros.html:46
+#: app/templates/auth/auth_macros.html:70
+msgid "Username"
+msgstr "Nom d'utilisateur"
+
+#: app/templates/auth/auth_macros.html:16
+#: app/templates/auth/auth_macros.html:83
+msgid "Email"
+msgstr "Email"
+
+#: app/templates/auth/auth_macros.html:25
+#: app/templates/auth/auth_macros.html:99
+#: app/templates/auth/auth_macros.html:131
+msgid "Confirm password"
+msgstr "Confirmez le mot de passe"
+
+#: app/templates/auth/auth_macros.html:58
+msgid "Remember me"
+msgstr "Souviens-toi de moi"
+
+#: app/templates/auth/auth_macros.html:111
+msgid "Enter token"
+msgstr "Entrez le jeton"
+
+#: app/templates/auth/auth_macros.html:123
+msgid "Current password"
+msgstr "Mot de passe actuel"
+
+#: app/templates/auth/change_email.html:7
+msgid "Change email: "
+msgstr "Changer d'e-mail: "
+
+#: app/templates/auth/login.html:10
+msgid "New user?"
+msgstr "Nouvel utilisateur?"
+
+#: app/templates/auth/login.html:13
+msgid "Forgot password?"
+msgstr "Mot de passe oublié?"
+
+#: app/templates/auth/login.html:14 app/templates/auth/reset_password.html:7
+msgid "Reset password"
+msgstr "Réinitialiser le mot de passe"
+
+#: app/templates/auth/login.html:17
+msgid "Lost token?"
+msgstr "Jeton perdu?"
+
+#: app/templates/auth/login.html:18
+msgid "Reset admin token"
+msgstr "Réinitialiser le jeton d'administration"
+
+#: app/templates/auth/request_admin_token.html:7
+msgid "Request admin token"
+msgstr "Demande de jeton d'administrateur"
+
+#: app/templates/auth/request_password_reset.html:7
+msgid "Request password reset"
+msgstr "Demande de réinitialisation du mot de passe"
+
+#: app/templates/auth/setup_mfa.html:7
+msgid "Scan QR"
+msgstr "Scanner le code QR"
+
+#: app/templates/email/admin_token.html:8
+#: app/templates/email/change_email.html:12
+#: app/templates/email/confirm_account.html:12
+#: app/templates/email/export_posts.html:6
+#: app/templates/email/reset_password.html:12
+msgid "Note: DO NOT REPLY"
+msgstr "Remarque : NE PAS RÉPONDRE"
+
+#: app/templates/email/change_email.html:7
+msgid "Confirm email link"
+msgstr "Confirmer le lien e-mail"
+
+#: app/templates/email/change_email.html:10
+#: app/templates/email/confirm_account.html:10
+#: app/templates/email/reset_password.html:10
+msgid "Copy link:"
+msgstr "Copier le lien:"
+
+#: app/templates/email/confirm_account.html:7
+msgid "Confirm account link"
+msgstr "Confirmer le lien du compte"
+
+#: app/templates/email/export_posts.html:5
+msgid "Posts archive is attached"
+msgstr "Les archives des articles sont jointes"
+
+#: app/templates/email/reset_password.html:7
+msgid "Reset password link"
+msgstr "Lien de réinitialisation du mot de passe"
+
+#: app/templates/errors/403.html:6
+msgid "Forbidden"
+msgstr "Interdit"
+
+#: app/templates/errors/403.html:8 app/templates/errors/404.html:8
+#: app/templates/errors/500.html:9
+msgid "Homepage"
+msgstr "Page d'accueil"
+
+#: app/templates/errors/500.html:6
+msgid "Unexpected error has occurred"
+msgstr "Une erreur inattendue s'est produite"
+
+#: app/templates/errors/500.html:7
+msgid "Administrator has been notified"
+msgstr "L'administrateur a été notifié"
+

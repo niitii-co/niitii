@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    {% if user.can_view() %}
+    <div class="row d-flex justify-content-center">
+      <div class="col-sm-12 col-md-10 col-lg-8 col-xl-6 col-xxl-6">
+        <div class="card border-top-0">
+          <div class="rounded-top d-flex flex-row h-100" >
+            <div class="ms-3 w-25 d-flex flex-column h-100" >
+              <img class="rounded-circle avatar-lg mx-auto mt-5" {% if user.photo %} src="{{ user.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %}alt="photo" >
+              <p class="m-0 text-center small mt-2">
+                {{ user.username }}{% if age != None %}, {{ age }}{% endif %}
+                {% if user.verified %}
+                &#x2713;&#xfe0e;
+                {% elif user.confirmed %}
+                &#xB7;&#xfe0e;
+                {% endif %}
+                {% if user.banner_flag %}<span>{{ user.banner_flag }}</span>{% endif %}
+              </p>
+                {% if user.label %}
+                    <p class="m-0 badge rounded-pill text-bg-secondary small">{{ user.label }}</p>
+                {% endif %}
+            </div>
+            <div class="pt-5 w-100 text-center">
+                {% set song = user.get_song() %}
+                {% if song %}
+                    <p class="m-0 my-1"><a class="text-decoration-none song" href="{{ song.get('link') }}" target="_blank" rel="noopener noreferrer">{{ song.get('name') | truncate(32) }}</a></p>
+                {% endif %}
+
+                {% if user.location %}
+                    <p class="m-0 small"><a class="text-decoration-none" href="https://www.google.com/maps?q={{ user.location }}" target="_blank" rel="noopener noreferrer">{{ user.location }}</a></p>
+                {% endif %}
+
+                {% if current_user.is_authenticated %}
+                {% if current_user != user %}
+                    <div class="w-25 mx-auto d-flex justify-content-evenly">
+                        <a class="my-1 text-decoration-none" href="{{ url_for('main.message', username=user.username) }}">&#x2709;&#xfe0e;</a>
+                        {% set action %}{{ url_for('main.ping', username=user.username) }}{% endset %}
+                        {{ macros.ping_user_modal(action=action) }}
+                    </div>
+                    
+                    {% if not current_user.is_following(user.username) %}
+                    <div class="my-1">
+                    {% set action %}{{ url_for('main.follow', username=user.username) }}{% endset %}
+                    {% set follow %}{{ _('follow') }}{% endset %}
+
+                    {{ macros.empty(action=action, value="follow", label=follow) }}
+                    </div>
+                    {% elif current_user.is_following(user.username)  %}
+                    <div class="my-1">
+                    {% set action %}{{ url_for('main.unfollow', username=user.username) }}{% endset %}
+                    {% set unfollow %}{{ _('unfollow') }}{% endset %}
+
+                    {{ macros.empty(action=action, value="unfollow", label=unfollow) }}
+                    </div>
+                    {% endif %}
+                {% endif %}                    
+
+                {% if current_user == user %}
+                <div class="w-25 mx-auto d-flex justify-content-evenly">
+                {% set action %}{{ url_for('main.ping_follower') }}{% endset %}
+                {{ macros.ping_user_modal(action=action, follower=True) }}
+                </div>                
+                <span><a class="my-1 btn btn-outline-dark btn-sm" href="{{ url_for('main.edit_account') }}">
+                    {{ _('Edit Account') }}
+                </a></span>
+                {% endif %}
+
+                {% if current_user != user and current_user.can("MODERATE")%}
+                    <span><a class="my-1 btn btn-outline-dark btn-sm" href="{{ url_for('main.edit_account_admin', username=user.username) }}">{{ _('Edit Account') }}</a></span>
+                {% endif %}
+                {% endif %}
+            </div>
+          </div>
+          {% if user.about_me %}
+          <div class="mt-3 mx-3">
+            <p class="m-0 pre-wrap">{{ user.about_me }}</p>
+          </div>
+         {% endif %}
+          <div class="mt-3 mx-3">
+            <div class="d-flex justify-content-end text-center">
+              <div class="pe-3">
+                <p class="m-0 fs-5 fw-medium">{{ user.followers_count() }}</p>
+                <p class="m-0 small text-muted"><a class="text-decoration-none" {% if current_user == user %} href="{{ url_for('main.edit_follower') }}" {% else %} href="{{ url_for('main.follower', username=user.username) }}" {% endif %}>{{ _('followers') }}</a></p>
+              </div>
+              <div>
+                <p class="m-0 fs-5 fw-medium">{{ user.following_count() }}</p>
+                <p class="m-0 small text-muted"><a class="text-decoration-none" {% if current_user == user %} href="{{ url_for('main.edit_following') }}" {% else %} href="{{ url_for('main.following', username=user.username) }}" {% endif %}>{{ _('following') }}</a></p>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <p class="m-0 fs-5 text-muted">{{ _('Posts') }}: {{ user.posts_count() }}</p>
+                {% if current_user.is_authenticated  and (current_user == user or current_user.can('MODERATE')) %}
+              <p class="m-0 d-inline"><a class="text-decoration-none" href="{{ url_for('main.user_comment', username=user.username) }}">{{ _('View comments') }}: {{ user.get_comment_count() }}</a></p>
+                {% else %}
+              <p class="m-0 fs-5 text-muted">{{ _('Comments') }}: {{ user.get_comment_count() }}</a></p>
+                {% endif %}
+            </div>
+            <div class="mt-2">
+                {% for post in posts %}
+                    {% with user_page=True %}
+                        {% include '_post.html' %}
+                    {% endwith %}
+                {% endfor %}
+
+                {{ macros.pagination(pagination, 'main.user', username=user.username) }}
+            </div>
+           </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+<!--    User cannot view    -->
+    <div class="row d-flex justify-content-center">
+      <div class="col-sm-12 col-md-10 col-lg-8 col-xl-6 col-xxl-6">
+        <div class="card border-top-0">
+          <div class="rounded-top d-flex flex-row h-100" >
+            <div class="ms-3 w-25 d-flex flex-column h-100" >
+              <img class="rounded-circle avatar-lg mx-auto mt-5" {% if user.photo %} src="{{ user.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %}alt="photo" >
+              <p class="m-0 text-center small mt-2">
+                {{ user.username }}{% if age != None %}, {{ age }}{% endif %}
+                {% if user.verified %}
+                &#x2713;
+                {% elif user.confirmed %}
+                &#xB7;
+                {% endif %}
+                {% if user.banner_flag %}<span>{{ user.banner_flag }}</span>{% endif %}
+              </p>
+                {% if user.label %}
+                    <p class="m-0 badge rounded-pill text-bg-secondary small">{{ user.label }}</p>
+                {% endif %}
+            </div>
+            <div class="pt-5 w-100 text-center">
+                {% set song = user.get_song() %}
+                {% if song %}
+                    <p class="m-0 my-1"><a class="text-decoration-none song" href="{{ song.get('link') }}" target="_blank" rel="noopener noreferrer">{{ song.get('name') }}</a></p>
+                {% endif %}
+                {% if user.location %}
+                    <p class="m-0 small"><a class="text-decoration-none" href="https://www.google.com/maps?q={{ user.location }}" target="_blank" rel="noopener noreferrer">{{ user.location }}</a></p>
+                {% endif %}
+                {% if current_user.is_authenticated %}
+                <div class="w-25 mx-auto d-flex justify-content-evenly">
+                    {% set action %}{{ url_for('main.ping', username=user.username) }}{% endset %}
+                    {{ macros.ping_user_modal(action=action) }}
+                </div>
+                {% endif %}
+            </div>
+          </div>
+          <div class="mt-3 mx-3">
+            <div class="d-flex justify-content-end text-center">
+              <div class="pe-3">              
+                <p class="m-0 fs-5 fw-medium">{{ user.posts_count() }}</p>
+                <p class="m-0 small text-muted">{{ _('Posts') }}</p>
+              </div>
+              <div class="pe-3">
+                <p class="m-0 fs-5 fw-medium">{{ user.followers_count() }}</p>
+                <p class="m-0 small text-muted">{{ _('followers') }}</a></p>
+              </div>
+              <div>
+                <p class="m-0 fs-5 fw-medium">{{ user.following_count() }}</p>
+                <p class="m-0 small text-muted">{{ _('following') }}</a></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}    
+
+    <script type="text/javascript" charset="utf-8">
+// create div at the end of <body>
+        const lightbox = document.createElement('div');
+        lightbox.id = 'lightbox';
+        document.body.appendChild(lightbox);
+    </script>
+
+    <script type="text/javascript">
+        const showBtn = document.getElementById("showDialog");
+        
+// showBtn(ping dialog) will not be true if the current_user is viewing their own page. Browser will throw errors                
+        if (showBtn) {
+            const pingDialog = document.getElementById("pingDialog");
+// const confirmBtn = pingDialog.querySelector("#confirm"); - Not needed
+            const closeBtn = pingDialog.querySelector("#close");
+            
+            
+// "Show the dialog" button opens the <dialog> modal
+            showBtn.addEventListener("click", () => {
+              pingDialog.showModal();
+            });
+
+// "Cancel" button closes the dialog without submitting because of (formmethod="dialog") attribute in closeBtn, triggering a close event.
+            closeBtn.addEventListener("click", () => {
+                document.forms['ping'].reset()
+                pingDialog.close();
+            });
+        }
+              
+        function sendForm(target, submitter) {
+            let postForm = new FormData(target);
+            postForm.append('submit', submitter.value);
+            const url = target.action;
+
+            fetch(url, {
+                method: 'POST',         
+                body: postForm,
+            })
+            .then((response) => response.text())
+            .then((text) => {
+                if (submitter.value === 'follow') {
+                    submitter.innerHTML = 'unfollow';                
+                    submitter.value = 'unfollow';
+                }
+// Must define 'else if' so that the 'Send' button inside pingDialog modal isn't changed to 'follow'
+                else if (submitter.value === 'unfollow') {
+                    submitter.innerHTML = 'follow';
+                    submitter.value = 'follow';
+                };
+            })
+            .catch(console.error);
+        }
+
+        document.addEventListener('submit', (e) => {
+            if (e.target.id != 'search') {
+                e.preventDefault();
+                sendForm(e.target, e.submitter);
+                e.target.reset()
+            }
+            if (e.target.id == 'ping') {
+                document.getElementById("pingDialog").close();
+            }
+       });
+       
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('.avatar-lg').addEventListener('dblclick', function(e) {
+// class 'active' will display lightbox. Styles applied in style.css
+                lightbox.classList.add('active')
+                const box_img = document.createElement('img')
+                box_img.src = e.target.src
+                while (lightbox.firstChild) {
+// Remove all child elements so there are no images for lightbox.appendChild(box_img)
+                    lightbox.removeChild(lightbox.firstChild)
+                }
+                lightbox.appendChild(box_img)            
+            });
+
+            lightbox.addEventListener('click', e => {
+        // Exit if anything besides the lightbox is clicked. e.target any item that's clicked. e.currentTarget is lightbox.
+                if (e.target !== e.currentTarget) return
+                lightbox.classList.remove('active')
+            });
+
+            // *DOES NOT WORK* - hide lightbox with 'Esc' key
+            lightbox.addEventListener('keydown', function(event) {
+                // active element is body
+                const lightbox = document.activeElement.querySelector('#lightbox')
+
+                if (lightbox.className == 'active' && event.key === 'Escape') {
+                    lightbox.classList.remove('active')
+                }
+            });
+        });
+       
+    </script>
+{% endblock %}

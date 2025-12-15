@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% import "auth/auth_macros.html" as macros %}
+
+{% block content %}
+    <div class="row justify-content-center align-items-center mt-2">
+    <div class="col-sm-12 col-md-10 col-lg-8 col-xl-6 col-xxl-6">
+    <h3>{{_('Change email: ')}}</h3>
+    <span class="my-5">{{ current_user.email}}</span>
+        {{ macros.change_email() }}
+    </div>
+    </div>
+{% endblock %}

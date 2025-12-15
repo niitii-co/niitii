@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    <div class="row justify-content-center align-items-center mt-2">
+    <div class="col-sm-12 col-md-10 col-lg-8 col-xl-6 col-xxl-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between py-2">
+                <p class="m-0 fs-3 font-weight-bold text-lg-start">{{ _('Inbox') }}</p>
+                <p class="m-0 py-2"><a class="text-decoration-none text-lg-end" href="{{ url_for('main.edit_message') }}">{{ _('Edit Messages') }}</a></p>
+            </div>
+          <div class="card-body w-auto h-10 overflow-y-auto">
+            <ul class="list-unstyled mb-0">
+            {% for m in messages %}
+            {% if m.sender == current_user %}
+                {% set username %}{{ m.recipient.username }}{% endset %}
+                {% set converser %}{{ m.recipient.username }}{% endset %}
+                {% set converser_photo %}{{ m.recipient.photo }}{% endset %}
+            {% else %}
+                {% set username %}{{ m.sender.username }}{% endset %}
+                {% set converser %}{{ m.sender.username }}{% endset %}
+                {% set converser_photo %}{{ m.sender.photo }}{% endset %}                
+            {% endif %}
+              <li class="p-2 border-bottom">
+                <a class="text-decoration-none d-flex justify-content-between" href="{{ url_for('main.message', username=username) }}">
+                  <div class="d-flex flex-row">
+                    <div class="d-flex flex-column">
+                    <img class="rounded-circle d-flex align-self-center shadow-1-strong avatar-md" {% if converser_photo  and converser_photo != 'None'%} src="{{ converser_photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="avatar">
+                    <p class="m-0 fs-5 fw-medium text-center text-body">
+                    {{ converser }}
+                    </p>
+                    </div>
+                    <div class="ms-3 my-auto">
+                        <p class="m-0 small text-muted">{{  m.decrypt(m.body) | truncate(128) }}</p>
+                    </div>
+                  </div>
+                    <time class="d-flex justify-content-end text-nowrap text-muted" datetime="{{m.timestamp}}">{{ moment(m.timestamp).format('D MMM H:mm') }}</time>
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{ macros.pagination(pagination, 'main.inbox') }}
+{% endblock %}

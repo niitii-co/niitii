@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    <div class="row justify-content-center align-items-center mt-2">
+    <div class="col-sm-12 col-md-10 col-lg-8 col-xl-8 col-xxl-8">
+        <h3>{{ _('Edit Post') }}: <a class="text-decoration-none" href="{{ url_for('main.post', id=post.id) }}">{{ post.id }}</a></h3>
+        <div class="mb-4">
+        {% if current_user.is_authenticated %}
+            {% if current_user == post.author %}
+                    {{ macros.edit_post(post=post, tags=tags, photos=post.get_photos()) }}
+            {% elif current_user.can("MODERATE") %}
+                    {% set label = post.label if post.label else 'None' %}
+                    {{ macros.edit_post(post=post, tags=tags, photos=post.get_photos(), mod=True) }}
+            {% endif %}
+        {% endif %}
+        </div>
+        <div class="fs-5 mb-4"><a class="text-decoration-none" href="{{ url_for('main.post_comment', id=post.id) }}">{{ _('Edit Comment') }}</a>
+        </div>
+        <h3>{{ _('Delete Post') }}</h3>
+            {% set action %}{{ url_for('main.del_post', id=post.id) }}{% endset %}
+            {{ macros.del_post_modal(action=action, value="del_post")}}
+            {{ macros.del_btn() }}
+    {% if post.editor and current_user.can("MODERATE") %}
+        <p class="m-0 mt-3">{{ post.editor }}</p>
+    {% endif %}            
+    </div>
+    </div>
+
+
+    <script type="text/javascript">
+        // Alert user of files over 10MB
+        fileInput = document.getElementById('fileInput');
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                let files = Array.from(e.target.files);
+                for (let i = 0; i < files.length; i++) {
+                    if (files[i].size > (1024 * 1024 * 10)) {
+                        size = Math.floor(files[i].size / (1024 * 1024));
+                        alert(`LIMIT 10MB \n${files[i].name} - ${size}MB`);
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('submit', (e) => {
+            // Create DataTransfer to check files over 10MB
+            let dt = new DataTransfer();
+            let files = e.target.photo.files
+
+            if (files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    if (files[i].size > (1024 * 1024 * 10)) {
+                        continue; // Skip. Do not add to dt
+                    }
+                    // add files to dt object
+                    dt.items.add(files[i]);
+                }
+            }
+            // update event files before submitting
+            e.target.photo.files = dt.files;
+       });
+
+        const showBtn = document.querySelector("#showDialog");
+        const delDialog = document.querySelector("#delDialog");
+        const confirmBtn = delDialog.querySelector("#confirm");
+        const closeBtn = delDialog.querySelector("#close");
+
+        // "Show the dialog" button opens the <dialog> modal
+        showBtn.addEventListener("click", () => {
+          delDialog.showModal();
+        });
+
+        // "Cancel" button closes the dialog without submitting because of [formmethod="dialog"], triggering a close event.
+        closeBtn.addEventListener("click", () => {
+            delDialog.close();
+        });
+
+        // Prevent the "confirm" button from the default behavior of submitting the form, and close the dialog with the `close()` method, which triggers the "close" event.
+        confirmBtn.addEventListener("click", () => {
+        });
+    </script>
+{% endblock %}

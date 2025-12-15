@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    {% for n in notifications %}
+    <div class="card-body py-0 mx-auto card-width" id="n{{n.id}}">
+        <div>
+<!--            title-->
+            <p class="m-0">
+            <span class="fs-6 fw-bold">{{ n.get_payload()['title'] }}</span>
+            <span>
+            <time datetime="{{n.timestamp}}">{{ moment(n.timestamp).format('D/MM/YY H:mm') }}</time>
+            </span>
+            </p>
+
+            {% if n.item_type == 'comment' %}
+<!--            body - rendered html as safe for comment notification-->
+            <p class="m-0 mt-1 pre-wrap">{{ n.get_payload()['body'] | safe}} {{ n.get_payload()['author'] | safe}}<span class="d-block mt-1 fs-6">{{ n.get_payload()['sender']}}</span></p>
+            {% elif n.item_type == 'chatii' %}
+            <p class="m-0 mt-1">
+            <a class="text-decoration-none text-lg-end btn btn-outline-dark btn-sm px-1" href="{{ url_for('main.chatii', room=n.get_payload()['body']) }}">{{ _('Join Chatii') }}</a>
+            <span class="d-block mt-1 fs-6">{{ n.get_payload()['sender']}}</span>
+            </p>
+            {% else %}
+            <p class="m-0 d-inline mt-1 pre-wrap">{{ n.get_payload()['body'] | safe}} {{ n.get_payload()['author'] | safe}}<span class="d-block mt-1 fs-6">{{ n.get_payload()['sender']}}</span></p>
+            {% endif %}
+
+        </div>
+        <div>
+            {% if n.item_id %}
+            <p class="m-0 d-inline small"><a class="text-decoration-none" href="{{ url_for('main.post', id=n.item_id) }}">{{ _('View post') }}</a>
+            </p>
+            {% endif %}
+            {% set action %}{{ url_for('main.del_notification', id=n.id) }}{% endset %}
+            {{ macros.empty(action=action, value="delete", input_id=n.id) }}
+        </div>
+        <hr class="my-2">
+    </div>
+    {% endfor %}
+
+    {{ macros.pagination(pagination, 'main.view_notification') }}
+
+    <script type="text/javascript">
+        let notification_count = Number(document.getElementById('notification_count').innerHTML)
+
+        function sendForm(target, submitter) {
+            let postForm = new FormData(target);
+            postForm.append('submit', submitter.value);
+
+            const input_id = target.input_id.value;
+            const url = target.action;
+
+            fetch(url, {
+                method: 'POST',
+                body: postForm,
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                document.getElementById(`n${input_id}`).remove();
+                if (Number(data.notification_count) > 0) {
+                    document.getElementById('notification_count').innerHTML = data.notification_count;
+                }
+                else {
+                    document.getElementById('notification_count').style.display = 'none';
+                };
+            })
+            .catch(console.error);
+        }
+        document.addEventListener('submit', (e) => {
+            eButton = e.target.querySelector('button').value
+            if (eButton == 'delete') {
+                e.preventDefault();
+                sendForm(e.target, e.submitter);
+            }
+       });
+    </script>
+{% endblock %}

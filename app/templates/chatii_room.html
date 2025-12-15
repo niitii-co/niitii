@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    <div class="row justify-content-center align-items-center mt-2">
+        <div class="col-sm-12 col-md-10 col-lg-8 col-xl-6 col-xxl-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-evenly align-items-center p-0">
+                <p class="m-0 fs-3">Chatii: {{code}}</p>
+                {% set action %}{{ url_for('main.invite_chat') }}{% endset %}
+                {% set roomCode %}{{ code }}{% endset %}
+                {{ macros.invite_modal(action=action, roomCode=roomCode) }}
+            </div>
+            <div class="card-body w-auto overflow-y-auto" id="messages">
+                    <!--javascript adds messages here-->
+            </div>
+        <form action="" method="post" enctype="multipart/form-data">
+            <div class="d-flex justify-content-start align-items-center card-footer text-muted p-0 px-3">
+            <input  name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+                <div class="me-3">
+                    <label for="photo" class="form-label">&#x1F4CE;&#xfe0e;</label>
+                    <input class="form-control d-none" type="file" id="photo" name="photo" accept="image/*, .jpg, .jpeg, .png, .gif" multiple>
+                </div>
+                <textarea id="message" autofocus class="form-control me-3" maxlength="256" minlength="1" rows="" name="message" required></textarea>
+                <button  id="sendBtn" class="btn btn-outline-primary btn-sm mt-2" type="submit" name="send">{{ _('Send') }}</button>
+            </div>
+        </form>
+        </div>
+        </div>
+    </div>
+
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+        integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+        crossorigin="anonymous">
+    </script>
+    
+    <script type="text/javascript" charset="utf-8">
+/*
+    Earlier version added the div after document.addEventListener('DOMContentLoaded'.
+    This didn't work when the page refreshed
+    Error: Uncaught ReferenceError: lightbox is not defined
+*/
+        const lightbox = document.createElement('div');
+        lightbox.id = 'lightbox';
+        document.body.appendChild(lightbox);
+    </script>
+
+    <script type="text/javascript" charset="utf-8">
+        let socket = io();
+
+        // listen for 'message' event from app server with data.
+        socket.on("message", (data) => {
+            showMessage(data.name, data.body, data.img, data.time);
+        });
+
+        const messages = document.querySelector('#messages');
+        const showBtn = document.getElementById("showDialog");
+
+
+        if (showBtn) {
+            const inviteChatDialog = document.getElementById("inviteChatDialog");
+            const closeBtn = inviteChatDialog.querySelector("#close");
+
+// "Show the dialog" button opens the <dialog> modal
+            showBtn.addEventListener("click", () => {
+              inviteChatDialog.showModal();
+            });
+
+// "Cancel" button closes the dialog without submitting because of [formmethod="dialog"], triggering a close event.
+            closeBtn.addEventListener("click", () => {
+                document.forms['inviteChat'].reset();
+                inviteChatDialog.close();
+            });
+        }
+
+        const showMessage = (name, body, image, time) => {
+            const options = { hour12: false, hour: "2-digit", minute: "2-digit"}
+            let msg_time = new Date(time).toLocaleTimeString([], options);
+
+            if (image && image !== 'None') {
+                let p = document.createElement("p");
+                p.classList.add("mb-2");
+                p.innerHTML = `\
+                        <a class="text-decoration-none d-block small" href="${window.location.origin}/${name}" target="_blank" rel="noopener noreferrer"><strong>${name}</strong></a>\
+                        <img class="img-fluid object-fit-scale mb-3" src="${image}">\
+                        <span class="d-block mb-0 rounded-3 text-body" style="font-size: .50rem;">${msg_time}</span>\
+                `;
+                messages.append(p);
+
+// Show lightbox
+                pImg = p.querySelector("img")
+
+                if (pImg) {
+                    pImg.addEventListener('dblclick', function(e) {
+                        lightbox.classList.add('active');
+                        const box_img = document.createElement('img');
+                        box_img.src = e.target.src;
+                        while (lightbox.firstChild) {
+// Remove all child elements so there are no images for lightbox.appendChild(box_img)
+                            lightbox.removeChild(lightbox.firstChild);
+                          }
+                        lightbox.appendChild(box_img);
+                    });
+                    lightbox.addEventListener('click', e => {
+// Exit if anything besides the lightbox is clicked. e.target any item that's clicked. e.currentTarget is lightbox.
+                        if (e.target !== e.currentTarget) return
+                            lightbox.classList.remove('active');
+                    });
+                }
+            }
+
+
+            if (body) {
+                let p = document.createElement("p");
+                p.classList.add("mb-2");                
+                p.innerHTML = `\
+                        <a class="text-decoration-none d-block small" href="${window.location.origin}/${name}" target="_blank" rel="noopener noreferrer"><strong>${name}</strong></a>\
+                        <p class="m-0 d-inline p-1 mb-1 rounded-3 bg-body-tertiary">${body}</p>\
+                        <span class="d-block mb-0 rounded-3 text-body" style="font-size: .50rem;">${msg_time}</span>\
+                `;
+                messages.append(p);
+            }
+        }
+
+        function sendForm(target, submitter) {
+            let postForm = new FormData(target);
+            postForm.append('submit', submitter.value);
+
+            const url = target.action;
+
+            fetch(url, {
+                method: 'POST',
+                body: postForm,
+            })
+        }
+
+// Send the message to server
+        document.addEventListener('submit', (e) => {
+            if (e.target.id != 'search') {
+                e.preventDefault();
+// True if event <textarea> contains [id="message"] or [name="message"]
+                if (e.target.message) {
+                    let msg = e.target.message.value
+                    let file = e.target.photo.files[0];
+                    let photo = document.getElementById("photo").files[0];
+                    let reader = new FileReader();
+
+                    if (msg == "" && typeof file == 'undefined') {
+                        return;
+                    }
+
+                    reader.addEventListener('load', () => {
+                            socket.emit('message', {body: msg, img: reader.result});
+                            e.target.reset();
+                        },
+                        false,
+                    );
+
+                    if (file) {
+                        reader.readAsDataURL(file);
+                    }
+                    else {
+                        socket.emit('message', {body: msg, img: null});
+                        e.target.reset();
+                    };
+// temporarily disable submit button for 5 secs
+                    const submitButton = document.getElementById('sendBtn');
+                    submitButton.disabled = true;
+                    setTimeout(function() {
+                        submitButton.disabled = false;
+                    }, 5000);
+                }
+                if (e.target.id == 'inviteChat') {
+                    sendForm(e.target, e.submitter);
+                    document.forms['inviteChat'].reset();
+                    document.getElementById("inviteChatDialog").close();
+                }
+            }
+        });
+        
+        document.querySelector('textarea').addEventListener('focus', function() {
+            this.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+    </script>
+
+    {% for msg in messages %}
+        <script type="text/javascript">
+            showMessage("{{msg.name}}", "{{msg.body}}", "{{msg.img}}", {{msg.time}});
+
+            var msg_view = document.getElementById("messages");
+            msg_view.scrollTop = msg_view.scrollHeight;
+        </script>
+    {% endfor %}
+{% endblock %}

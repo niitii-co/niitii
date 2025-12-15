@@ -1,0 +1,99 @@
+{% for c in comments %}
+    {% set user = c.author %}
+<div id="comment{{c.id}}" class="card border-0 {% if not c.direct %} comment {% endif %}">
+    <div class="card-body p-0 mb-1">
+        <div>
+            {% if not c.ghost %}
+            {{ macros.avatar(user) }}
+            <span>{{ macros.user_link(user=user) }}</span>
+            {% else %}
+            <span>&#x1F47B;&#xfe0e;</span>
+            {% endif %}
+            {% if c.pinned %}
+            <span>&#x1F4CC;&#xfe0e;</span>
+            {% endif %}
+            {% if c.direct %}
+            <span>&#x1F576;&#xfe0e;</span>
+            {% endif %}
+            <span data-id="c{{c.id}}">
+            <time datetime="{{c.timestamp}}">{{ moment(c.timestamp).format('D/MM/YY H:mm') }}</time>
+            </span>
+            {% if c.parent_id %}
+                {% for p in comments %}
+                    {% if p.id == c.parent_id and not p.disabled %}
+                        {% if p.body_html %}
+                            {% set p_body %}
+                            {{ p.body_html | safe }}
+                            {% endset %}
+                        {% else %}
+                            {% set p_body %}
+                            {{ p.body }}
+                            {% endset %}
+                        {% endif %}
+                    <button popovertarget="parent-comment{{c.parent_id}}" class="m-0 p-0 pb-1 btn btn-outline-secondary border-0"><span>&#x1F441;&#xFE0F;&#x200D;&#x1F5E8;&#xFE0F;&#xfe0e;</span></button>
+                    <div popover id="parent-comment{{c.parent_id}}" class="rounded border border-secondary p-2 border-opacity-50 comment-height overflow-y-auto">{{ p_body }}</div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <div>
+            {% if c.disabled %}
+                <p class="m-0 small fst-italic">{{ _('Disabled') }}</p>
+            {% else %}
+                {% if c.body_html %}
+                    {% if c.body_html | length > 500 %}
+                    <input type="checkbox" name="read-more" id="read-more{{c.id}}" hidden>
+                    <div class="comment-body">
+                    {{ c.body_html | safe }}
+                    </div>
+                    <label for="read-more{{c.id}}"></label>
+                    {% else %}
+                    {{ c.body_html | safe }}
+                    {% endif %}
+                {% else %}
+                    {% if c.body | length > 500 %}
+                    <input type="checkbox" name="read-more" id="read-more{{c.id}}">
+                    <div class="comment-body">
+                    {{ c.body }}
+                    </div>
+                    <label for="read-more{{c.id}}"></label>
+                    {% else %}
+                    {{ c.body }}
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        </div>
+        {% if current_user.is_authenticated and current_user.can("COMMENT") and not post.disable_comments %}
+        {% if not c.ghost %}
+            {% set action %}{{ url_for('main.vote_comment', id=post.id) }}{% endset %}
+            {{ macros.vote(action=action, value="vote_comment", input_id=c.id, count=c.votes) }}
+
+            <button class="btn btn-sm dropdown-toggle ps-1 py-0" type="button" data-bs-toggle="collapse" data-bs-target="#reply_comment_{{ c.id }}" aria-expanded="False" aria-controls="reply_comment_{{ c.id }}">
+            <span>{{_('Reply')}}</span>
+            </button>
+            <div class="collapse" id="reply_comment_{{ c.id }}">
+            {% set action %}{{ url_for('main.reply_comment', id=post.id) }}{% endset %}
+            {{ macros.comment(action=action, author=user, comment_id=c.id, value="reply_comment") }}
+            </div>
+        {% endif %}
+        {% else %}
+            <span class="btn btn-outline-dark btn-sm border border-dark-subtle disabled px-1 py-0">
+                &#8679;&#xfe0e; {{ c.votes }}
+            </span>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+
+    <script type="text/javascript" charset="utf-8">
+    const images = document.querySelectorAll('img');
+
+    images.forEach(img => {
+        img.classList.contains("carousel-img") ? null : img.classList.add("img-fluid", "mb-2");
+    });
+    
+    </script>
+
+
+

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    {% for comment in comments %}
+        {% set user = comment.author %}
+        <div class="card-body py-0 mx-auto card-width" id="comment{{comment.id}}">
+            <div>
+                {% if not comment.ghost %}
+                {{ macros.avatar(user) }}
+                <span>{{ macros.user_link(user=user) }}</span>
+                {% endif %}
+                {% if comment.pinned %}
+                <span>&#x1F4CC;&#xfe0e;</span>
+                {% endif %}
+                {% if comment.direct %}
+                <span>&#x1F576;&#xfe0e;</span>
+                {% endif %}
+                <span>
+                <time datetime="{{comment.timestamp}}">{{ moment(comment.timestamp).format('D/MM/YY H:mm') }}</time>
+                </span>
+            </div>
+
+            <div>
+                <div id="comment_body{{comment.id}}">
+                {% if comment.disabled %}
+                    <p class="m-0 mt-1"><i>{{ _('Disabled') }}</i></p>
+                {% else %}
+                    {% if comment.body_html %}
+                        {{ comment.body_html | safe }}
+                    {% else %}
+                        {{ comment.body }}
+                    {% endif %}
+                {% endif %}
+                </div>
+
+                <div class="mt-2">
+                <span class="btn btn-outline-dark btn-sm border border-dark-subtle disabled px-1 py-0">&#x21E7;&#xfe0e; {{ comment.vote_count() }}</span>
+
+<!-- Cannot add fragment to post link since the post pagination will not match user-comment pagination-->
+                <p class="m-0 d-inline mx-1 small"><a class="text-decoration-none" href="{{ url_for('main.post', id=comment.post_id) }}">{{ _('view post') }}</a></p>
+
+                {% if current_user.is_authenticated %}
+                    {% if current_user == user or current_user.can("MODERATE") %}
+                    <div class="d-inline m-0">
+                    {% set action %}{{ url_for('main.disable_comment', id=comment.id) }}{% endset %}
+
+                    {% if comment.disabled %}
+                        {% set enable %}{{ _('enable') }}{% endset %}
+                        {{ macros.empty(action=action, value="enable", label=enable, input_id=comment.id) }}
+                    {% else %}
+                        {% set disable %}{{ _('disable') }}{% endset %}
+                        {{ macros.empty(action=action, btn="danger", value="disable", label=disable, input_id=comment.id) }}
+                    {% endif %}
+
+                    {% set action %}{{ url_for('main.del_comment', id=comment.id) }}{% endset %}
+                    {{ macros.empty(action=action, value="delete", input_id=comment.id) }}
+                    </div>
+                    {% endif %}
+                {% endif %}
+                </div>
+            </div>
+            <hr class="my-2">
+        </div>
+    {% endfor %}
+
+<!-- babel transalation text to update after fetch()-->
+            <span id="enable" hidden>{{ _('enable') }}</span>
+            <span id="disable" hidden>{{ _('disable') }}</span>
+            <span id="disabled" hidden>{{ _('Disabled') }}</span>
+
+    {{ macros.pagination(pagination, 'main.user_comment', username=user.username) }}
+
+    <script type="text/javascript"  charset="utf-8">
+        const images = document.querySelectorAll('img');
+
+        images.forEach(img => {
+            img.classList.add("img-fluid");
+        });
+
+        function sendForm(target, submitter) {
+            let postForm = new FormData(target);
+// FormData only send the <input>. <button> is appended to the form
+            postForm.append('submit', submitter.value);
+            if (target.input_id) {
+                postForm.append('input_id', target.input_id.value);
+            }
+
+            const url = target.action;
+            const enable = document.getElementById('enable').innerHTML;
+            const disable = document.getElementById('disable').innerHTML;
+            const disabled = document.getElementById('disabled').innerHTML;
+            const commentId = input_id = target.input_id.value;
+
+            fetch(url, {
+                method: 'POST',
+                body: postForm,
+            })
+            .then((response) => response.text())
+            .then((text) => {
+                if (submitter.value === 'delete') {
+// remove comment from view
+                    document.getElementById(`comment${commentId}`).remove();
+                }
+                else if (submitter.value === 'disable') {
+// update button value for disable/enable
+                    document.getElementById(`comment_body${commentId}`).innerHTML = `
+                        <p class="m-0"><i>${disabled}</i></p>
+                    `;
+                    submitter.className = 'btn btn-outline-primary btn-sm px-1 py-0';
+                    submitter.innerHTML = `${enable}`;
+                    submitter.value = 'enable';
+                }
+                else {
+                    const parser = new DOMParser();
+                    const resDoc = parser.parseFromString(text, "text/html");
+
+// display the comment body and resize images
+                    content = resDoc.getElementById(`comment_body${commentId}`);
+                    content.querySelectorAll('img').forEach(img => {
+                        img.classList.add("img-fluid");
+                    });
+                    document.getElementById(`comment_body${commentId}`).innerHTML = content.innerHTML;
+
+                    submitter.className = 'btn btn-outline-danger btn-sm px-1 py-0';
+                    submitter.innerHTML = `${disable}`;
+                    submitter.value = 'disable';
+                    
+                };
+            })
+            .catch(console.error);
+        }
+        document.addEventListener('submit', (e) => {
+            if (e.target.id != 'search') {
+                e.preventDefault();
+                sendForm(e.target, e.submitter);
+            }
+       });
+    </script>
+{% endblock %}

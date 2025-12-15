@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    {% for m in messages %}
+    {% set user = m.recipient %}
+    <div class="card-body py-0 mx-auto card-width" id="message{{m.id}}">
+        <div>
+            <div>
+                {{ macros.avatar(user) }}
+                {% set user_link %}
+                {{ macros.user_link(user=user) }}
+                {% endset %}
+            <span>{{ _('%(username)s', username=user_link) }}</span>
+            <span>
+            <time datetime="{{m.timestamp}}">{{ moment(m.timestamp).format('D/MM/YY H:mm') }}</time>
+            </span>
+            <div class="mt-2">
+                {%if m.photos %}
+                      <img class="d-block img-fluid object-fit-scale mb-2" src="{{ m.get_url() }}" alt="message photo">
+                {% endif %}
+                <p class="mt-2 mb-0">{{ m.decrypt(m.body) }}</p>
+            </div>
+            {% if current_user.is_authenticated %}
+                <div>
+                    {% set action %}{{ url_for('main.del_message', id=m.id) }}{% endset %}
+                    {{ macros.empty(action=action, value="delete", input_id=m.id) }}
+                </div>
+            {% endif %}
+            </div>
+        </div>
+    <hr class="my-2">
+    </div>
+    {% endfor %}
+
+    {{ macros.pagination(pagination, 'main.edit_messages', username=current_user.username) }}
+
+    <script type="text/javascript">
+        function deleteContent(target, submitter) {
+            let postForm = new FormData(target);
+            // FormData only send the <input>. <button> is appended to the form
+            postForm.append('submit', submitter.value);
+            postForm.append('input_id', target.input_id.value);
+
+            const input_id = target.input_id.value;
+            const url = target.action;
+
+            fetch(url, {
+                method: 'POST',
+                body: postForm,
+            })
+            .then((response) => response.text())
+            .then((text) => {
+                    document.getElementById(`message${input_id}`).remove();
+            })
+            .catch(console.error);
+        }
+        document.addEventListener('submit', (e) => {
+            if (e.target.id != 'search') {
+                e.preventDefault();
+                deleteContent(e.target, e.submitter);
+            }
+       });
+    </script>     
+{% endblock %}

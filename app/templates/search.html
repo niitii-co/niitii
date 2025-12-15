@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    {% for post in posts %}
+        {% include '_post.html' %}
+    {% endfor %}
+    
+    {{ macros.pagination(pagination, 'main.search', q=q) }}
+{% endblock %}

@@ -1,0 +1,7 @@
+{{ user.username }},
+
+{{ _('Posts archive is attached.') }}
+
+{{ _('Note: DO NOT REPLY') }}
+
+niitii

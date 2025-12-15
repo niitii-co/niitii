@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    <div class="row justify-content-center align-items-center mt-2 mx-auto">
+    <div class="col-sm-12 col-md-10 col-lg-8 col-xl-6 col-xxl-6">
+    <form method="post" class="col-sm-2 col-md-6 col-lg-8 col-xl-6 col-xxl-6"> 
+        <input id="csrf_token" name="csrf_token" type="hidden" value="{{ csrf_token() }}">    
+        <h3>Chatii</h3>
+        <div class="mb-3">
+            <label class="form-label" for="name">{{ _('Name') }}</label>
+            <input autofocus class="form-control" id="name" type="text" maxlength="30" name="name" {% if not name %}value="{{current_user.username}}"{% else %}value="{{ name }}"{% endif %} autocomplete="off" required/>
+        </div>
+        <div class="mb-3"> 
+            <label class="form-label" for="roomCode">{{ _('Room Code') }}{% if err_msg %} - <span class="text-danger">{{ err_msg }}</span>{% endif %}</label>
+            <input class="form-control" id="roomCode" type="text" name="code" value="{{code}}" autocomplete="off"/>
+        </div>
+        <div class="d-flex justify-content-between">
+            <button class="btn btn-outline-primary btn-sm" type="submit" name="join">{{ _('Join Room') }}</button>
+            <button class="btn btn-outline-primary btn-sm" type="submit" name="create">{{ _('Create Room') }}</button>
+        </div>
+    </form>
+    </div>
+    </div>
+{% endblock %}
