@@ -1,0 +1,124 @@
+# APP SERVER
+
+#/etc/supervisor/conf.d/niitii.conf
+    [program:niitii]
+    command=/bin/sh -c "/home/niitii/niitii/venv/bin/gunicorn -b 192.168.0.103:8000 -w 1 --threads 100 niitii:app & /home/niitii/niitii/venv/bin/gunicorn -b 192.168.0.103:8001 -w 1 --threads 100 niitii:app & /home/niitii/niitii/venv/bin/gunicorn -b 192.168.0.103:8002 -w 1 --threads 100 niitii:app & /home/niitii/niitii/venv/bin/gunicorn -b 192.168.0.103:8003 -w 1 --threads 100 niitii:app & /home/niitii/niitii/venv/bin/gunicorn -b 192.168.0.103:8004 -w 1 --threads 100 niitii:app"
+    directory=/home/niitii/niitii
+    user=niitii
+    autostart=true
+    autorestart=true
+    stopasgroup=true
+    killasgroup=true
+
+# reload after updating config file
+$ sudo supervisorctl reload
+    
+# restart app
+$ sudo supervisorctl restart all
+
+
+# NGINX Server
+
+#/etc/nginx/sites-available/niitii
+# Define which servers to include in the load balancing scheme. 
+# private IPs for better performance and security.
+# each port matches a gunicorn process
+
+    # max body size is 1.34x larger than the uploaded file. 100M will allow 74M to upload
+    client_max_body_size 100M;
+
+    # define a limit zones
+    limit_req_zone $binary_remote_addr zone=reqLimit:10m rate=10r/s;
+    limit_req_status 429;
+    limit_conn_zone $binary_remote_addr zone=connLimit:10m;
+    limit_conn_status 429;
+    client_header_timeout 10;    
+
+   upstream backend {
+      # session persistence, alt to ip_hash. $remote_addr will hash to all four octets
+      hash $binary_remote_addr consistent;
+      server 192.168.0.103:8000;
+      server 192.168.0.103:8001;
+      server 192.168.0.103:8002;
+      server 192.168.0.103:8003;
+      server 192.168.0.103:8004;
+
+      keepalive 10;
+   }
+
+   # This server accepts all traffic to port 80 and passes it to the upstream. 
+   server {
+       # listen on port 80 (http)
+       listen 80;
+       listen [::]:80;
+       # catch all
+       server_name _;
+       location / {
+            # redirect any requests to the same URL but on https
+            return 301 https://$host$request_uri;
+        }
+    }
+
+
+   # upstream name and the proxy_pass need to match.
+    server {
+        # listen on port 443 (https)
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        # catch all
+        server_name _;
+
+        # location of the self-signed SSL certificate
+        ssl_certificate /home/niitii/certs/cert.pem;
+        ssl_certificate_key /home/niitii/certs/key.pem;
+
+        # write access and error logs to /var/log
+        access_log /var/log/niitii_access.log;
+        error_log /var/log/niitii_error.log;
+
+        location / {
+            # forward application requests to the gunicorn server
+            proxy_pass http://backend;
+
+            # from "include proxy_params;"
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # forward application requests to the gunicorn server
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+            proxy_redirect off;
+            
+            limit_req zone=reqLimit burst=20 nodelay;
+            limit_conn connLimit 10;
+
+            keepalive_timeout 10 10;
+            client_body_timeout 10;
+            send_timeout 10;            
+        }
+
+        location /socket.io {
+            proxy_pass http://backend/socket.io;
+
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            proxy_http_version 1.1;
+            proxy_buffering off;
+            # WebSocket support
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+        }
+    }
+
+
+# reload after config
+$ sudo service nginx reload
+
+# VALID DOMAINS
+Valid domains for niitii: (.net, .app, .com, .info, .org)
+The domain service provider is IONOS

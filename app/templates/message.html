@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% import "macros/_macros.html" as macros %}
+
+{% block content %}
+    {% set user = sender %}
+    <div class="row justify-content-center mt-2">
+      <div class="col-sm-12 col-md-10 col-lg-10 col-xl-8 col-xxl-8">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <img class="rounded-circle img-fluid avatar-md me-1 my-1" {% if user.photo %} src="{{ user.photo }}" {% else %} src="{{ url_for('static', filename='images/avatar.png') }}" {% endif %} alt="photo">
+            <span>{{ macros.user_link(user=user) }}</span>
+            <span class="fs-4 text-end btn btn-outline-secondary btn-sm" data-edit>&#x270E;&#xfe0e;</span>
+          </div>
+
+          <div class="card-body w-auto overflow-y-auto" id="messages">
+            {% for m in messages %}
+                {% set m_photos = m.get_photos()['link'] %}
+                {% if m.sender == current_user %}
+                    <div class="d-flex flex-row justify-content-end mb-2" id="message{{m.id}}">
+                        <div class="bg-dark-subtle rounded-2 px-2 py-1">
+                        {% if m_photos %}
+                          <img class="img-fluid object-fit-scale mb-2" src="{{ m.get_url() }}" alt="message photo" loading="lazy">
+                        {% endif %}
+                            <p class="m-0 text-end text-pre-wrap">{{ m.decrypt(m.body) }}</p>
+                            <time class="d-block text-body text-end" datetime="{{m.timestamp}}"></time>
+                        <span class="d-block text-body text-end d-none" data-delBtn>
+                        {% set action %}{{ url_for('main.del_message', id=m.id) }}{% endset %}
+                        {{ macros.empty(action=action, value="delete", inputId=m.id) }}
+                        </span>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="d-flex flex-row justify-content-start mb-2" id="message{{m.id}}">
+                        <div class="bg-light-subtle rounded-2 px-2 py-1">
+                        {% if m_photos %}
+                          <img class="img-fluid object-fit-scale mb-2" src="{{ m.get_url() }}" alt="message photo" loading="lazy">
+                        {% endif %}
+                            <p class="m-0 text-start text-pre-wrap">{{ m.decrypt(m.body) }}</p>
+                            <time  class="d-block text-body text-start" datetime="{{m.timestamp}}"></time>
+                      </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+         </div>
+            {% set action %}{{ url_for('main.send_message', username=user.username) }}{% endset %}
+            {{ macros.message(action=action) }}
+        </div>
+      </div>
+    </div>
+
+<!--    IMPORTED JS FUNCTIONS-->
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+
+    <script type="text/javascript" charset="utf-8">
+/*
+    Adding div after document.addEventListener('DOMContentLoaded' doesn't work after page refresh
+    Error: Uncaught ReferenceError: lightbox is not defined
+*/
+        const lightbox = document.createElement('div');
+        lightbox.id = 'lightbox';
+        document.body.appendChild(lightbox);
+    </script>
+
+    <script type="text/javascript">
+        const messages = document.querySelector('#messages');
+        messages.scrollTop = messages.scrollHeight;
+        const options = {
+            timeStyle: 'short',
+            dateStyle: 'short',
+            hour12: false,
+        };
+
+        function showMessage(target, submitter) {
+            let postForm = new FormData(target);
+            postForm.append('submit', submitter.value);
+            postForm.append('photo', target.photo.files[0]);
+            const url = target.action;
+
+            fetch(url, {
+                method: 'POST',
+                body: postForm,
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                let timestamp = showTime(data.timestamp, options).replace(',', '');
+                const d = document.createElement("div");
+                const d2 = document.createElement("div");
+                const img = document.createElement("img");
+                const p = document.createElement("p");
+                const s = document.createElement("span");
+                const s2 = document.createElement("span");
+                const t = document.createElement("time");
+
+                if (data.photo) {
+                    img.classList.add("img-fluid", "object-fit-scale", "mb-2");
+                    img.src = data.photo;
+                }
+
+                d.classList.add("d-flex", "flex-row", "justify-content-end", "mb-2");
+                d2.classList.add("bg-dark-subtle", "rounded-3", "px-3", "py-1");
+                p.classList.add("m-0", "text-end");
+                p.textContent = data.body;
+                s.classList.add("d-block", "text-body", "text-end");
+                t.datetime = timestamp;
+                s2.setAttribute('data-timestamp', `${timestamp}`);
+                s2.setAttribute('data-function', 'format');
+                s2.setAttribute('data-format', 'D MMM H:mm');
+                s2.setAttribute('data-refresh', '0');
+                s2.textContent = timestamp;
+                t.append(s2);
+                s.append(t);
+                img.src? d2.append(img, p, s) : d2.append(p, s);
+                d.append(d2);
+                messages.append(d);
+            })
+            .catch(console.error);
+        }
+
+        function deleteContent(target, submitter) {
+            const postForm = new FormData(target);
+            // FormData only send the <input>. <button> is appended to the form
+            postForm.append('submit', submitter.value);
+            postForm.append('inputId', target.inputId.value);
+
+            const inputId = target.inputId.value;
+            const url = target.action;
+
+            fetch(url, {
+                method: 'POST',
+                body: postForm,
+            })
+            .then((response) => response.text())
+            .then((text) => {
+                    document.getElementById(`message${inputId}`).remove();
+            })
+            .catch(console.error);           
+        }
+
+        Array.from(document.querySelectorAll('time')).forEach((ele) => {
+            ele.textContent = showTime(ele.dateTime, options, zone = true).replace(',', '');
+        });
+
+        document.querySelector('[data-edit]').addEventListener('click', () => {
+            Array.from(document.querySelectorAll('[data-delBtn]')).forEach((ele) => {
+                ele.classList.toggle('d-none');
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            Array.from(document.querySelectorAll('img')).forEach((ele, index) => {
+                ele.addEventListener('dblclick', function(e) {
+// class 'active' will display lightbox. Styles applied in style.css
+                    lightbox.classList.add('active')
+                    const box_img = document.createElement('img')
+                    box_img.src = ele.src
+                    while (lightbox.firstChild) {
+// Remove all child elements so there are no images for lightbox.appendChild(box_img)
+                        lightbox.removeChild(lightbox.firstChild)
+                    }
+                    lightbox.appendChild(box_img)
+                });
+            });
+
+            lightbox.addEventListener('click', e => {
+// Exit if anything besides the lightbox is clicked. e.target any item that's clicked. e.currentTarget is lightbox.
+                if (e.target !== e.currentTarget) return
+                lightbox.classList.remove('active')
+            });
+        });
+
+        document.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (e.submitter.value == 'message') {
+                // Create DataTransfer to check files over 10MB
+                const dt = new DataTransfer();
+                const files = e.target.photo.files
+
+                if (files.length > 0) {
+                    for (let i = 0; i < files.length; i++) {
+                        if (files[i].size > (1024 * 1024 * 10)) {
+                        // Do not add to dt
+                            continue;
+                        }
+                        // add files to dt object
+                        dt.items.add(files[i]);
+                    }
+                }
+                // update event files before submitting
+                e.target.photo.files = dt.files;
+                showMessage(e.target, e.submitter);
+                e.target.reset();
+           }
+           else if (e.submitter.value == 'delete') {
+                deleteContent(e.target, e.submitter);
+           }
+       });
+    </script>
+{% endblock %}

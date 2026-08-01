@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+    <body>
+        <p>{{ user.username }},</p>
+        <p>
+            <a href="{{ url_for('auth.change_email', token=token, _external=True) }}">
+                {{ _('Confirm email link') }}
+            </a>
+        </p>
+        <p>{{ _('Copy link:') }}</p>        
+        <p>{{ url_for('auth.change_email', token=token, _external=True) }}</p>
+        <p><small>{{ _('Note: DO NOT REPLY') }}</small></p>
+        <p><b>niitii</b></p>
+    </body>
+</html>

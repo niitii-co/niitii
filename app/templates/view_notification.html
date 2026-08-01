@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% import "macros/_macros.html" as macros %}
+
+{% block content %}
+    {% for n in notifications %}
+    <div class="card-body py-0 mx-auto card-width" id="n{{n.id}}">
+            <h6 class="m-0 mb-1">
+            {% if n.item_type == 'comment' %}
+            <a class="text-decoration-none text-body" href="{{ url_for('main.post', id=n.item_id) }}">{{ n.get_payload()['title'] }}</a>
+            {% else %}
+            {{ n.get_payload()['title'] }}
+            {% endif %}
+            <time class="fw-light" datetime="{{n.timestamp}}"></time>
+            </h6>
+            
+            {% if n.item_type == 'comment' %}
+<!--            body - rendered html as safe for comment notification-->
+            <div class="pre-wrap">{{ n.get_payload()['body'] | safe}}{{ n.get_payload()['author'] | safe}}</div>
+            <span class="d-block">{{ n.get_payload()['sender']}}</span>
+            {% elif n.item_type == 'chatii' %}
+            <p class="m-0 mt-1 ps-1">
+            <a class="text-decoration-none btn btn-outline-dark btn-sm px-1" href="{{ url_for('main.chatii', room=n.get_payload()['body']) }}">{{ _('Join Chatii') }}</a>
+            <span class="d-block mt-1 fs-6">{{ n.get_payload()['sender']}}</span>
+            </p>
+
+            {% else %}
+            <div class="mt-1 mb-2">{{ n.get_payload()['body'] | safe}} {{ n.get_payload()['author'] | safe}}</div>
+            <span class="d-block">{{ n.get_payload()['sender']}}</span>
+            {% endif %}
+
+            {% set action %}{{ url_for('main.del_notification', id=n.id) }}{% endset %}
+            {{ macros.empty(action=action, value="delete", inputId=n.id) }}
+        <hr class="my-1">
+    </div>
+    {% endfor %}
+
+    {{ macros.pagination(pagination, 'main.view_notification') }}
+
+    <!--    IMPORTED JS FUNCTIONS-->
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script type="text/javascript" charset="utf-8">
+    // timestamp
+        const options = {
+            timeStyle: 'short',
+            dateStyle: 'short',
+            hour12: false,
+        };
+
+        Array.from(document.querySelectorAll('time')).forEach((ele) => {
+            ele.textContent = showTime(ele.dateTime, options, zone = true).replace(',', '');
+        });
+
+        const notificationCount = document.getElementById('notificationCount');
+
+        function sendForm(target, submitter) {
+            let postForm = new FormData(target);
+            postForm.append('submit', submitter.value);
+
+            const inputId = target.inputId.value;
+            const url = target.action;
+
+            fetch(url, {
+                method: 'POST',
+                body: postForm,
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                document.getElementById(`n${inputId}`).remove();
+                if (Number(data.count) > 0) {
+                    notificationCount.textContent = data.count;
+                }
+                else {
+                    notificationCount.classList.add('d-none');
+                };
+            })
+            .catch(console.error);
+        }
+
+       Array.from(document.querySelectorAll('.pre-wrap p:first-of-type')).forEach((ele, index) =>{
+            ele.classList.add("mt-1", "mb-2");
+        });
+
+        document.addEventListener('submit', (e) => {
+            if (e.submitter.value !== 'search') {
+                e.preventDefault();
+                sendForm(e.target, e.submitter);
+            }
+       });
+    </script>
+{% endblock %}

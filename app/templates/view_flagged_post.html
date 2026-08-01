@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% import "macros/_macros.html" as macros %}
+
+{% block content %}
+    {% for post in posts %}
+        {% include '_post.html' %}
+    {% endfor %}
+    
+    {{ macros.pagination(pagination, 'main.view_flagged_post') }}
+
+    <!--    IMPORTED JS FUNCTIONS-->
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+
+    <script type="text/javascript" charset="utf-8">
+    // timestamp for _post.html
+        const options = {
+            timeStyle: 'short',
+            dateStyle: 'short',
+            hour12: false,
+        };
+
+        Array.from(document.querySelectorAll('time')).forEach((ele) => {
+            ele.textContent = showTime(ele.dateTime, options, zone = true).replace(',', '');
+        });
+    </script>
+{% endblock %}

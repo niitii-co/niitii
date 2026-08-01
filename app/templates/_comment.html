@@ -1,0 +1,99 @@
+{% for c in comments %}
+    {% set user = c.author %}
+<div id="comment{{c.id}}" class="card border-0" {% if not c.direct %}data-comment{% endif %}>
+    <div class="card-body p-0 mb-2">
+            {% if not c.ghost %}
+            {{ macros.avatar(user) }}
+            {{ macros.user_link(user=user) }}
+            {% else %}
+            <span>&#x1F47B;&#xfe0e;</span>
+            {% endif %}
+            {% if c.pinned %}
+            <span>&#x1F4CC;&#xfe0e;</span>
+            {% endif %}
+            {% if c.direct %}
+            <span>&#x1F576;&#xfe0e;</span>
+            {% endif %}
+            <time datetime="{{c.timestamp}}"></time>
+<!--  find parent comment, create popover-->
+            {% if c.parent_id %}
+                {% for pc in comments %}
+                    {% if pc.id == c.parent_id and not pc.disabled %}
+                        {% if pc.body_html %}
+                            {% set p_body %} {{ pc.body_html | safe }} {% endset %}
+                        {% else %}
+                            {% set p_body %} {{ pc.body }} {% endset %}
+                        {% endif %}
+                    <button popovertarget="parentComment{{c.parent_id}}" class="m-0 p-0 pb-1 btn btn-outline-secondary border-0"><span>&#x1F441;&#xFE0F;&#x200D;&#x1F5E8;&#xFE0F;&#xfe0e;</span></button>
+                    <div popover id="parentComment{{c.parent_id}}" class="rounded border border-secondary p-2 border-opacity-50 comment-height overflow-y-auto">{{ p_body }}</div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            <div>
+            {% if c.disabled %}
+                <p class="m-0 small fst-italic">{{ _('Disabled') }}</p>
+            {% else %}
+                {% if c.body_html %}
+                    {% if c.body_html | length > 500 %}
+                    <input type="checkbox" name="readMore" id="readMore{{c.id}}" hidden>
+                    <div class="comment-body">
+                    {{ c.body_html | safe }}
+                    </div>
+                    <label for="readMore{{c.id}}"></label>
+                    {% else %}
+                    {{ c.body_html | safe }}
+                    {% endif %}
+                {% else %}
+                    {% if c.body | length > 500 %}
+                    <input type="checkbox" name="readMore" id="readMore{{c.id}}">
+                    <div class="comment-body">
+                    {{ c.body }}
+                    </div>
+                    <label for="readMore{{c.id}}"></label>
+                    {% else %}
+                    {{ c.body }}
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+            </div>
+
+        {% if current_user.is_authenticated and current_user.can("COMMENT") %}
+            {% if not c.ghost and not post.disable_comments %}
+            {% set action %}{{ url_for('main.vote_comment', id=post.id) }}{% endset %}
+            {{ macros.vote(action=action, value="vote_comment", inputId=c.id, count=c.votes) }}
+            <button class="btn btn-sm  ps-1 py-0" type="button" data-bs-toggle="collapse" data-bs-target="#replyComment{{ c.id }}" aria-expanded="False" aria-controls="replyComment{{ c.id }}">
+            <span>{{_('Reply')}}</span>
+            </button>
+            <div class="collapse" id="replyComment{{ c.id }}">
+            {% set action %}{{ url_for('main.reply_comment', id=post.id) }}{% endset %}
+            {{ macros.comment(action=action, author=user, commentId=c.id, value="replyComment") }}
+            </div>
+            {% elif post.disable_comments %}
+            {% set action %}{{ url_for('main.vote_comment', id=post.id) }}{% endset %}
+            {{ macros.vote(action=action, value="vote_comment", inputId=c.id, count=c.votes) }}
+            {% endif %}
+        {% else %}
+            <span class="btn btn-outline-dark btn-sm border border-dark-subtle disabled px-1 py-0">
+                &#8679;&#xfe0e; {{ c.votes }}
+            </span>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+
+    <script type="text/javascript" charset="utf-8">
+    const images = document.querySelectorAll('img');
+
+    images.forEach(img => {
+        img.classList.contains("carousel-img") ? null : img.classList.add("img-fluid", "mb-1");
+    });   
+
+    Array.from(document.querySelectorAll('.card-body p:first-of-type')).forEach((ele, index) =>{
+//  only <p> without a class. Title <p> has a class
+        !ele.hasAttribute('class')? ele.classList.add('m-0') : null;
+    });
+    </script>
+
+
+

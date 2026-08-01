@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% import "macros/_macros.html" as macros %}
+
+{% block content %}
+    <div class="row justify-content-center mt-2">
+    <div class="col-sm-12 col-md-10 col-lg-10 col-xl-8 col-xxl-8">
+        <h3><a class="text-decoration-none" href="{{ url_for('main.post', id=post.id) }}">{{ _('Edit Post') }} </a></h3>
+        {% if post.editor and current_user.can("MODERATE") %}
+            <p class="mb-2">{{ post.editor }}</p>
+        {% endif %}        
+        <div class="mb-4">
+        {% if current_user == post.author %}
+            {{ macros.edit_post(post=post, tags=tags, photos=post.get_photos()) }}
+        {% else %}
+            {{ macros.edit_post_admin(post=post, tags=tags, photos=post.get_photos()) }}
+        {% endif %}
+        </div>
+        <div class="fs-5 mb-2"><a class="text-decoration-none" href="{{ url_for('main.post_comment', id=post.id) }}">{{ _('Comments') }}</a></div>
+        <div class="d-flex">
+        <h3 class="pe-2">{{ _('Delete Post') }}</h3>
+            {% set action %}{{ url_for('main.del_post', id=post.id) }}{% endset %}
+            {{ macros.del_post_modal(action=action, value="del_post")}}
+            {{ macros.del_btn() }}
+        </div>
+    </div>
+    </div>
+
+    <script type="text/javascript">
+        const showBtn = document.querySelector("#showDialog");
+        const delDialog = document.querySelector("#delDialog");
+        const confirmBtn = delDialog.querySelector("#confirm");
+        const closeBtn = delDialog.querySelector("#close");
+
+        // "Show the dialog" button opens the <dialog> modal
+        showBtn.addEventListener("click", () => {
+          delDialog.showModal();
+        });
+
+        // "Cancel" button closes the dialog without submitting because of [formmethod="dialog"], triggering a close event.
+        closeBtn.addEventListener("click", () => {
+            delDialog.close();
+        });
+
+        // Prevent the "confirm" button from the default behavior of submitting the form, and close the dialog with the `close()` method, which triggers the "close" event.
+        confirmBtn.addEventListener("click", () => {
+        });
+        
+        // Alert user of files over 10MB
+        document.getElementById('fileInput')?.addEventListener('change', (e) => {
+            let files = Array.from(e.target.files);
+            for (let i = 0; i < files.length; i++) {
+                if (files[i].size > (1024 * 1024 * 10)) {
+                    size = Math.floor(files[i].size / (1024 * 1024));
+                    alert(`LIMIT 10MB \n${files[i].name} - ${size}MB`);
+                }
+            }
+        });
+
+        const linkDiv = document.querySelector('[data-linkPhotos]');
+        let linkCount = linkDiv ? linkDiv.getAttribute('data-linkPhotos') : 1;
+        const linkMax = linkCount > 1 ? (5 - linkCount) : 1;
+// Events bubble up, meaning that once an event takes place on an element, that event is received also by the parents of that element. It provides performance because each individual event listener that we add will consume memory.
+// Safely clicks if the element exists, otherwise does nothing
+        linkDiv?.addEventListener('click', (e) => {
+            const eParentEle = e.target.parentElement;
+
+            if (e.target.hasAttribute('data-addBtn')) {
+                const linkPhotos = eParentEle.parentElement.parentElement;
+                const clonedDiv = eParentEle.cloneNode(true);
+                const addBtn = clonedDiv.children[1];
+                const rmBtn = clonedDiv.children[2];
+    // Clears value from original input
+                clonedDiv.children[0].value = '';
+
+                rmBtn.hidden = false;
+                addBtn.parentNode.removeChild(addBtn);
+
+                if (linkCount < 5) {
+                    eParentEle.parentElement.appendChild(clonedDiv);
+                    linkCount++;
+                }
+            }
+            else if (e.target.hasAttribute('data-rmBtn')) {
+                e.target.parentElement.remove();
+                if (linkCount > linkMax) {
+                    linkCount--;
+                }
+            }
+        });
+
+        document.addEventListener('submit', (e) => {
+            // Create DataTransfer to check files over 10MB
+            let dt = new DataTransfer();
+            let files = e.target.photo.files
+
+            if (files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    if (files[i].size > (1024 * 1024 * 10)) {
+                        continue; // Skip. Do not add to dt
+                    }
+                    // add files to dt object
+                    dt.items.add(files[i]);
+                }
+            }
+            // update event files before submitting
+            e.target.photo.files = dt.files;
+       });
+    </script>
+{% endblock %}
